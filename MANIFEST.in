@@ -1,0 +1,9 @@
+include README.rst
+include requirements*.txt
+include examples/*.py
+include tests/*.py
+include tests/data/*.*
+include tests/data/MTBLS79_subset/*.*
+include dimspy/models/*.py
+include dimspy/parsers/*.py
+include dimspy/process/*.py
