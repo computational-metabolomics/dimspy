@@ -45,9 +45,17 @@ class ThermoRaw():
             gld = self.run.GetLabelData(scan_id)
             mzs, ints, baseline, noise = gld[0][0], gld[0][1], gld[0][3], gld[0][4]
 
+        # TODO: sort mz values.
+        # Found a raw file where mz files where not in order (20170313_FlyFaeces_DIMS_Lipids_Neg_1116_V5F2c.raw).
+        # Correct place to do this?
+        mz_ibn = zip(mzs, ints, baseline, noise)
+        mz_ibn.sort()
+        mzs, ints, baseline, noise = zip(*mz_ibn)
+
         if mode_noise == "msfilereader":
             # https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2871411
             # Mol Cell Proteomics. 2010 May; 9(5): 754–763.
+            # TODO: Negative baseline?
             snr = np.divide(np.subtract(ints, baseline), noise)
         elif mode_noise == "median":
             snr = ints / np.median(ints)
