@@ -139,7 +139,7 @@ def read_scan_data(fn, source, function_noise, nscans, fn_exp):
 def process_replicate_scans(pkls, snr_thres=3.0, ppm=2.0, min_fraction=0.8, rsd_thres=30.0, block_size=2000, ncpus=None):
     print "Removing noise....."
     for h in pkls:
-        pkls[h] = [filter_snr(pk, snr_thres) for pk in pkls[h]]
+        pkls[h] = [filter_snr(pk, snr_thres) for pk in pkls[h] if len(pk.mz) > 0] # TODO: empty scans
 
     print "Align and filtering peaks from scans....."
     for h in pkls:
@@ -162,11 +162,14 @@ def process_replicate_scans(pkls, snr_thres=3.0, ppm=2.0, min_fraction=0.8, rsd_
                 #pkls[h].add_attribute("rsd_flag", np.logical_or(np.isnan(pm.rsd), pm.rsd < rsd_thres), flagged_only=False, is_flag=True)
                 pkls[h].add_attribute("rsd_flag", pm.rsd <= rsd_thres, flagged_only=False, is_flag=True)
 
-        else:
+        elif len(pkls[h]) == 1:
             pkls[h] = pkls[h][0]
             pkls[h].add_attribute("present", np.ones(pkls[h].full_size), flagged_only = False)
             pkls[h].add_attribute("fraction", np.ones(pkls[h].full_size), flagged_only = False)
             pkls[h].add_attribute("fraction_flag", np.ones(pkls[h].full_size), flagged_only=False, is_flag=True)
+        else:
+            print "No scans available for {}".format(h) # TODO: check if it is valid to remove header
+            del pkls[h]
     return pkls
 
 
