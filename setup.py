@@ -29,7 +29,7 @@ def main():
 
           install_requires=open('requirements.txt').read().splitlines()
                             if os.name != "nt" \
-                            else open('requirements-win.txt').read().splitlines(),
+                            else open('requirements_win.txt').read().splitlines(),
           
           include_package_data=True,
 
