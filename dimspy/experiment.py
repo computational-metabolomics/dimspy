@@ -222,10 +222,13 @@ def read_filelist(fn_tsv, source):
     assert zipfile.is_zipfile(source) or os.path.isdir(source), "path or .zip archive does not exist"
 
     fm = np.genfromtxt(fn_tsv, dtype=None, delimiter="\t", names=True)
+    if len(fm.shape) == 0: # TODO: Added to check if filelist has a single row
+        fm = np.array([fm])
+
     col_names = fm.dtype.fields.keys()
 
     fm_dict = collections.OrderedDict()
-    for k in fm.dtype.fields.keys():
+    for k in col_names:
         fm_dict[k] = list(fm[k])
 
     if zipfile.is_zipfile(source):
