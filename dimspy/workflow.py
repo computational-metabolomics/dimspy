@@ -109,7 +109,7 @@ def replicate_filter(peaklists, ppm, reps, minpeaks, rsd_thres=None, block_size=
 
 
 def align_samples(peaklists, ppm, block_size=2000, ncpus=None):
-    return align_peaks(peaklists, ppm=2.0, block_size=block_size, byunique=False, ncpus=ncpus)
+    return align_peaks(peaklists, ppm=ppm, block_size=block_size, byunique=False, ncpus=ncpus)
 
 
 def blank_filter(peak_matrix, blank_label, min_fraction=1.0, min_fold_change=1.0, function="mean", rm_samples=True):
