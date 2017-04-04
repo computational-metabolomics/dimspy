@@ -129,23 +129,3 @@ def sample_filter(peak_matrix, min_fraction, within=False, rsd=None, qc_label=No
     return peak_matrix
 
 
-def to_readable(pickle_file, path_out, separator, transpose=False):
-    assert os.path.isfile(pickle_file), "Pickle file does not exist"
-    assert separator in ["tab", "comma"], "Incorrect separator [tab, comma]"
-    seps = {"comma":",", "tab":"\t"}
-    with open(pickle_file, "rb") as fn_pkl_in:
-        pkl = pickle.load(fn_pkl_in)
-        if type(pkl) == list:
-            assert isinstance(pkl[0], PeakList), "Not compatible with {}".format(type(pkl[0]))
-            for pl in pkl:
-                with open(os.path.join(path_out, os.path.splitext(pl.ID)[0] + ".txt"), "w") as pk_out:
-                    pk_out.write(pl.to_str(seps[separator]))
-                time.sleep(1)
-
-        elif isinstance(pkl, PeakMatrix):
-            assert os.path.isfile(path_out), "Provide filename for peak matrix"
-            with open(os.path.join(path_out), "w") as pk_out:
-                pk_out.write(pkl.to_str(seps[separator], transpose))
-    return
-
-
