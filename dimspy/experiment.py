@@ -8,12 +8,14 @@ author(s): Ralf Weber
 origin: Oct. 2016
 """
 import os
+import sys
 import warnings
 import collections
 import re
 import copy
 import numpy as np
 import zipfile
+from models.peaklist import PeakList
 
 
 def mz_range_from_header(h):
@@ -153,11 +155,11 @@ def read_ms_exp_from_file(fn_tsv):
     fn_tsv = fn_tsv.encode('string-escape')
     assert os.path.isfile(fn_tsv), "{} does not exist".format(fn_tsv)
 
+    exp = []
+
     with open(fn_tsv) as fn_exp:
 
-        exp = []
-
-        lines =  fn_exp.readlines()
+        lines = fn_exp.readlines()
         header = [name.lower() for name in lines[0].rstrip().split("\t")]
 
         assert len(lines) >= 2, "too few rows"
@@ -182,8 +184,7 @@ def read_ms_exp_from_file(fn_tsv):
             if "ms_type" in d:
                 assert d["ms_type"].lower() in ["ftms", "itms"], "ms type does not exist"
             exp.append(d)
-        return exp
-    return []
+    return exp
 
 
 def read_ms_exp_from_headers(mz_ranges):
@@ -213,58 +214,93 @@ def read_ms_exp_from_headers(mz_ranges):
     return mzrs.keys()
 
 
-def read_filelist(fn_tsv, source):
+def validate_source(tsv, source):
 
-    source = source.encode('string-escape')
+    if tsv is None:
+        if type(source) == list:
+            assert type(source[0]) == PeakList, "Incorrect Objects in list. Peaklist class required."
+            files = [pl.ID for pl in source]
+        elif os.path.isdir(source.encode('string-escape')):
+            files = [os.path.join(source, fn) for fn in os.listdir(source) if fn.lower().endswith(".mzml") or fn.lower().endswith(".raw")]
+        elif zipfile.is_zipfile(source.encode('string-escape')):
+            with zipfile.ZipFile(source.encode('string-escape')) as zf:
+                assert len([fn for fn in zf.namelist() if fn.lower().endswith(".raw")]) == 0, "Archive with *.raw files not yet supported. Convert to mzML"
+                files = [fn for fn in zf.namelist() if fn.lower().endswith(".mzml")]
+
+    elif os.path.isfile(tsv):
+
+        fm = np.genfromtxt(tsv.encode('string-escape'), dtype=None, delimiter="\t", names=True)
+        if len(fm.shape) == 0:  # TODO: Added to check if filelist has a single row
+            fm = np.array([fm])
+
+        assert fm.dtype.names[0] == "filename" or fm.dtype.names[0] == "sample_id" or fm.dtype.names[0] == "sample", \
+            "Incorrect header for first column. Use filename, sample_id or sample"
+
+        files = []
+        if type(source) == list:
+            assert type(source[0]) == PeakList, "Incorrect Objects in list. Peaklist Object required."
+            for fn in fm[fm.dtype.names[0]]:
+                assert fn in [pl.ID for pl in source], "{} does not exist in list with Objects".format(fn)
+                files.append(fn)
+
+        elif os.path.isdir(source):
+            l = os.listdir(source.encode('string-escape'))
+            for fn in fm[fm.dtype.names[0]]:
+                assert os.path.basename(fn) in l, "{} does not exist in directory".format(os.path.basename(fn))
+                files.append(os.path.join(source, fn).replace('\\', r'\\'))
+
+        elif zipfile.is_zipfile(source.encode('string-escape')):
+            with zipfile.ZipFile(source) as zf:
+                assert len([fn for fn in zf.namelist() if fn.lower().endswith(".raw")]) == 0, "Archive with *.raw files not yet supported. Convert to mzML"
+                for fn in fm[fm.dtype.names[0]]:
+                    assert fn in zf.namelist(), "{} does not exist in .zip file".format(fn)
+                    files.append(fn)
+        else:
+            print "Can not read and parse {} and {}".format(source, tsv)
+            sys.exit()
+    else:
+        print "Can not read and parse {} and {}".format(source, tsv)
+        sys.exit()
+
+    return files
+
+
+def validate_metadata(fn_tsv):
+
     fn_tsv = fn_tsv.encode('string-escape')
-
     assert os.path.isfile(fn_tsv), "{} does not exist".format(fn_tsv)
-    assert zipfile.is_zipfile(source) or os.path.isdir(source), "path or .zip archive does not exist"
 
     fm = np.genfromtxt(fn_tsv, dtype=None, delimiter="\t", names=True)
-    if len(fm.shape) == 0: # TODO: Added to check if filelist has a single row
+    if len(fm.shape) == 0:  # TODO: Added to check if filelist has a single row
         fm = np.array([fm])
 
-    col_names = fm.dtype.fields.keys()
-
     fm_dict = collections.OrderedDict()
-    for k in col_names:
+    for k in fm.dtype.names:
         fm_dict[k] = list(fm[k])
 
-    if zipfile.is_zipfile(source):
-        l = zipfile.ZipFile(source)
-        for fn in fm["filename"]:
-            assert fn in l.namelist(), "{} does not exist in .zip file".format(fn)
-
-    elif os.path.isdir(source):
-        l = os.listdir(source)
-        for i in range(len(fm["filename"])):
-            assert os.path.basename(fm["filename"][i]) in l, "{} does not exist in directory".format(os.path.basename(fm["filename"][i]))
-            fn = str(fm["filename"][i])
-            if os.path.basename(fn) == fm["filename"][i]:
-                fm_dict["filename"][i] = os.path.join(source, fn).replace('\\', r'\\')
-
-    #if "blank" not in col_names and "Blank" not in col_names:
+    #if "blank" not in fm.dtype.names and "Blank" not in fm.dtype.names:
     #    warnings.warn("No samples marked as blank. Column missing.")
     #else:
     #    unique, counts = np.unique(fm["blank"], return_counts=True)
     #    print "Blank samples:", counts
 
-    #if "qc" not in col_names and "QC" not in col_names:
+    #if "qc" not in fm.dtype.names and "QC" not in fm.dtype.names:
     #    warnings.warn("No samples marked as QC. Column missing.")
     #else:
     #    unique, counts = np.unique(fm["qc"], return_counts=True)
     #    print "QC samples:", counts
 
-    if "replicate" in col_names:
+    unique_reps = [1]
+    counts = len(fm[fm.dtype.names[0]])
+    if "replicate" in fm.dtype.names:
         unique_reps, counts = np.unique(fm["replicate"], return_counts=True)
         assert len(np.unique(counts)) == 1, "Incorrect numbering of replicates"
         assert len(unique_reps) == max(unique_reps), "Incorrect numbering of replicates"
         print "Replicates:", dict(zip(unique_reps, counts))
     else:
-        print "Column for replicate numbers missing"
+        print "Column for replicate numbers missing. Only required for replicate filter."
 
-    if "batch" in col_names:
+    if "batch" in fm.dtype.names:
         unique_batches, counts = np.unique(fm["batch"], return_counts=True)
         #assert np.array_equal(fm["batch"], sorted(fm["batch"])), "mixed order of batches"
         print "Batch numbers:", unique_batches
@@ -272,13 +308,12 @@ def read_filelist(fn_tsv, source):
     else:
         print "Column for batch number missing. Not required."
 
-    if "order" in col_names:
+    if "order" in fm.dtype.names:
         assert np.array_equal(fm["order"], sorted(fm["order"])), "Check the order column - samples not in order"
     else:
         print "Column for sample order missing. Not required."
 
-    if "class" in col_names:
-
+    if "class" in fm.dtype.names:
         ra = range(0, len(fm["class"]), max(unique_reps))
         for i in range(0, len(ra)-1):
             assert len(np.unique(fm["class"][ra[i]:ra[i+1]])) == 1, "class names do not match with number of replicates"

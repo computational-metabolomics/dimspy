@@ -185,9 +185,7 @@ def join_peaklists(ID, pkls, class_label):
 
     attrs = _join_atrtributes(pkls.values())
     pl_j = PeakList(ID=ID, mz=attrs["mz"], intensity=attrs["intensity"], tags=class_label)
-    pl_j.metadata.ion_injection_time = 1.0
     del attrs["mz"], attrs["intensity"]  # default attributes
     for a in attrs:
-        #pl_j.add_attribute(a, attrs[a])
         pl_j.add_attribute(a, attrs[a], is_flag=(a in pkls.values()[0].flag_attributes), flagged_only=False)
     return pl_j
