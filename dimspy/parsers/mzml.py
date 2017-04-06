@@ -48,7 +48,7 @@ class Mzml():
                 header = scan['MS:1000512']
                 mz_range = mz_range_from_header(header)
 
-                pkl = PeakList(ID=scan["id"], mz=mzs, intensity=ints,
+                pl = PeakList(ID=scan["id"], mz=mzs, intensity=ints,
                                mz_range=mz_range,
                                header=header,
                                ion_injection_time=ion_injection_time,
@@ -59,8 +59,8 @@ class Mzml():
                                instrument=None)
 
                 snr = np.divide(ints, scan.estimatedNoiseLevel(mode=mode))
-                pkl.add_attribute('snr', snr)
-                return pkl
+                pl.add_attribute('snr', snr)
+                return pl
         return None
 
     def peaklists(self, scan_ids, mode="median"):  # generator

@@ -16,7 +16,7 @@ import copy
 import numpy as np
 import zipfile
 from models.peaklist import PeakList
-
+import io
 
 def mz_range_from_header(h):
     return [float(m) for m in re.findall(r'([\w\.-]+)-([\w\.-]+)', h)[0]]
@@ -150,44 +150,11 @@ def remove_headers(exp, mzrs):
     return mzrs
 
 
-def read_ms_exp_from_file(fn_tsv):
+def define_mz_ranges(subset_mzrs):
+    assert len(subset_mzrs[0]) > 1 and len(subset_mzrs[0]) <= 3, "Incorect number value in subset_mzrs"
+    return [dict(zip(["start", "end", "scan_type"], [float(mzr[0]), float(mzr[1]), str(mzr[2])])) for mzr in subset_mzrs]
 
-    fn_tsv = fn_tsv.encode('string-escape')
-    assert os.path.isfile(fn_tsv), "{} does not exist".format(fn_tsv)
-
-    exp = []
-
-    with open(fn_tsv) as fn_exp:
-
-        lines = fn_exp.readlines()
-        header = [name.lower() for name in lines[0].rstrip().split("\t")]
-
-        assert len(lines) >= 2, "too few rows"
-        assert len(header) <= 6 , "too many columns"
-        assert len(header) >= 2 , "too few columns"
-        assert "start" in header, "provide start value for each window"
-        assert "end" in header, "provide end value for each window"
-        assert False not in [False for h in header if h not in ["start", "end", "scan_type", "ms_type", "mode"]], "unknown column name"
-
-        for line in lines[1:]:
-
-            d = collections.OrderedDict(zip(header, line.rstrip().lower().split("\t")))
-
-            if "start" in d:
-                d["start"] = float(d["start"])
-            if "end" in d:
-                d["end"] = float(d["end"])
-            if "mode" in d:
-                assert d["mode"].lower() in ["p", "c"], "wrong mode (p or c)"
-            if "scan_type" in d:
-                assert d["scan_type"].lower() in ["sim", "full"], "scan type does not exist"
-            if "ms_type" in d:
-                assert d["ms_type"].lower() in ["ftms", "itms"], "ms type does not exist"
-            exp.append(d)
-    return exp
-
-
-def read_ms_exp_from_headers(mz_ranges):
+def interpret_experiment_from_headers(mz_ranges):
 
     mzrs = sort_mz_ranges(mz_ranges)
 
@@ -197,28 +164,30 @@ def read_ms_exp_from_headers(mz_ranges):
 
     #print len(mzrs), len(now), len(pow), len(ffow)
 
-    if len(now) == len(mzrs):
-        print "Experiment: Join non-overlapping windows"
+    if len(mz_ranges) == 1:
+        print "Reading scans (Single m/z range)....."
+    elif len(now) == len(mzrs):
+        print "Reading scans (Adjacent m/z ranges)....."
     elif len(pow) == len(mzrs):
-        print "Experiment: Stitch overlapping windows"
+        print "Reading scans (SIM-Stitch - Overlapping m/z ranges)....."
     elif len(ffow) > 0:
         del mzrs[ffow[0]]
         pow2 = _partially_overlapping_windows(mzrs)
         if len(pow2) == len(mzrs) - 1:
-            print "Experiment: Stitch overlapping windows (Fully overlapping window removed)"
+            print "Reading scans (SIM-Stitch - Overlapping m/z ranges)....."
         else:
-            print "Please, describe DIMS experiment - experiment too complex"
+            print "Please, describe DIMS method - Overlapping and/or non-overlapping m/z ranges"
     else:
-        print "Please, describe DIMS experiment - experiment too complex"
+        print "Please, describe DIMS method - Overlapping and/or non-overlapping m/z ranges"
 
     return mzrs.keys()
 
 
-def validate_source(tsv, source):
+def _check_paths(tsv, source):
 
     if tsv is None:
         if type(source) == list:
-            assert type(source[0]) == PeakList, "Incorrect Objects in list. Peaklist class required."
+            assert type(source[0]) == PeakList, "Incorrect Objects in list. PeakList class required."
             files = [pl.ID for pl in source]
         elif os.path.isdir(source.encode('string-escape')):
             files = [os.path.join(source, fn) for fn in os.listdir(source) if fn.lower().endswith(".mzml") or fn.lower().endswith(".raw")]
@@ -228,13 +197,11 @@ def validate_source(tsv, source):
                 files = [fn for fn in zf.namelist() if fn.lower().endswith(".mzml")]
 
     elif os.path.isfile(tsv):
-
         fm = np.genfromtxt(tsv.encode('string-escape'), dtype=None, delimiter="\t", names=True)
         if len(fm.shape) == 0:  # TODO: Added to check if filelist has a single row
             fm = np.array([fm])
-
-        assert fm.dtype.names[0] == "filename" or fm.dtype.names[0] == "sample_id" or fm.dtype.names[0] == "sample", \
-            "Incorrect header for first column. Use filename, sample_id or sample"
+        assert fm.dtype.names[0] == "filename" or fm.dtype.names[0] == "sample_id", \
+            "Incorrect header for first column. Use filename or sample_id"
 
         files = []
         if type(source) == list:
@@ -246,7 +213,7 @@ def validate_source(tsv, source):
         elif os.path.isdir(source):
             l = os.listdir(source.encode('string-escape'))
             for fn in fm[fm.dtype.names[0]]:
-                assert os.path.basename(fn) in l, "{} does not exist in directory".format(os.path.basename(fn))
+                assert os.path.basename(fn) in l, "{} does not exist in directory provided".format(os.path.basename(fn))
                 files.append(os.path.join(source, fn).replace('\\', r'\\'))
 
         elif zipfile.is_zipfile(source.encode('string-escape')):
@@ -256,21 +223,18 @@ def validate_source(tsv, source):
                     assert fn in zf.namelist(), "{} does not exist in .zip file".format(fn)
                     files.append(fn)
         else:
-            print "Can not read and parse {} and {}".format(source, tsv)
-            sys.exit()
+            raise IOError("Can not read and parse {} or {}".format(source, tsv))
     else:
-        print "Can not read and parse {} and {}".format(source, tsv)
-        sys.exit()
+        raise IOError("File {} does not exist".format(tsv))
 
     return files
 
 
-def validate_metadata(fn_tsv):
+def _lint_metadata(fn_tsv):
 
-    fn_tsv = fn_tsv.encode('string-escape')
-    assert os.path.isfile(fn_tsv), "{} does not exist".format(fn_tsv)
+    assert os.path.isfile(fn_tsv.encode('string-escape')), "{} does not exist".format(fn_tsv)
 
-    fm = np.genfromtxt(fn_tsv, dtype=None, delimiter="\t", names=True)
+    fm = np.genfromtxt(fn_tsv.encode('string-escape'), dtype=None, delimiter="\t", names=True)
     if len(fm.shape) == 0:  # TODO: Added to check if filelist has a single row
         fm = np.array([fm])
 
@@ -326,6 +290,34 @@ def validate_metadata(fn_tsv):
         warnings.warn("Column for class labels missing.")
 
     return fm_dict
+
+
+def _update_metadata(peaklists, fl):
+    assert isinstance(peaklists[0], PeakList), "PeakList object required"
+    for k in fl.keys():  # Update metadata
+        for pl in peaklists:
+            index = fl[fl.keys()[0]].index(pl.ID)
+            pl.metadata[k] = fl[k][index]
+    return peaklists
+
+
+def _update_class_labels(pm, fn_tsv):
+
+    assert os.path.isfile(fn_tsv.encode('string-escape')), "{} does not exist".format(fn_tsv)
+
+    fm = np.genfromtxt(fn_tsv.encode('string-escape'), dtype=None, delimiter="\t", names=True)
+    if len(fm.shape) == 0:  # TODO: Added to check if filelist has a single row
+        fm = np.array([fm])
+
+    assert "sample_id" == fm.dtype.names[0] or "filename" == fm.dtype.names[0], "Column for class labels not available"
+    assert "class" in fm.dtype.names, "Column for class label not available"
+    assert (fm[fm.dtype.names[0]] == pm.peaklist_ids).all(), "Sample ids do not match {}".format(np.setdiff1d(fm[fm.dtype.names[0]], pm.peaklist_ids))
+    # TODO: class_labels
+    for i in range(len(fm["class"])):
+        if pm.peaklist_tags[i].has_tag_type("class_label"):
+            pm.peaklist_tags[i].drop_tag_types("class_label")
+            pm.peaklist_tags[i].add_tags(class_label=fm["class"][i]) # TODO: fix raw parser to remove tags from metadata
+    return pm
 
 
 if __name__ == '__main__':

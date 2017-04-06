@@ -103,6 +103,7 @@ class PeakMatrix(object):
         assert self.shape[0] > 1, 'calculating RSD on less than 2 samples'
         rsd = (lambda m: _nzstd(m, 0) / _nzmean(m, 0) * 100)(self.intensity_matrix)
         rsd[np.where(map(lambda x: len(set(x[np.nonzero(x)])) == 1, self.intensity_matrix.T))] = np.nan
+        # TODO: Is this correct? What if we have 3 intensities that are identical?
         return rsd
 
     @property
@@ -228,7 +229,7 @@ if __name__ == '__main__':
     _mzs = lambda: sorted(np.random.uniform(100, 1000, size=100))
     _ints = lambda: np.abs(np.random.normal(10, 3, size=100))
 
-    pkls = [
+    pls = [
         PeakList('sample_1_1', _mzs(), _ints(), mz_range=(100, 1000)),
         PeakList('sample_1_2', _mzs(), _ints(), mz_range=(100, 1000)),
         PeakList('QC_1', _mzs(), _ints(), mz_range=(100, 1000)),
@@ -237,18 +238,18 @@ if __name__ == '__main__':
         PeakList('QC_2', _mzs(), _ints(), mz_range=(100, 1000)),
     ]
 
-    pkls[0].add_tags('sample', treatment='compound_1', time_point='1hr', plate=1)
-    pkls[1].add_tags('sample', treatment='compound_1', time_point='6hr', plate=1)
-    pkls[2].add_tags('qc', plate=1)
-    pkls[3].add_tags('sample', treatment='compound_2', time_point='1hr', plate=2)
-    pkls[4].add_tags('sample', treatment='compound_2', time_point='6hr', plate=2)
-    pkls[5].add_tags('qc', plate=2)
+    pls[0].add_tags('sample', treatment='compound_1', time_point='1hr', plate=1)
+    pls[1].add_tags('sample', treatment='compound_1', time_point='6hr', plate=1)
+    pls[2].add_tags('qc', plate=1)
+    pls[3].add_tags('sample', treatment='compound_2', time_point='1hr', plate=2)
+    pls[4].add_tags('sample', treatment='compound_2', time_point='6hr', plate=2)
+    pls[5].add_tags('qc', plate=2)
 
     # create matrix
     pm = PeakMatrix(
-        [p.ID for p in pkls],
-        [p.tags for p in pkls],
-        {a: np.vstack([p.get_attribute(a) for p in pkls]) for a in pkls[0].attributes}
+        [p.ID for p in pls],
+        [p.tags for p in pls],
+        {a: np.vstack([p.get_attribute(a) for p in pls]) for a in pls[0].attributes}
     )
 
     import pdb;

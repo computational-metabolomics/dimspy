@@ -26,11 +26,20 @@ def main():
     # # ZIP FILE WORKS!
     fn_fls = os.path.join("..", 'tests', 'data', "MTBLS79_subset", 'filelist_mzML.tsv')
     #fn_fls = os.path.join("..", 'tests', 'data', "MTBLS79_subset", 'filelist_mzML_error.tsv')
+    #fn_fls = os.path.join("..", 'tests', 'data', "MTBLS79_subset", 'filelist_mzML_without_class.tsv')
     fn_fls_subset = os.path.join("..", 'tests', 'data', "MTBLS79_subset", 'filelist_mzML_subset.tsv')
     fn_sample_ids = os.path.join("..", 'tests', 'data', "MTBLS79_subset", 'sample_ids_subset.tsv')
     source = os.path.join('..', 'tests', 'data', "MTBLS79_subset", "MTBLS79_subset.zip")
-    source = os.path.join('..', 'tests', 'data', "MTBLS79_subset")
+    class_labels = os.path.join('..', 'tests', 'data', "MTBLS79_subset", "class_labels.tsv")
 
+    source_txt = os.path.join('..', 'tests', 'data', "peaklists_txt")#, "peaklists_txt.zip")# "peaklists_txt")
+    fn_fls_txt_subset = os.path.join("..", 'tests', 'data', "peaklists_txt", 'filelist_txt_subset.tsv')
+    #source = os.path.join('..', 'tests', 'data', "MTBLS79_subset")
+
+
+    #source = "E:\\GitHub\\dimspy\\tests\\data\\raw_files_testing\\"
+
+    #source = "E:\Dropbox\Projects\Science\data\External\TrentUniversity\Orbitrap_TrentU_out\\"
 
     # porder = [pdct[i] for i in pids]
     # ALL SCANS AND NO RSD FILTER
@@ -44,24 +53,28 @@ def main():
     #                    snr_thres=3.0, ppm=2.0, min_fraction=0.5, rsd_thres=None, block_size=200, ncpus=None)
 
     # SINGLE SCANS
-    pls = process_scans(source, fn_fls_subset, nscans=1, fn_exp=None, function_noise="median",
-                        snr_thres=3.0, ppm=2.0, min_fraction=0.5, rsd_thres=30.0, block_size=2000, ncpus=None)
+    #pls = process_scans(source, nscans=1, function_noise="median",
+    #                    snr_thres=3.0, ppm=2.0, min_fraction=0.5, rsd_thres=30.0, block_size=2000, ncpus=None)
+
+    # SINGLE SCANS
+    pls = process_scans(source, nscans=1, function_noise="median",
+                        snr_thres=3.0, ppm=2.0, min_fraction=0.5, rsd_thres=30.0, filelist=fn_fls_subset, fn_exp=None, block_size=2000, ncpus=None)
     # export
-    print
-    for pl in pls:
-        print pl.ID, pl.shape
-        with open(os.path.join('output', pl.ID + ".txt"), "w") as out: out.write(pl.to_str("\t"))
+    #print
+    #for pl in pls:
+    #    print pl.ID, pl.shape
+    #    with open(os.path.join('output', pl.ID + ".txt"), "w") as out: out.write(pl.to_str("\t"))
+
     #cp.dump(pls, open(os.path.join('output', "pls.pkl"), "w"))
     #pls = cp.load(open(os.path.join('output', "pls.pkl"), "r"))
 
     # replicate Filter
     # ----------------------------------------------
-    print
+    # print
     print "Replicate Filter...."
-    pls_rf = replicate_filter(pls, ppm=2.0, reps=3, minpeaks=2, rsd_thres=20.0, filelist=fn_fls_subset)
+    pls_rf_txt = replicate_filter(source_txt, ppm=2.0, reps=3, minpeaks=2, rsd_thres=20.0, filelist=fn_fls_txt_subset)
     print "Finished"
 
-    print
     print "Replicate Filter...."
     pls_rf = replicate_filter(pls, ppm=2.0, reps=3, minpeaks=2, rsd_thres=20.0)
     print "Finished"
@@ -75,6 +88,12 @@ def main():
 
     # alignment
     # ----------------------------------------------
+
+    print
+    print "Align Samples...."
+    pm = align_samples(source_txt, ppm=2.0, filelist=fn_fls_txt_subset)
+    print "Finished", pm.shape
+
     print
     print "Align Samples...."
     pm = align_samples(pls_rf, ppm=2.0, filelist=fn_sample_ids)
@@ -95,17 +114,35 @@ def main():
     pm_bf = blank_filter(pm, "blank", min_fraction=1.0, min_fold_change=10.0, function="mean", rm_samples=True)
     print "Finished", pm_bf.shape
 
+    print
+    print "Blank Filter"
+    pm_bf = blank_filter(pm, "blank", min_fraction=1.0, min_fold_change=10.0, function="mean", rm_samples=True, tsv_labels=class_labels)
+    print "Finished", pm_bf.shape
+
     cp.dump(pm, open(os.path.join('output', "pm_bf.pkl"), "w"))
     with open(os.path.join('output', "pm_bf.txt"), "w") as out: out.write(pm.to_str('\t'))
+
 
     # sample Filter
     # ----------------------------------------------
     print
+    pm_bf = cp.load(open(os.path.join('output', "pm_bf.pkl"), "r"))
     print "Sample Filter"
-    pm_bf_sf = sample_filter(pm_bf, 0.8, within=False)
+    pm_bf_sf = sample_filter(pm_bf, 0.8, within=False, tsv_labels=class_labels)
     print "Finished(1)", pm_bf_sf.shape
 
-    """
+
+    print
+    print "Sample Filter"
+    class_labels = os.path.join('..', 'tests', 'data', "MTBLS79_subset", "class_labels.tsv")
+    pm_bf_sf = sample_filter(pm_bf, 0.8, within=True, tsv_labels=class_labels)
+    print "Finished(1)", pm_bf_sf.shape
+
+    print
+    print "Sample Filter"
+    pm_bf_sf = sample_filter(pm_bf, 0.8, within=True)
+    print "Finished(1)", pm_bf_sf.shape
+
     pm_bf_sf = sample_filter(pm, 0.8, within=False, rsd=30.0, qc_label=None)
     print "Finished(2)", pm_bf_sf.shape
     
@@ -116,7 +153,6 @@ def main():
     
     pm_bf_sf = sample_filter(pm, 0.8, within=True, rsd=30.0, qc_label=None)
     print "Finished(4)", pm_bf_sf.shape
-    """
 
 # main
 if __name__ == '__main__':
