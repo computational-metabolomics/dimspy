@@ -5,11 +5,11 @@
 author(s): Ralf Weber
 origin: Nov. 2016
 """
-import time
 import os
-import cPickle as pickle
 import numpy as np
 import collections
+import zipfile
+import h5py
 
 from process.peak_alignment import align_peaks
 from process.scan_processing import read_scans
@@ -22,23 +22,24 @@ from process.peak_filters import filter_across_classes
 from process.peak_filters import filter_within_classes
 from process.peak_filters import filter_rsd
 
-from experiment import _check_paths
-from experiment import _lint_metadata
-from experiment import _update_metadata
-from experiment import _update_class_labels
+from portals import check_paths
+from experiment import check_metadata
+from experiment import update_metadata
+from experiment import update_class_labels
 
-from io import textfiles_to_peaklist
-
+from portals import load_peaklists
+from portals import text_to_peaklist
+from portals import hdf5_to_peaklists
 from models.peaklist import PeakList
 
 
 def process_scans(source, function_noise, snr_thres, nscans, ppm, min_fraction=None, rsd_thres=None, filelist=None, subset_mzrs=None, block_size=2000, ncpus=None):
 
-    filenames = _check_paths(filelist, source)
+    filenames = check_paths(filelist, source)
     assert len([fn for fn in filenames if not fn.lower().endswith(".mzml") or not fn.lower().endswith(".raw")]) > 0, "Incorrect file format. Provide .mzML and .raw files"
 
     if filelist is not None:
-        fl = _lint_metadata(filelist)
+        fl = check_metadata(filelist)
     else:
         fl = collections.OrderedDict()
 
@@ -71,23 +72,16 @@ def stitch(source, filelist, fn_exp, nscans, function_noise, snr_thres, ppm, pre
     return process_scans(source, filelist, fn_exp, nscans, function_noise, snr_thres, ppm, presence_thres, rsd_thres, block_size, ncpus)
 
 
-def replicate_filter(peaklists, ppm, reps, minpeaks, rsd_thres=None, filelist=None, block_size=2000, ncpus=None):
+def replicate_filter(source, ppm, reps, minpeaks, rsd_thres=None, filelist=None, block_size=2000, ncpus=None):
 
-    filenames = _check_paths(filelist, peaklists)
-
+    filenames = check_paths(filelist, source)
     assert len(filenames) > 0, "Provide a filelist that list all the text files (columnname:filename) and assign replicate numbers to each filename/sample (columnname:replicate)"
-
-    #if isinstance(peaklists, hdf5):
-    #   peaklists = _hdf5(source)
-    if not filenames[0].lower().endswith(".mzml") and not filenames[0].lower().endswith(".raw") and type(peaklists) is not list:
-        peaklists = textfiles_to_peaklist(peaklists, filenames)
-    elif not isinstance(peaklists[0], PeakList):
-        raise TypeError("Incorrect format. Process .mzML and .raw files first using the 'process scans' function")
+    peaklists = load_peaklists(source)
 
     if filelist is not None:
-        fl = _lint_metadata(filelist)
+        fl = check_metadata(filelist)
         peaklists = [pl for pl in peaklists if pl.ID in [os.path.basename(fn) for fn in filenames]]
-        peaklists = _update_metadata(peaklists, fl)
+        peaklists = update_metadata(peaklists, fl)
 
     assert hasattr(peaklists[0].metadata, "replicate"), "Provide a filelist and assign replicate numbers (columnname:replicate) to each filename/sample"
 
@@ -124,21 +118,15 @@ def replicate_filter(peaklists, ppm, reps, minpeaks, rsd_thres=None, filelist=No
     return pls_rep_filt
 
 
-def align_samples(peaklists, ppm, filelist=None, block_size=2000, ncpus=None):
+def align_samples(source, ppm, filelist=None, block_size=2000, ncpus=None):
 
-    filenames = _check_paths(filelist, peaklists)
-
-    #if isinstance(peaklists, hdf5):
-    #   peaklists = _hdf5(source)
-    if not filenames[0].lower().endswith(".mzml") and not filenames[0].lower().endswith(".raw") and type(peaklists) is not list:
-        peaklists = textfiles_to_peaklist(peaklists, filenames)
-    elif not isinstance(peaklists[0], PeakList):
-        raise TypeError("Incorrect format. Process .mzML and .raw files first using the 'process scans' function")
+    filenames = check_paths(filelist, source)
+    peaklists = load_peaklists(source)
 
     if filelist is not None:
-        fl = _lint_metadata(filelist)
+        fl = check_metadata(filelist)
         peaklists = [pl for pl in peaklists if pl.ID in [os.path.basename(fn) for fn in filenames]]
-        peaklists = _update_metadata(peaklists, fl)
+        peaklists = update_metadata(peaklists, fl)
 
     return align_peaks(peaklists, ppm=ppm, block_size=block_size, byunique=False, ncpus=ncpus)
 
@@ -150,7 +138,7 @@ def blank_filter(peak_matrix, blank_label, min_fraction=1.0, min_fold_change=1.0
     assert function in ("mean", "median", "max"), "Mean, median or max intensity"
 
     if tsv_labels is not None:
-        _update_class_labels(peak_matrix, tsv_labels)
+        peak_matrix = update_class_labels(peak_matrix, tsv_labels)
 
     assert blank_label in peak_matrix.peaklist_tag_values, "Blank label ({}) does not exist".format(blank_label)
 
@@ -161,7 +149,7 @@ def sample_filter(peak_matrix, min_fraction, within=False, rsd=None, qc_label=No
 
     if tsv_labels is not None:
         assert os.path.isfile(tsv_labels), "File with class labels not available"
-        _update_class_labels(peak_matrix, tsv_labels)
+        peak_matrix = update_class_labels(peak_matrix, tsv_labels)
 
     if qc_label is not None:
         assert qc_label in peak_matrix.peaklist_tag_values
@@ -173,5 +161,3 @@ def sample_filter(peak_matrix, min_fraction, within=False, rsd=None, qc_label=No
     if rsd is not None:
         peak_matrix = filter_rsd(peak_matrix, rsd, qc_label)
     return peak_matrix
-
-

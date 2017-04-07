@@ -16,7 +16,7 @@ import copy
 import numpy as np
 import zipfile
 from models.peaklist import PeakList
-import io
+import portals
 
 def mz_range_from_header(h):
     return [float(m) for m in re.findall(r'([\w\.-]+)-([\w\.-]+)', h)[0]]
@@ -154,6 +154,7 @@ def define_mz_ranges(subset_mzrs):
     assert len(subset_mzrs[0]) > 1 and len(subset_mzrs[0]) <= 3, "Incorect number value in subset_mzrs"
     return [dict(zip(["start", "end", "scan_type"], [float(mzr[0]), float(mzr[1]), str(mzr[2])])) for mzr in subset_mzrs]
 
+
 def interpret_experiment_from_headers(mz_ranges):
 
     mzrs = sort_mz_ranges(mz_ranges)
@@ -183,54 +184,7 @@ def interpret_experiment_from_headers(mz_ranges):
     return mzrs.keys()
 
 
-def _check_paths(tsv, source):
-
-    if tsv is None:
-        if type(source) == list:
-            assert type(source[0]) == PeakList, "Incorrect Objects in list. PeakList class required."
-            files = [pl.ID for pl in source]
-        elif os.path.isdir(source.encode('string-escape')):
-            files = [os.path.join(source, fn) for fn in os.listdir(source) if fn.lower().endswith(".mzml") or fn.lower().endswith(".raw")]
-        elif zipfile.is_zipfile(source.encode('string-escape')):
-            with zipfile.ZipFile(source.encode('string-escape')) as zf:
-                assert len([fn for fn in zf.namelist() if fn.lower().endswith(".raw")]) == 0, "Archive with *.raw files not yet supported. Convert to mzML"
-                files = [fn for fn in zf.namelist() if fn.lower().endswith(".mzml")]
-
-    elif os.path.isfile(tsv):
-        fm = np.genfromtxt(tsv.encode('string-escape'), dtype=None, delimiter="\t", names=True)
-        if len(fm.shape) == 0:  # TODO: Added to check if filelist has a single row
-            fm = np.array([fm])
-        assert fm.dtype.names[0] == "filename" or fm.dtype.names[0] == "sample_id", \
-            "Incorrect header for first column. Use filename or sample_id"
-
-        files = []
-        if type(source) == list:
-            assert type(source[0]) == PeakList, "Incorrect Objects in list. Peaklist Object required."
-            for fn in fm[fm.dtype.names[0]]:
-                assert fn in [pl.ID for pl in source], "{} does not exist in list with Objects".format(fn)
-                files.append(fn)
-
-        elif os.path.isdir(source):
-            l = os.listdir(source.encode('string-escape'))
-            for fn in fm[fm.dtype.names[0]]:
-                assert os.path.basename(fn) in l, "{} does not exist in directory provided".format(os.path.basename(fn))
-                files.append(os.path.join(source, fn).replace('\\', r'\\'))
-
-        elif zipfile.is_zipfile(source.encode('string-escape')):
-            with zipfile.ZipFile(source) as zf:
-                assert len([fn for fn in zf.namelist() if fn.lower().endswith(".raw")]) == 0, "Archive with *.raw files not yet supported. Convert to mzML"
-                for fn in fm[fm.dtype.names[0]]:
-                    assert fn in zf.namelist(), "{} does not exist in .zip file".format(fn)
-                    files.append(fn)
-        else:
-            raise IOError("Can not read and parse {} or {}".format(source, tsv))
-    else:
-        raise IOError("File {} does not exist".format(tsv))
-
-    return files
-
-
-def _lint_metadata(fn_tsv):
+def check_metadata(fn_tsv):
 
     assert os.path.isfile(fn_tsv.encode('string-escape')), "{} does not exist".format(fn_tsv)
 
@@ -292,7 +246,7 @@ def _lint_metadata(fn_tsv):
     return fm_dict
 
 
-def _update_metadata(peaklists, fl):
+def update_metadata(peaklists, fl):
     assert isinstance(peaklists[0], PeakList), "PeakList object required"
     for k in fl.keys():  # Update metadata
         for pl in peaklists:
@@ -301,7 +255,7 @@ def _update_metadata(peaklists, fl):
     return peaklists
 
 
-def _update_class_labels(pm, fn_tsv):
+def update_class_labels(pm, fn_tsv):
 
     assert os.path.isfile(fn_tsv.encode('string-escape')), "{} does not exist".format(fn_tsv)
 

@@ -8,7 +8,7 @@ from dimspy.workflow import blank_filter
 from dimspy.workflow import sample_filter
 
 def main():
-
+    """
     # Example 1 - mzML files (zip file)
     source = os.path.join("..", "tests", "data", "MTBLS79_subset", "MTBLS79_subset.zip")
     fn_filelist = os.path.join("..", "tests", "data", "MTBLS79_subset", "filelist_mzML.txt")
@@ -40,7 +40,7 @@ def main():
     print "Sample Filter"
     pm_bf_sf = sample_filter(pm_bf, 0.8, within=False)
     print "Finished", pm_bf_sf.shape
-
+    """
 
     # Example 2 - RAW files (Directory)
     source = os.path.join("..", "tests", "data", "MTBLS79_subset", "raw")
