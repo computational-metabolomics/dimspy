@@ -1,2 +1,1 @@
--r requirements.txt
 comtypes>=0.6.4

@@ -1,19 +1,12 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-
-"""
-Define DIMS experiment
-
-author(s): Ralf Weber
-origin: Oct. 2016
-"""
 import os
 import warnings
 import collections
 import re
 import copy
 import numpy as np
-import zipfile
+from models.peaklist import PeakList
 
 
 def mz_range_from_header(h):
@@ -148,45 +141,12 @@ def remove_headers(exp, mzrs):
     return mzrs
 
 
-def read_ms_exp_from_file(fn_tsv):
-
-    fn_tsv = fn_tsv.encode('string-escape')
-    assert os.path.isfile(fn_tsv), "{} does not exist".format(fn_tsv)
-
-    with open(fn_tsv) as fn_exp:
-
-        exp = []
-
-        lines =  fn_exp.readlines()
-        header = [name.lower() for name in lines[0].rstrip().split("\t")]
-
-        assert len(lines) >= 2, "too few rows"
-        assert len(header) <= 6 , "too many columns"
-        assert len(header) >= 2 , "too few columns"
-        assert "start" in header, "provide start value for each window"
-        assert "end" in header, "provide end value for each window"
-        assert False not in [False for h in header if h not in ["start", "end", "scan_type", "ms_type", "mode"]], "unknown column name"
-
-        for line in lines[1:]:
-
-            d = collections.OrderedDict(zip(header, line.rstrip().lower().split("\t")))
-
-            if "start" in d:
-                d["start"] = float(d["start"])
-            if "end" in d:
-                d["end"] = float(d["end"])
-            if "mode" in d:
-                assert d["mode"].lower() in ["p", "c"], "wrong mode (p or c)"
-            if "scan_type" in d:
-                assert d["scan_type"].lower() in ["sim", "full"], "scan type does not exist"
-            if "ms_type" in d:
-                assert d["ms_type"].lower() in ["ftms", "itms"], "ms type does not exist"
-            exp.append(d)
-        return exp
-    return []
+def define_mz_ranges(subset_mzrs):
+    assert len(subset_mzrs[0]) > 1 and len(subset_mzrs[0]) <= 3, "Incorect number value in subset_mzrs"
+    return [dict(zip(["start", "end", "scan_type"], [float(mzr[0]), float(mzr[1]), str(mzr[2])])) for mzr in subset_mzrs]
 
 
-def read_ms_exp_from_headers(mz_ranges):
+def interpret_experiment_from_headers(mz_ranges):
 
     mzrs = sort_mz_ranges(mz_ranges)
 
@@ -196,75 +156,59 @@ def read_ms_exp_from_headers(mz_ranges):
 
     #print len(mzrs), len(now), len(pow), len(ffow)
 
-    if len(now) == len(mzrs):
-        print "Experiment: Join non-overlapping windows"
+    if len(mz_ranges) == 1:
+        print "Reading scans (Single m/z range)....."
+    elif len(now) == len(mzrs):
+        print "Reading scans (Adjacent m/z ranges)....."
     elif len(pow) == len(mzrs):
-        print "Experiment: Stitch overlapping windows"
+        print "Reading scans (SIM-Stitch - Overlapping m/z ranges)....."
     elif len(ffow) > 0:
         del mzrs[ffow[0]]
         pow2 = _partially_overlapping_windows(mzrs)
         if len(pow2) == len(mzrs) - 1:
-            print "Experiment: Stitch overlapping windows (Fully overlapping window removed)"
+            print "Reading scans (SIM-Stitch - Overlapping m/z ranges)....."
         else:
-            print "Please, describe DIMS experiment - experiment too complex"
+            print "Please, describe DIMS method - Overlapping and/or non-overlapping m/z ranges"
     else:
-        print "Please, describe DIMS experiment - experiment too complex"
+        print "Please, describe DIMS method - Overlapping and/or non-overlapping m/z ranges"
 
     return mzrs.keys()
 
 
-def read_filelist(fn_tsv, source):
+def check_metadata(fn_tsv):
 
-    source = source.encode('string-escape')
-    fn_tsv = fn_tsv.encode('string-escape')
+    assert os.path.isfile(fn_tsv.encode('string-escape')), "{} does not exist".format(fn_tsv)
 
-    assert os.path.isfile(fn_tsv), "{} does not exist".format(fn_tsv)
-    assert zipfile.is_zipfile(source) or os.path.isdir(source), "path or .zip archive does not exist"
-
-    fm = np.genfromtxt(fn_tsv, dtype=None, delimiter="\t", names=True)
-    if len(fm.shape) == 0: # TODO: Added to check if filelist has a single row
+    fm = np.genfromtxt(fn_tsv.encode('string-escape'), dtype=None, delimiter="\t", names=True)
+    if len(fm.shape) == 0:  # TODO: Added to check if filelist has a single row
         fm = np.array([fm])
 
-    col_names = fm.dtype.fields.keys()
-
     fm_dict = collections.OrderedDict()
-    for k in col_names:
+    for k in fm.dtype.names:
         fm_dict[k] = list(fm[k])
 
-    if zipfile.is_zipfile(source):
-        l = zipfile.ZipFile(source)
-        for fn in fm["filename"]:
-            assert fn in l.namelist(), "{} does not exist in .zip file".format(fn)
-
-    elif os.path.isdir(source):
-        l = os.listdir(source)
-        for i in range(len(fm["filename"])):
-            assert os.path.basename(fm["filename"][i]) in l, "{} does not exist in directory".format(os.path.basename(fm["filename"][i]))
-            fn = str(fm["filename"][i])
-            if os.path.basename(fn) == fm["filename"][i]:
-                fm_dict["filename"][i] = os.path.join(source, fn).replace('\\', r'\\')
-
-    #if "blank" not in col_names and "Blank" not in col_names:
+    #if "blank" not in fm.dtype.names and "Blank" not in fm.dtype.names:
     #    warnings.warn("No samples marked as blank. Column missing.")
     #else:
     #    unique, counts = np.unique(fm["blank"], return_counts=True)
     #    print "Blank samples:", counts
 
-    #if "qc" not in col_names and "QC" not in col_names:
+    #if "qc" not in fm.dtype.names and "QC" not in fm.dtype.names:
     #    warnings.warn("No samples marked as QC. Column missing.")
     #else:
     #    unique, counts = np.unique(fm["qc"], return_counts=True)
     #    print "QC samples:", counts
 
-    if "replicate" in col_names:
+    unique_reps = [1]
+    if "replicate" in fm.dtype.names:
         unique_reps, counts = np.unique(fm["replicate"], return_counts=True)
         assert len(np.unique(counts)) == 1, "Incorrect numbering of replicates"
         assert len(unique_reps) == max(unique_reps), "Incorrect numbering of replicates"
         print "Replicates:", dict(zip(unique_reps, counts))
     else:
-        print "Column for replicate numbers missing"
+        print "Column for replicate numbers missing. Only required for replicate filter."
 
-    if "batch" in col_names:
+    if "batch" in fm.dtype.names:
         unique_batches, counts = np.unique(fm["batch"], return_counts=True)
         #assert np.array_equal(fm["batch"], sorted(fm["batch"])), "mixed order of batches"
         print "Batch numbers:", unique_batches
@@ -272,13 +216,12 @@ def read_filelist(fn_tsv, source):
     else:
         print "Column for batch number missing. Not required."
 
-    if "order" in col_names:
+    if "order" in fm.dtype.names:
         assert np.array_equal(fm["order"], sorted(fm["order"])), "Check the order column - samples not in order"
     else:
         print "Column for sample order missing. Not required."
 
-    if "class" in col_names:
-
+    if "class" in fm.dtype.names:
         ra = range(0, len(fm["class"]), max(unique_reps))
         for i in range(0, len(ra)-1):
             assert len(np.unique(fm["class"][ra[i]:ra[i+1]])) == 1, "class names do not match with number of replicates"
@@ -291,6 +234,34 @@ def read_filelist(fn_tsv, source):
         warnings.warn("Column for class labels missing.")
 
     return fm_dict
+
+
+def update_metadata(peaklists, fl):
+    assert isinstance(peaklists[0], PeakList), "PeakList object required"
+    for k in fl.keys():  # Update metadata
+        for pl in peaklists:
+            index = fl[fl.keys()[0]].index(pl.ID)
+            pl.metadata[k] = fl[k][index]
+    return peaklists
+
+
+def update_class_labels(pm, fn_tsv):
+
+    assert os.path.isfile(fn_tsv.encode('string-escape')), "{} does not exist".format(fn_tsv)
+
+    fm = np.genfromtxt(fn_tsv.encode('string-escape'), dtype=None, delimiter="\t", names=True)
+    if len(fm.shape) == 0:  # TODO: Added to check if filelist has a single row
+        fm = np.array([fm])
+
+    assert "sample_id" == fm.dtype.names[0] or "filename" == fm.dtype.names[0], "Column for class labels not available"
+    assert "class" in fm.dtype.names, "Column for class label not available"
+    assert (fm[fm.dtype.names[0]] == pm.peaklist_ids).all(), "Sample ids do not match {}".format(np.setdiff1d(fm[fm.dtype.names[0]], pm.peaklist_ids))
+    # TODO: class_labels
+    for i in range(len(fm["class"])):
+        if pm.peaklist_tags[i].has_tag_type("class_label"):
+            pm.peaklist_tags[i].drop_tag_types("class_label")
+            pm.peaklist_tags[i].add_tags(class_label=fm["class"][i]) # TODO: fix raw parser to remove tags from metadata
+    return pm
 
 
 if __name__ == '__main__':

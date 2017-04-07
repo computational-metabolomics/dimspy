@@ -1,70 +1,56 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-
-"""
-author(s): Ralf Weber
-origin: Nov. 2016
-"""
-import time
 import os
-import sys
-import zipfile
-import cPickle as pickle
 import numpy as np
-
-from models.peak_matrix import PeakMatrix
-from models.peaklist import PeakList
-
+import collections
 from process.peak_alignment import align_peaks
-from process.scan_processing import read_scan_data
-from process.scan_processing import process_replicate_scans
+from process.scan_processing import read_scans
+from process.scan_processing import average_replicate_scans
 from process.scan_processing import remove_edges
 from process.scan_processing import join_peaklists
-
 from process.peak_filters import filter_blank_peaks
 from process.peak_filters import filter_across_classes
 from process.peak_filters import filter_within_classes
 from process.peak_filters import filter_rsd
+from portals import check_paths
+from experiment import check_metadata
+from experiment import update_metadata
+from experiment import update_class_labels
+from portals import load_peaklists
 
-from experiment import read_filelist
 
+def process_scans(source, function_noise, snr_thres, nscans, ppm, min_fraction=None, rsd_thres=None, filelist=None, subset_mzrs=None, block_size=2000, ncpus=None):
 
-def process_scans(source, filelist, fn_exp, nscans, function_noise, snr_thres, ppm, min_fraction=None, rsd_thres=None, block_size=2000, ncpus=None):
+    filenames = check_paths(filelist, source)
+    assert len([fn for fn in filenames if not fn.lower().endswith(".mzml") or not fn.lower().endswith(".raw")]) > 0, "Incorrect file format. Provide .mzML and .raw files"
 
-    if filelist is None and os.path.isdir(source):
-        fl = {"filename":[os.path.join(source,fn) for fn in os.listdir(source) if fn.lower().endswith(".mzml") or fn.lower().endswith(".raw")]}
-    elif filelist is None and zipfile.is_zipfile(source):
-        with zipfile.ZipFile(source) as zf:
-            assert len([fn for fn in zf.namelist() if fn.lower().endswith(".raw")]) == 0, "Archive with *.raw files not yet supported"
-            fl = {"filename": [fn for fn in zf.namelist() if fn.lower().endswith(".mzml")]}
-    elif os.path.isfile(filelist) and zipfile.is_zipfile(source):
-        with zipfile.ZipFile(source) as zf:
-            assert len([fn for fn in zf.namelist() if fn.lower().endswith(".raw")]) == 0, "Archive with *.raw files not yet supported"
-        fl = read_filelist(filelist, source)
-    elif os.path.isfile(filelist) and os.path.isdir(source):
-        fl = read_filelist(filelist, source)
+    if filelist is not None:
+        fl = check_metadata(filelist)
     else:
-        print "Can not read and parse {} and {}".format(source, filelist)
-        sys.exit()
+        fl = collections.OrderedDict()
 
-    pkls = []
-    for i in range(len(fl["filename"])):
+    pls = []
+    for i in range(len(filenames)):
 
         print
-        print fl["filename"][i]
+        print os.path.basename(filenames[i])
 
-        scans = read_scan_data(fl["filename"][i], source, function_noise, nscans, fn_exp)
-        scans_re = remove_edges(scans)
+        scans = read_scans(filenames[i], source, function_noise, nscans, subset_mzrs)
+        scans_er = remove_edges(scans)
 
-        prs = process_replicate_scans(scans_re, snr_thres, ppm, min_fraction, rsd_thres, block_size, ncpus)
+        prs = average_replicate_scans(scans_er, snr_thres, ppm, min_fraction, rsd_thres, block_size, ncpus)
+        pl = join_peaklists(os.path.basename(filenames[i]), prs)
 
-        cl = ()
-        if "class" in fl: cl = (fl["class"][i],)
+        if "class" in fl:
+            pl.add_tags(class_label=fl["class"][i])  # TODO: Tags from metadata
+            # pl.add_tags(class_label2=fl["class"][i]) # TODO: Tags from metadata
+            # TODO: assert not any(map(lambda x: x in self.tag_values, list(args) + kwargs.values())), 'tag already exists'
 
-        pkl = join_peaklists(os.path.basename(fl["filename"][i]), prs, cl)
-        for k in fl.keys(): pkl.metadata[k] = fl[k][i]
-        pkls.append(pkl)
-    return pkls
+        for k in fl.keys():
+            pl.metadata[k] = fl[k][i]
+
+        pls.append(pl)
+    return pls
 
 
 # placeholder (synonym)
@@ -72,78 +58,94 @@ def stitch(source, filelist, fn_exp, nscans, function_noise, snr_thres, ppm, pre
     return process_scans(source, filelist, fn_exp, nscans, function_noise, snr_thres, ppm, presence_thres, rsd_thres, block_size, ncpus)
 
 
-def replicate_filter(peaklists, ppm, reps, minpeaks, rsd_thres=None, block_size=2000, ncpus=None):
+def replicate_filter(source, ppm, reps, minpeaks, rsd_thres=None, filelist=None, block_size=2000, ncpus=None):
 
-    assert type(peaklists) == list, "Provide list of peaklists"
+    filenames = check_paths(filelist, source)
+    assert len(filenames) > 0, "Provide a filelist that list all the text files (columnname:filename) and assign replicate numbers to each filename/sample (columnname:replicate)"
+    peaklists = load_peaklists(source)
+
+    if filelist is not None:
+        fl = check_metadata(filelist)
+        peaklists = [pl for pl in peaklists if pl.ID in [os.path.basename(fn) for fn in filenames]]
+        peaklists = update_metadata(peaklists, fl)
+
+    assert hasattr(peaklists[0].metadata, "replicate"), "Provide a filelist and assign replicate numbers (columnname:replicate) to each filename/sample"
 
     unique, counts = np.unique([pl.metadata.replicate for pl in peaklists], return_counts=True)
     assert max(unique) == reps, "replicates missing (1)"
     assert len(counts) == reps, "replicates missing (2)"
     assert sum(counts) == len(peaklists), "replicates missing (3)"
     assert list(unique) == range(1, reps+1), "replicates missing (4)"
-    assert len(counts) > 1, "No technical replicates available (single) - No need to run replicate filter "
+    assert len(counts) > 1, "No technical replicates available (single) - Skip replicate filter "
 
     idx_peaklists = range(0, len(peaklists) + reps, reps)
-    pkls_rep_filt = []
+    pls_rep_filt = []
     for i in range(len(idx_peaklists)-1):
 
         pls = peaklists[idx_peaklists[i]:idx_peaklists[i+1]]
         pm = align_peaks(pls, ppm, block_size, byunique=False, ncpus=ncpus)
         #############################################################
-        # Write some sort of merging function for multiple replicate file names
+        # TODO: Write some sort of merging function for multiple replicate file names
         #############################################################
         prefix = os.path.commonprefix([p.ID for p in pls])
         merged_id = "{}{}".format(prefix, "_".join(map(str, [p.ID.replace(prefix, "").split(".")[0] for p in pls])))
         #############################################################
 
-        pkl = pm.to_peaklist(ID = merged_id)
-        pkl.add_tags(class_name = pls[0].metadata.tags[0]) # TODO: fix raw parser to remove tags from metadata
-        pkl.add_attribute("present", pm.present)
-        pkl.add_attribute("rsd", pm.rsd)
-        pkl.add_attribute("present_flag", pm.present >= minpeaks, is_flag=True)
-        if rsd_thres is not None: pkl.add_attribute("rsd_flag", pm.rsd <= rsd_thres, flagged_only=False, is_flag=True)
+        pl = pm.to_peaklist(ID=merged_id)
+        for j, t in enumerate(pls[0].tag_types):  # TODO:
+            pl.add_tags(t, pls[0].tag_values[j])
+        pl.add_attribute("present", pm.present)
+        pl.add_attribute("rsd", pm.rsd)
+        pl.add_attribute("present_flag", pm.present >= minpeaks, is_flag=True)
+        if rsd_thres is not None:
+            pl.add_attribute("rsd_flag", pm.rsd <= rsd_thres, flagged_only=False, is_flag=True)
         for k in pls[0].metadata:
-            if k != "filename": pkl.metadata[k] = pls[0].metadata[k]
-        pkls_rep_filt.append(pkl)
-    return pkls_rep_filt
+            if k != "filename":
+                pl.metadata[k] = pls[0].metadata[k]
+        pls_rep_filt.append(pl)
+    return pls_rep_filt
 
 
-def align_samples(peaklists, ppm, block_size=2000, ncpus=None):
-    return align_peaks(peaklists, ppm=2.0, block_size=block_size, byunique=False, ncpus=ncpus)
+def align_samples(source, ppm, filelist=None, block_size=2000, ncpus=None):
+
+    filenames = check_paths(filelist, source)
+    peaklists = load_peaklists(source)
+
+    if filelist is not None:
+        fl = check_metadata(filelist)
+        peaklists = [pl for pl in peaklists if pl.ID in [os.path.basename(fn) for fn in filenames]]
+        peaklists = update_metadata(peaklists, fl)
+
+    return align_peaks(peaklists, ppm=ppm, block_size=block_size, byunique=False, ncpus=ncpus)
 
 
-def blank_filter(peak_matrix, blank_label, min_fraction=1.0, min_fold_change=1.0, function="mean", rm_samples=True):
+def blank_filter(peak_matrix, blank_label, min_fraction=1.0, min_fold_change=1.0, function="mean", rm_samples=True, tsv_labels=None):
+
+    assert 0 < min_fraction <= 1, "Provide a value between 0. and 1."
+    assert min_fold_change >= 0, "Provide a value larger than zero."
+    assert function in ("mean", "median", "max"), "Mean, median or max intensity"
+
+    if tsv_labels is not None:
+        peak_matrix = update_class_labels(peak_matrix, tsv_labels)
+
+    assert blank_label in peak_matrix.peaklist_tag_values, "Blank label ({}) does not exist".format(blank_label)
+
     return filter_blank_peaks(peak_matrix, blank_label, min_fraction, min_fold_change, function, rm_samples)
 
 
-def sample_filter(peak_matrix, min_fraction, within=False, rsd=None, qc_label=None):
+def sample_filter(peak_matrix, min_fraction, within=False, rsd=None, qc_label=None, tsv_labels=None):
+
+    if tsv_labels is not None:
+        assert os.path.isfile(tsv_labels), "File with class labels not available"
+        peak_matrix = update_class_labels(peak_matrix, tsv_labels)
+
+    if qc_label is not None:
+        assert qc_label in peak_matrix.peaklist_tag_values
 
     if not within:
         peak_matrix = filter_across_classes(peak_matrix, min_fraction)
     elif within:
-        peak_matrix = filter_within_classes(peak_matrix, None, min_fraction) # TODO: use tag_type instead of None, currently it's temp workaround
+        peak_matrix = filter_within_classes(peak_matrix, None, min_fraction)  # TODO: use tag_type instead of None, currently it's temp workaround
     if rsd is not None:
         peak_matrix = filter_rsd(peak_matrix, rsd, qc_label)
     return peak_matrix
-
-
-def to_readable(pickle_file, path_out, separator, transpose=False):
-    assert os.path.isfile(pickle_file), "Pickle file does not exist"
-    assert separator in ["tab", "comma"], "Incorrect separator [tab, comma]"
-    seps = {"comma":",", "tab":"\t"}
-    with open(pickle_file, "rb") as fn_pkl_in:
-        pkl = pickle.load(fn_pkl_in)
-        if type(pkl) == list:
-            assert isinstance(pkl[0], PeakList), "Not compatible with {}".format(type(pkl[0]))
-            for pl in pkl:
-                with open(os.path.join(path_out, os.path.splitext(pl.ID)[0] + ".txt"), "w") as pk_out:
-                    pk_out.write(pl.to_str(seps[separator]))
-                time.sleep(1)
-
-        elif isinstance(pkl, PeakMatrix):
-            assert os.path.isfile(path_out), "Provide filename for peak matrix"
-            with open(os.path.join(path_out), "w") as pk_out:
-                pk_out.write(pkl.to_str(seps[separator], transpose))
-    return
-
-

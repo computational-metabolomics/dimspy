@@ -1,15 +1,10 @@
 #!/usr/bin/python
-
-"""dimspy:dimspy provides entry point main()."""
-
+# -*- coding: utf-8 -*-
 import argparse
-import sys
 import workflow
+import portals
 import cPickle as pickle
 from . import __version__
-
-from models.peak_matrix import PeakMatrix
-from models.peaklist import PeakList
 
 
 def main():
@@ -252,20 +247,20 @@ def main():
     args = parser.parse_args()
     print args
 
-    if args.step == "check-filelist":
-        workflow.read_filelist(args.filelist, args.source)
+    #if args.step == "check-filelist":
+    #    workflow.read_filelist(args.filelist, args.source)
 
-    elif args.step == "process-scans":
+    if args.step == "process-scans":
         with open(args.pickle_file_out, "wb") as fn_pkl:
             peaklists = workflow.process_scans(source=args.source,
-                filelist=args.filelist,
-                fn_exp=args.filename_experiment,
-                nscans=args.nscans,
                 function_noise=args.function_noise,
                 snr_thres=args.snr_threshold,
+                nscans=args.nscans,
                 ppm=args.ppm,
                 min_fraction=args.min_fraction,
                 rsd_thres=args.rsd_threshold,
+                filelist=args.filelist,
+                subset_mzrs=args.subset_mzrs,
                 block_size=args.block_size,
                 ncpus=args.ncpus)
             pickle.dump(peaklists, fn_pkl, -1)
@@ -305,4 +300,4 @@ def main():
                 pickle.dump(pm_sf, fn_pkl_out, -1)
 
     elif args.step == "pickle-to-readable":
-        workflow.to_readable(args.pickle_file_in, path_out=args.path_out, separator=args.separator, transpose=args.transpose)
+        portals.to_readable(args.pickle_file_in, path_out=args.path_out, separator=args.separator, transpose=args.transpose)

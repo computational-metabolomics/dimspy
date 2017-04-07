@@ -366,88 +366,88 @@ if __name__ == '__main__':
     ints = np.abs(np.random.normal(10, 3, size=size))
     snr = np.abs(np.random.normal(1000, 400, size=size))
 
-    pkl = PeakList('sample_peaklist', mzs, ints, mz_range=(100, 1000))
-    pkl.add_tags('sample', 'passed_qc', main_class='treatment_1')
-    pkl.add_attribute('snr', snr)
-    pkl.metadata.type = 'blank'
+    pl = PeakList('sample_peaklist', mzs, ints, mz_range=(100, 1000))
+    pl.add_tags('sample', 'passed_qc', main_class='treatment_1')
+    pl.add_attribute('snr', snr)
+    pl.metadata.type = 'blank'
 
     import pdb; pdb.set_trace()
 
     import cPickle as cp
 
-    s = cp.dumps(pkl)
-    pkl = cp.loads(s)
+    s = cp.dumps(pl)
+    pl = cp.loads(s)
 
     # magic functions
-    print len(pkl)
-    print pkl
+    print len(pl)
+    print pl
 
     # tags
-    print pkl.tags
-    print pkl.tag_types
-    print pkl.tag_values
-    pkl.add_tags('not_QC')
-    pkl.add_tags(time_point='1hr')
-    print pkl.tag_of('time_point')
-    print pkl.has_tags('1hr')
-    print pkl.has_any_tags(main_class='1hr')
-    print pkl.has_tag_type('main_class')
-    pkl.drop_tags('not_QC')
-    pkl.drop_tag_types('time_point')
-    print pkl.tags.to_list()
+    print pl.tags
+    print pl.tag_types
+    print pl.tag_values
+    pl.add_tags('not_QC')
+    pl.add_tags(time_point='1hr')
+    print pl.tag_of('time_point')
+    print pl.has_tags('1hr')
+    print pl.has_any_tags(main_class='1hr')
+    print pl.has_tag_type('main_class')
+    pl.drop_tags('not_QC')
+    pl.drop_tag_types('time_point')
+    print pl.tags.to_list()
 
     # metadata
-    pkl.metadata['replicate'] = '4'
-    pkl.metadata.sample = 'S01'
-    print pkl.metadata
-    del pkl.metadata.sample
-    print pkl.metadata
-    print pkl.metadata.keys()
+    pl.metadata['replicate'] = '4'
+    pl.metadata.sample = 'S01'
+    print pl.metadata
+    del pl.metadata.sample
+    print pl.metadata
+    print pl.metadata.keys()
 
     # add flag
-    print pkl.flags
-    pkl.add_attribute('odd_flags', np.arange(len(pkl)) % 2 == 0, is_flag=True)
-    print pkl.flags
+    print pl.flags
+    pl.add_attribute('odd_flags', np.arange(len(pl)) % 2 == 0, is_flag=True)
+    print pl.flags
 
     # attrs access
-    print pkl.mz  # internally == getAttribute
-    print pkl.snr
-    print pkl.mz_all
-    print pkl.snr_all
+    print pl.mz  # internally == getAttribute
+    print pl.snr
+    print pl.mz_all
+    print pl.snr_all
 
-    pkl.mz = np.random.uniform(100, 1000, size=len(pkl))  # internally == setAttribute
-    print pkl[:10]
+    pl.mz = np.random.uniform(100, 1000, size=len(pl))  # internally == setAttribute
+    print pl[:10]
 
-    print pkl['mz']  # internally == getPeak
-    print pkl['snr']
+    print pl['mz']  # internally == getPeak
+    print pl['snr']
 
-    print pkl[0]  # internally == getPeak
-    pkl[0] = (0, 100, 200, True)  # internally == setPeak
-    print pkl[:10]
+    print pl[0]  # internally == getPeak
+    pl[0] = (0, 100, 200, True)  # internally == setPeak
+    print pl[:10]
 
-    pkl[0][0] = 1  # not working
-    print pkl[:10]
+    pl[0][0] = 1  # not working
+    print pl[:10]
 
-    pkl['mz'][0] = 2  # not working
-    print pkl[:10]
+    pl['mz'][0] = 2  # not working
+    print pl[:10]
 
     # properties
-    print pkl.ID
-    print pkl.size
-    print pkl.shape
-    print pkl.attributes
-    print pkl.peaks
-    print pkl.dtable
+    print pl.ID
+    print pl.size
+    print pl.shape
+    print pl.attributes
+    print pl.peaks
+    print pl.dtable
 
     # publics
-    print pkl.has_attribute('snr')
-    print pkl.has_attribute('no_such_thing')
-    pkl.add_attribute('snr_filter_flag', pkl.snr > 20, is_flag=True)  # must be all full size vector
-    print pkl
-    pkl.drop_attribute('snr_filter_flag')
-    print pkl
+    print pl.has_attribute('snr')
+    print pl.has_attribute('no_such_thing')
+    pl.add_attribute('snr_filter_flag', pl.snr > 20, is_flag=True)  # must be all full size vector
+    print pl
+    pl.drop_attribute('snr_filter_flag')
+    print pl
 
-    pkl.insert_peak((900, 20, 30, True))  # auto sort
+    pl.insert_peak((900, 20, 30, True))  # auto sort
     print pkl
     pkl.remove_peak(-2)
     print pkl

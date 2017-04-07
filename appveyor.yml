@@ -4,25 +4,23 @@ environment:
       MAKE_WINEX: 0
 
 install:
-  - if %MAKE_WINEX%==1	%PYTHON%\Scripts\pip.exe install pyinstaller
-  - '%PYTHON%\Scripts\pip.exe install .'
-
-test_script:
   - wget http://teamcity.labkey.org:8080/repository/download/bt36/305892:id/pwiz-bin-windows-x86-vc120-release-3_0_9393.tar.bz2?guest=1 -O pwiz-bin-windows-x86-vc120-release-3_0_9393.tar.bz2
   - mkdir pwiz && \
   - tar -xvjf pwiz-bin-windows-x86-vc120-release-3_0_9393.tar.bz2 -C pwiz/
   - regsvr32 /s pwiz/MSFileReader.XRawfile2.dll
-  - '%PYTHON%\\python.exe -m dimspy'
 
-deploy:
-  provider: GitHub
-  description: 'Release description'
-  auth_token:
-    secure: -----
-  draft: false
-  prerelease: true
-  force_update: true
-  on:
-    branch: master
-    appveyor_repo_tag: true
+test_script:
+  - '%PYTHON%\\python.exe setup.py test'
+
+#deploy:
+#  provider: GitHub
+#  description: 'Release description'
+#  auth_token:
+#    secure: -----
+#  draft: false
+#  prerelease: true
+#  force_update: true
+#  on:
+#    branch: master
+#    appveyor_repo_tag: true
 

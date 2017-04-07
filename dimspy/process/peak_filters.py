@@ -59,9 +59,6 @@ def filter_within_classes(pm, tag_type, min_fraction):
 
 
 def filter_blank_peaks(pm, blank_label, min_fraction=1.0, min_fold=1.0, function="mean", rm_samples=True):
-    print blank_label, type(blank_label)
-    print pm.peaklist_tag_values
-    for t in pm.peaklist_tags: print t
 
     assert blank_label in pm.peaklist_tag_values, "Blank label does not exist"
     assert 0 < min_fraction <= 1, "Provide a value between 0. and 1."
@@ -72,7 +69,7 @@ def filter_blank_peaks(pm, blank_label, min_fraction=1.0, min_fold=1.0, function
         ints = pm.intensity_matrix if pm.shape[0] == 1 else \
                np.max(pm.intensity_matrix, axis=0) if function == "max" else \
                np.array(map(lambda x: getattr(np, function)(x), pm.intensity_matrix.T))
-               # quick fix of unexpected dtype conversion in apply_along_axis (float64 -> int64)
+               # TODO: quick fix of unexpected dtype conversion in apply_along_axis (float64 -> int64)
                # np.apply_along_axis(lambda x: _skipempty(getattr(np, function), x[np.nonzero(x)]), 0, pm.intensity_matrix)
         ints *= min_fold
 
