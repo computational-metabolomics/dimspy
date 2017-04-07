@@ -1,12 +1,13 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 import unittest
-
-import dimspy
 import pprint
 import numpy as np
-from dimspy import models
+from dimspy.models import PeakMatrix
+from dimspy.models import PeakList
+from dimspy.models import mask_peakmatrix
 
 pp = pprint.PrettyPrinter(indent=4)
-
 np.random.seed(1234)
 
 class TestDimspy(unittest.TestCase):
@@ -24,7 +25,7 @@ class TestDimspy(unittest.TestCase):
         ints = np.abs(np.random.normal(10, 3, size=size))
         snr = np.abs(np.random.normal(1000, 400, size=size))
 
-        pl = models.PeakList('sample_peaklist', mzs, ints, mz_range=(100, 1000))
+        pl = PeakList('sample_peaklist', mzs, ints, mz_range=(100, 1000))
         pl.add_tags('sample', 'passed_qc', main_class='treatment_1')
         pl.add_attribute('snr', snr)
         pl.metadata.type = 'blank'
@@ -120,12 +121,12 @@ class TestDimspy(unittest.TestCase):
         _ints = lambda: np.abs(np.random.normal(10, 3, size=100))
 
         pls = [
-            models.PeakList('sample_1_1', _mzs(), _ints(), mz_range=(100, 1000)),
-            models.PeakList('sample_1_2', _mzs(), _ints(), mz_range=(100, 1000)),
-            models.PeakList('QC_1', _mzs(), _ints(), mz_range=(100, 1000)),
-            models.PeakList('sample_2_1', _mzs(), _ints(), mz_range=(100, 1000)),
-            models.PeakList('sample_2_2', _mzs(), _ints(), mz_range=(100, 1000)),
-            models.PeakList('QC_2', _mzs(), _ints(), mz_range=(100, 1000)),
+            PeakList('sample_1_1', _mzs(), _ints(), mz_range=(100, 1000)),
+            PeakList('sample_1_2', _mzs(), _ints(), mz_range=(100, 1000)),
+            PeakList('QC_1', _mzs(), _ints(), mz_range=(100, 1000)),
+            PeakList('sample_2_1', _mzs(), _ints(), mz_range=(100, 1000)),
+            PeakList('sample_2_2', _mzs(), _ints(), mz_range=(100, 1000)),
+            PeakList('QC_2', _mzs(), _ints(), mz_range=(100, 1000)),
         ]
 
         pls[0].add_tags('sample', treatment='compound_1', time_point='1hr', plate=1)
@@ -136,14 +137,14 @@ class TestDimspy(unittest.TestCase):
         pls[5].add_tags('qc', plate=2)
 
         # create matrix
-        pm = models.PeakMatrix(
+        pm = PeakMatrix(
             [p.ID for p in pls],
             [p.tags for p in pls],
             {a: np.vstack([p.get_attribute(a) for p in pls]) for a in pls[0].attributes}
         )
 
         # properties
-        np.testing.assert_array_equal(pm.mask, [ True,  True,  True,  True,  True,  True])
+        np.testing.assert_array_equal(pm.mask, [True,  True,  True,  True,  True,  True])
         np.testing.assert_array_equal(pm.peaklist_ids, ['sample_1_1', 'sample_1_2', 'QC_1', 'sample_2_1', 'sample_2_2', 'QC_2'])
         np.testing.assert_array_equal(pm.peaklist_tag_types, ['plate', 'treatment', 'time_point'])
         np.testing.assert_array_equal(pm.peaklist_tag_values, ['1hr', 1, 2, '6hr', 'sample', 'qc', 'compound_1', 'compound_2'])
@@ -152,14 +153,14 @@ class TestDimspy(unittest.TestCase):
 
         np.testing.assert_array_equal(pm.present, [6] * 100)
         np.testing.assert_array_equal(pm.missing, [0] * 6)
-        #self.assertEqual(np.isclose(pm.rsd[0:5], np.array([20.2078199, 37.63703196,
+        # self.assertEqual(np.isclose(pm.rsd[0:5], np.array([20.2078199, 37.63703196,
         #                                                                27.49539753, 33.07843295,
         #                                                                17.95949877])), True)  # TODO: replace isclose
 
-        np.testing.assert_array_equal(pm.tags_of('plate'), [1,2])
+        np.testing.assert_array_equal(pm.tags_of('plate'), [1, 2])
         # print pm.mz_matrix
         # pm.mask_tags('sample').unmask_tags(treatment = 'compound_1')
-        with models.mask_peakmatrix(pm, 'sample'):
+        with mask_peakmatrix(pm, 'sample'):
             np.testing.assert_array_equal(pm.mask, [True,  True, False,  True,  True, False])
             np.testing.assert_array_equal(pm.peaklist_ids, ['sample_1_1', 'sample_1_2', 'sample_2_1', 'sample_2_2'])
 
@@ -173,9 +174,8 @@ class TestDimspy(unittest.TestCase):
         pm.remove_peaks([0, 1, 2])
         np.testing.assert_array_equal(pm.shape, (5, 67L))
 
-        #print pm.to_peaklist('merged')  # TODO:
-        #print pm.to_str(transpose=True)  # TODO:
-
+        # print pm.to_peaklist('merged')  # TODO:
+        # print pm.to_str(transpose=True)  # TODO:
 
     def test_parsers_mzml(self):
         pass
@@ -190,6 +190,6 @@ class TestDimspy(unittest.TestCase):
         pass
 
 if __name__ == '__main__':
-    suite = unittest.TestLoader().loadTestsFromTestCase(test_dimspy)
+    suite = unittest.TestLoader().loadTestsFromTestCase(TestDimspy)
     unittest.TextTestRunner(verbosity=2).run(suite)
 

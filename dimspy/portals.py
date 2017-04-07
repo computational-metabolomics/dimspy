@@ -24,14 +24,13 @@ def check_paths(tsv, source):
                     filenames = [fn for fn in zf.namelist() if fn.lower().endswith(".mzml")]
             elif h5py.is_hdf5(source):
                 with h5py.file(source) as h5:
-                    #filenames =  = h5.
+                    # filenames = h5.
                     pass
         elif type(source) == list:
             assert type(source[0]) == PeakList, "Incorrect Objects in list. PeakList class required."
             filenames = [pl.ID for pl in source]
         else:
             pass
-
 
     elif os.path.isfile(tsv.encode('string-escape')):
         tsv = tsv.encode('string-escape')
@@ -62,7 +61,7 @@ def check_paths(tsv, source):
                         filenames.append(fn)
             elif h5py.is_hdf5(source.encode('string-escape')):
                 with h5py.file(source.encode('string-escape')) as h5:
-                    # files = h5.
+                    # filenames = h5.
                     pass
 
             else:
@@ -98,7 +97,7 @@ def load_peaklists(source):
         else:
             peaklists = source
     else:
-        raise IOError("Can not read and parse {} or {}".format(source, tsv))
+        raise IOError("Inccorrect input: list with peaklist objects or path")
 
     return peaklists
 
@@ -152,17 +151,17 @@ def to_readable(pickle_file, path_out, separator, transpose=False):
     return
 
 
-def hdf5_to_peaklists():
+def hdf5_to_peaklists(f):
     pass
 
 
-def hdf5_to_peak_matrix():
+def hdf5_to_peak_matrix(f):
     pass
 
 
-def peaklists_to_hdf5():
+def peaklists_to_hdf5(peaklists):
     pass
 
 
-def peak_matrix_to_hdf5():
+def peak_matrix_to_hdf5(pm):
     pass

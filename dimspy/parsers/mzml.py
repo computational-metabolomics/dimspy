@@ -8,10 +8,7 @@ import pymzml
 import numpy as np
 import zipfile
 from dimspy.models.peaklist import PeakList
-
-
-def mz_range_from_header(h):
-    return [float(m) for m in re.findall(r'([\w\.-]+)-([\w\.-]+)', h)[0]]
+from dimspy.experiment import mz_range_from_header
 
 
 class Mzml():
@@ -23,7 +20,8 @@ class Mzml():
         if self.archive is not None:
             zf = zipfile.ZipFile(self.archive, 'r')
             return pymzml.run.Reader('', file_object=zf.open(self.fname))
-        elif os.path.isfile(self.fname) and (self.fname.lower().endswith(".mzml") or self.fname.lower().endswith(".mzml.gz")):
+        elif os.path.isfile(self.fname) and (
+            self.fname.lower().endswith(".mzml") or self.fname.lower().endswith(".mzml.gz")):
             return pymzml.run.Reader(self.fname)
         else:
             return None
@@ -49,14 +47,14 @@ class Mzml():
                 mz_range = mz_range_from_header(header)
 
                 pl = PeakList(ID=scan["id"], mz=mzs, intensity=ints,
-                               mz_range=mz_range,
-                               header=header,
-                               ion_injection_time=ion_injection_time,
-                               scan_time=scan_time,
-                               tic=tic,
-                               segment=None,
-                               calibraton=None,
-                               instrument=None)
+                              mz_range=mz_range,
+                              header=header,
+                              ion_injection_time=ion_injection_time,
+                              scan_time=scan_time,
+                              tic=tic,
+                              segment=None,
+                              calibraton=None,
+                              instrument=None)
 
                 snr = np.divide(ints, scan.estimatedNoiseLevel(mode=mode))
                 pl.add_attribute('snr', snr)

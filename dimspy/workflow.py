@@ -1,36 +1,22 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-
-"""
-author(s): Ralf Weber
-origin: Nov. 2016
-"""
 import os
 import numpy as np
 import collections
-import zipfile
-import h5py
-
 from process.peak_alignment import align_peaks
 from process.scan_processing import read_scans
 from process.scan_processing import average_replicate_scans
 from process.scan_processing import remove_edges
 from process.scan_processing import join_peaklists
-
 from process.peak_filters import filter_blank_peaks
 from process.peak_filters import filter_across_classes
 from process.peak_filters import filter_within_classes
 from process.peak_filters import filter_rsd
-
 from portals import check_paths
 from experiment import check_metadata
 from experiment import update_metadata
 from experiment import update_class_labels
-
 from portals import load_peaklists
-from portals import text_to_peaklist
-from portals import hdf5_to_peaklists
-from models.peaklist import PeakList
 
 
 def process_scans(source, function_noise, snr_thres, nscans, ppm, min_fraction=None, rsd_thres=None, filelist=None, subset_mzrs=None, block_size=2000, ncpus=None):
@@ -56,7 +42,7 @@ def process_scans(source, function_noise, snr_thres, nscans, ppm, min_fraction=N
         pl = join_peaklists(os.path.basename(filenames[i]), prs)
 
         if "class" in fl:
-            pl.add_tags(class_label=fl["class"][i]) # TODO: Tags from metadata
+            pl.add_tags(class_label=fl["class"][i])  # TODO: Tags from metadata
             # pl.add_tags(class_label2=fl["class"][i]) # TODO: Tags from metadata
             # TODO: assert not any(map(lambda x: x in self.tag_values, list(args) + kwargs.values())), 'tag already exists'
 
@@ -106,14 +92,16 @@ def replicate_filter(source, ppm, reps, minpeaks, rsd_thres=None, filelist=None,
         #############################################################
 
         pl = pm.to_peaklist(ID=merged_id)
-        for i, t in enumerate(pls[0].tag_types):  # TODO:
-            pl.add_tags(t, pls[0].tag_values[i])
+        for j, t in enumerate(pls[0].tag_types):  # TODO:
+            pl.add_tags(t, pls[0].tag_values[j])
         pl.add_attribute("present", pm.present)
         pl.add_attribute("rsd", pm.rsd)
         pl.add_attribute("present_flag", pm.present >= minpeaks, is_flag=True)
-        if rsd_thres is not None: pl.add_attribute("rsd_flag", pm.rsd <= rsd_thres, flagged_only=False, is_flag=True)
+        if rsd_thres is not None:
+            pl.add_attribute("rsd_flag", pm.rsd <= rsd_thres, flagged_only=False, is_flag=True)
         for k in pls[0].metadata:
-            if k != "filename": pl.metadata[k] = pls[0].metadata[k]
+            if k != "filename":
+                pl.metadata[k] = pls[0].metadata[k]
         pls_rep_filt.append(pl)
     return pls_rep_filt
 
@@ -157,7 +145,7 @@ def sample_filter(peak_matrix, min_fraction, within=False, rsd=None, qc_label=No
     if not within:
         peak_matrix = filter_across_classes(peak_matrix, min_fraction)
     elif within:
-        peak_matrix = filter_within_classes(peak_matrix, None, min_fraction) # TODO: use tag_type instead of None, currently it's temp workaround
+        peak_matrix = filter_within_classes(peak_matrix, None, min_fraction)  # TODO: use tag_type instead of None, currently it's temp workaround
     if rsd is not None:
         peak_matrix = filter_rsd(peak_matrix, rsd, qc_label)
     return peak_matrix

@@ -448,9 +448,9 @@ if __name__ == '__main__':
     print pl
 
     pl.insert_peak((900, 20, 30, True))  # auto sort
-    print pl
-    pl.remove_peak(-2)
-    print pl
+    print pkl
+    pkl.remove_peak(-2)
+    print pkl
 
-    print pl.to_list()[0]
-    print pl.to_dict().keys()
+    print pkl.to_list()[0]
+    print pkl.to_dict().keys()

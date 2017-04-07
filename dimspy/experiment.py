@@ -1,22 +1,13 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-
-"""
-Define DIMS experiment
-
-author(s): Ralf Weber
-origin: Oct. 2016
-"""
 import os
-import sys
 import warnings
 import collections
 import re
 import copy
 import numpy as np
-import zipfile
 from models.peaklist import PeakList
-import portals
+
 
 def mz_range_from_header(h):
     return [float(m) for m in re.findall(r'([\w\.-]+)-([\w\.-]+)', h)[0]]
@@ -209,7 +200,6 @@ def check_metadata(fn_tsv):
     #    print "QC samples:", counts
 
     unique_reps = [1]
-    counts = len(fm[fm.dtype.names[0]])
     if "replicate" in fm.dtype.names:
         unique_reps, counts = np.unique(fm["replicate"], return_counts=True)
         assert len(np.unique(counts)) == 1, "Incorrect numbering of replicates"

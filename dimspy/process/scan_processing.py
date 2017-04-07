@@ -1,11 +1,9 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 import collections
-import copy
 import os
-import re
 import zipfile
-
 import numpy as np
-
 from dimspy.models.peaklist import PeakList
 from dimspy.parsers import Mzml
 from dimspy.parsers import ThermoRaw, ThermoRawWine
@@ -14,13 +12,14 @@ from dimspy.process.peak_filters import filter_snr
 from dimspy.experiment import define_mz_ranges
 from dimspy.experiment import interpret_experiment_from_headers
 from dimspy.experiment import remove_headers
+from dimspy.experiment import mz_range_from_header
 
 
 def _calculate_edges(mz_ranges):
     s_mz_ranges = map(sorted, mz_ranges)
     if len(s_mz_ranges) == 1: return s_mz_ranges
     
-    s_min,s_max = zip(*s_mz_ranges)
+    s_min, s_max = zip(*s_mz_ranges)
     assert all(map(lambda x: x[0] < x[1], zip(s_min[:-1], s_min[1:]))), 'start values not in order'
     assert all(map(lambda x: x[0] < x[1], zip(s_max[:-1], s_max[1:]))), 'end values not in order'
     
@@ -28,12 +27,8 @@ def _calculate_edges(mz_ranges):
     e_size = map(lambda x: (x[1]-x[0]) * 0.5, s_zip)
     assert all(map(lambda x: x > 0, e_size)), 'incorrect overlap'
     
-    merged = (s_min[0],) + reduce(lambda x,y: x+y, [(z[0]+e, z[1]-e) for z,e in zip(s_zip, e_size)]) + (s_max[-1],)
+    merged = (s_min[0],) + reduce(lambda x, y: x+y, [(z[0]+e, z[1]-e) for z, e in zip(s_zip, e_size)]) + (s_max[-1],)
     return zip(merged[::2], merged[1::2])
-
-
-def mz_range_from_header(h):
-    return [float(m) for m in re.findall(r'([\w\.-]+)-([\w\.-]+)', h)[0]]
 
 
 def remove_edges(pls_sd):
@@ -67,9 +62,9 @@ def read_scans(fn, source, function_noise, nscans, subset_mzrs=None):
 
     elif fn.lower().endswith(".raw"):
         if os.name == "nt":
-            run = ThermoRaw(fn, source)
+            run = ThermoRaw(fn)
         else:
-            run = ThermoRawWine(fn, source)
+            run = ThermoRawWine(fn)
 
     h_sids = run.headers_scan_ids()
     mzrs = collections.OrderedDict(zip(h_sids.keys(), [mz_range_from_header(h) for h in h_sids]))
@@ -126,7 +121,7 @@ def average_replicate_scans(pls, snr_thres=3.0, ppm=2.0, min_fraction=0.8, rsd_t
             if rsd_thres is None:
                 pls[h].add_attribute("rsd_flag", np.ones(pls[h].full_size), flagged_only=False, is_flag=True)
             else:
-                #pls[h].add_attribute("rsd_flag", np.logical_or(np.isnan(pm.rsd), pm.rsd < rsd_thres), flagged_only=False, is_flag=True)
+                # pls[h].add_attribute("rsd_flag", np.logical_or(np.isnan(pm.rsd), pm.rsd < rsd_thres), flagged_only=False, is_flag=True)
                 pls[h].add_attribute("rsd_flag", pm.rsd <= rsd_thres, flagged_only=False, is_flag=True)
 
         elif len(pls[h]) == 1:
@@ -138,7 +133,7 @@ def average_replicate_scans(pls, snr_thres=3.0, ppm=2.0, min_fraction=0.8, rsd_t
             pls[h].add_attribute("fraction_flag", np.ones(pls[h].full_size), flagged_only=False, is_flag=True)
             pls[h].add_attribute("rsd_flag", np.ones(pls[h].full_size), flagged_only=False, is_flag=True)
         else:
-            print "No scans available for {}".format(h) # TODO: check if it is valid to remove header
+            print "No scans available for {}".format(h)  # TODO: check if it is valid to remove header
             del pls[h]
     return pls
 

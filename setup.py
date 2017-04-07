@@ -1,11 +1,10 @@
-#!/usr/bin/env python
-# 2016 copyright Ralf Weber, Albert Zhou
-# released under the GNU General Public License version 3.0 (GPLv3)
-
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 import setuptools
 import sys
 import dimspy
 import os
+
 
 def main():
 
@@ -17,21 +16,16 @@ def main():
 
     setuptools.setup(name="dimspy",
         version=dimspy.__version__,
-
         description="Python package to process DIMS data",
         long_description=open('README.rst').read(),
-
         author="Ralf Weber, Albert Zhou",
         author_email="r.j.weber@bham.ac.uk, j.zhou.3@bham.ac.uk ",
-
         url="https://github.com/computational-metabolomics/dimspy",
         license="GPLv3",
         platforms=['Windows, UNIX'],
         keywords=['Metabolomics', 'Mass spectrometry', 'Data Processing', 'Direct-Infusion Mass Spectrometry'],
         packages=setuptools.find_packages(),
-
         test_suite='tests',
-
         install_requires=required_unix
             if os.name != "nt" \
             else required_unix.extend(required_win),

@@ -252,10 +252,6 @@ if __name__ == '__main__':
         {a: np.vstack([p.get_attribute(a) for p in pls]) for a in pls[0].attributes}
     )
 
-    import pdb;
-
-    pdb.set_trace()
-
     # properties
     print pm.mask
     print pm.peaklist_ids

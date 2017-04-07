@@ -1,23 +1,18 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-
 import tempfile
 import os
 import subprocess
-import re
 import collections
 import cPickle as pickle
 import numpy as np
 import argparse
-
-
-def mz_range_from_header(h):
-    return [float(m) for m in re.findall(r'([\w\.-]+)-([\w\.-]+)', h)[0]]
+from dimspy.experiment import mz_range_from_header
 
 
 class ThermoRaw():
 
-    def __init__(self, fname, archive=None):
+    def __init__(self, fname):
 
         import MSFileReader
         self.run = MSFileReader.ThermoRawfile(fname)
@@ -25,13 +20,13 @@ class ThermoRaw():
     def headers(self):
         return [str(self.run.GetFilterForScanNum(scan_id)) for scan_id in range(self.run.GetFirstSpectrumNumber(), self.run.GetLastSpectrumNumber() + 1)]
 
-    def headers_scan_ids(self, n=None):
+    def headers_scan_ids(self):
         sids = collections.OrderedDict()
         for scan_id in range(self.run.GetFirstSpectrumNumber(), self.run.GetLastSpectrumNumber() + 1):
             sids.setdefault(str(self.run.GetFilterForScanNum(scan_id)), []).append(scan_id)
         return sids
 
-    def peaklist(self, scan_id, mode_noise="noise_packets", out="class"): # generator
+    def peaklist(self, scan_id, mode_noise="noise_packets", out="class"):  # generator
         assert mode_noise in ["noise_packets", "mean", "median", "mad"], "select a method that is available [noise_packets, mean, median, mad]"
 
         if self.run.IsCentroidScanForScanNum(scan_id):
@@ -62,9 +57,7 @@ class ThermoRaw():
         elif mode_noise == "mean":
             snr = ints / np.mean(ints)
         elif mode_noise == "mad":
-            snr = ints / np.median(np.abs(np.subtract(ints,np.median(ints))))
-        else:
-            pass
+            snr = ints / np.median(np.abs(np.subtract(ints, np.median(ints))))
 
         extra = self.run.GetTrailerExtraForScanNum(scan_id)
 
@@ -82,7 +75,7 @@ class ThermoRaw():
         instrument = str(self.run.GetInstName())
 
         if out == "dict":
-            pl = {"ID":scan_id, "mz": mzs, "intensity": ints,
+            pl = {"ID": scan_id, "mz": mzs, "intensity": ints,
                            "mz_range": mz_range,
                            "header": header,
                            "ion_injection_time": ion_injection_time,
@@ -129,7 +122,7 @@ class ThermoRaw():
 
 
 class ThermoRawWine():
-    def __init__(self, fname, Archive=None):
+    def __init__(self, fname):
 
         fname_pl = tempfile.NamedTemporaryFile()
         ms_file_reader = os.path.abspath(__file__)
@@ -140,26 +133,25 @@ class ThermoRawWine():
         print out, err
         self.run = pickle.load(open(fname_pl.name, 'rb'))
 
-
     def headers(self):
         return self.run["headers_scan_ids"].keys()
 
-    def headers_scan_ids(self, n=None):
+    def headers_scan_ids(self):
         return self.run["headers_scan_ids"]
 
     def peaklist(self, scan_id, mode_noise="noise_packets", out="class"): # generator
         from dimspy.models.peaklist import PeakList
         d = self.run["peaklists"][scan_id]
         pl = PeakList(ID=d["ID"], mz=d["mz"], intensity=d["intensity"],
-                       mz_range=d["mz_range"],
-                       header=d["header"],
-                       ion_injection_time=d["ion_injection_time"],
-                       scan_time=d["scan_time"],
-                       tic=d["tic"],
-                       segment=d["segment"],
-                       calibraton=d["calibration"],
-                       instrument=d["instrument"],
-                       mode_noise=d["mode_noise"])
+            mz_range=d["mz_range"],
+            header=d["header"],
+            ion_injection_time=d["ion_injection_time"],
+            scan_time=d["scan_time"],
+            tic=d["tic"],
+            segment=d["segment"],
+            calibraton=d["calibration"],
+            instrument=d["instrument"],
+            mode_noise=d["mode_noise"])
         pl.add_attribute('snr', d["snr"])
         pl.add_attribute('noise', d["noise"])
         pl.add_attribute('baseline', d["baseline"])
