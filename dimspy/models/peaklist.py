@@ -84,7 +84,8 @@ class _Tags(object):
         return tag_type in self.tag_types
 
     def add_tags(self, *args, **kwargs):
-        assert None not in args or None not in kwargs.values(), '[None] is an acceptable tag value'
+        assert 'NA' not in kwargs.keys(), '[NA] is not an acceptable tag type' # reserve for hdf5 protal
+        assert None not in args or None not in kwargs.values(), '[None] is not an acceptable tag value'
         assert not any(map(lambda x: x in self.tag_values, list(args) + kwargs.values())), 'tag already exists'
         self._tags['_untyped'] += args
         self._tags['_typed'].update(kwargs)
@@ -112,7 +113,7 @@ class PeakList(object):
         assert len(intensity) == len(mz), 'mz values and intensities must have the same size'
         self.__dict__['_dtable'] = np.array(zip(mz, intensity), dtype=[('mz', 'f8'), ('intensity', 'f8')])
 
-        self._id = ID
+        self._id = str(ID)
         self._tags = _Tags()
         self._metadata = _Metadata(**metadata)
 
@@ -222,9 +223,11 @@ class PeakList(object):
         self._flags = self._flags[sids]
 
     def calculate_flags(self):
-        if len(self._flag_attrs) == 0: return
-        self._flags = np.sum(self._dtable[self._flag_attrs].tolist(), axis=1) == len(self._flag_attrs)
-        if self.size == 0: logging.warning('all peaks are removed for peaklist [%s]' % str(self.ID))
+        if len(self._flag_attrs) == 0:
+            self._flags = np.ones_like(self._flags)
+        else:
+            self._flags = np.sum(self._dtable[self._flag_attrs].tolist(), axis=1) == len(self._flag_attrs)
+            if self.size == 0: logging.warning('all peaks are removed for peaklist [%s]' % str(self.ID))
         return self._flags
 
     # attribute operations
@@ -240,8 +243,8 @@ class PeakList(object):
         {0}, {1}, {0, 1}), 'flag attribute can only contain True/False values'
 
         adt = bool if is_flag else \
-            attr_dtype if attr_dtype is not None else \
-                attr_value.dtype.str if hasattr(attr_value, 'dtype') else type(attr_value[0])
+              attr_dtype if attr_dtype is not None else \
+              attr_value.dtype.str if hasattr(attr_value, 'dtype') else type(attr_value[0])
         if adt in (bool, 'bool', '|b1'): adt = 'b'  # fix numpy dtype bug
 
         nattr = np.array([invalid_value] * self._dtable.shape[0]).astype([(attr_name, adt)])
@@ -261,8 +264,7 @@ class PeakList(object):
 
         self._dtable = self._dtable[list(filter(lambda x: x != attr_name, self.attributes))]
 
-        if attr_name not in self._flag_attrs:
-            return
+        if attr_name not in self._flag_attrs: return
         logging.warning('flags recalculated, unflagged peaks may contain incorrect values')
         self._flag_attrs = filter(lambda x: x != attr_name, self._flag_attrs)
         self.calculate_flags()
@@ -369,9 +371,7 @@ if __name__ == '__main__':
     pkl.add_attribute('snr', snr)
     pkl.metadata.type = 'blank'
 
-    import pdb;
-
-    pdb.set_trace()
+    import pdb; pdb.set_trace()
 
     import cPickle as cp
 

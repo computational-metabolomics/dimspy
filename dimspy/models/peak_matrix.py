@@ -36,15 +36,15 @@ def _nzstd(x, axis):
 
 
 class PeakMatrix(object):
-    def __init__(self, peaklist_IDs, peaklist_tags, peaklist_attributes, mask=None):
-        assert len(peaklist_IDs) == len(peaklist_tags) and \
-               all(map(lambda x: len(peaklist_IDs) == x.shape[0],
+    def __init__(self, peaklist_ids, peaklist_tags, peaklist_attributes, mask=None):
+        assert len(peaklist_ids) == len(peaklist_tags) and \
+               all(map(lambda x: len(peaklist_ids) == x.shape[0],
                        peaklist_attributes.values())), 'alignment input data shape not match'
         assert 'mz' in peaklist_attributes.keys() and 'intensity' in peaklist_attributes.keys(), 'required attribute fields not available'
 
-        self._pids = np.array(peaklist_IDs)
+        self._pids = np.array(peaklist_ids)
         self._tags = np.array(peaklist_tags)
-        self._attr_dict = peaklist_attributes
+        self._attr_dict = {k: np.array(v) for k,v in peaklist_attributes.items()}
         self.mask = mask
 
         if self.is_empty(): logging.warning('alignment input data is empty')
@@ -89,6 +89,10 @@ class PeakMatrix(object):
     @property
     def shape(self):
         return np.sum(self._mask), self._attr_dict['mz'].shape[1]
+
+    @property
+    def full_shape(self):
+        return self._attr_dict['mz'].shape
 
     @property
     def present(self):
@@ -221,6 +225,18 @@ class unmask_peakmatrix:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self._pm.mask = self._oldmask
 
+class unmask_all_peakmatrix:
+        def __init__(self, pm):
+            self._pm = pm
+            self._oldmask = pm.mask
+
+        def __enter__(self):
+            self._pm.mask  = None
+            return self._pm
+
+        def __exit__(self, exc_type, exc_val, exc_tb):
+            self._pm.mask = self._oldmask
+
 
 # test
 if __name__ == '__main__':
@@ -252,7 +268,6 @@ if __name__ == '__main__':
     )
 
     import pdb;
-
     pdb.set_trace()
 
     # properties
