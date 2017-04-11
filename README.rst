@@ -27,7 +27,7 @@ TODO
 .. |Py versions| image:: https://img.shields.io/pypi/pyversions/dimspy.svg?style=flat&maxAge=3600
    :target: https://pypi.python.org/pypi/dimspy/
 
-.. |Version| image:: https://img.shields.io/pypi/v/mzml2isa.svg?style=flat&maxAge=3600
+.. |Version| image:: https://img.shields.io/pypi/v/dimspy.svg?style=flat&maxAge=3600
    :target: https://pypi.python.org/pypi/dimspy/
 
 .. |Git| image:: https://img.shields.io/badge/repository-GitHub-blue.svg?style=flat&maxAge=3600
