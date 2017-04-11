@@ -58,7 +58,7 @@ def stitch(source, filelist, fn_exp, nscans, function_noise, snr_thres, ppm, pre
     return process_scans(source, filelist, fn_exp, nscans, function_noise, snr_thres, ppm, presence_thres, rsd_thres, block_size, ncpus)
 
 
-def replicate_filter(source, ppm, reps, minpeaks, rsd_thres=None, filelist=None, block_size=2000, ncpus=None):
+def replicate_filter(source, ppm, reps, min_peaks, rsd_thres=None, filelist=None, block_size=2000, ncpus=None):
 
     filenames = check_paths(filelist, source)
     assert len(filenames) > 0, "Provide a filelist that list all the text files (columnname:filename) and assign replicate numbers to each filename/sample (columnname:replicate)"
@@ -96,7 +96,7 @@ def replicate_filter(source, ppm, reps, minpeaks, rsd_thres=None, filelist=None,
             pl.add_tags(t, pls[0].tag_values[j])
         pl.add_attribute("present", pm.present)
         pl.add_attribute("rsd", pm.rsd)
-        pl.add_attribute("present_flag", pm.present >= minpeaks, is_flag=True)
+        pl.add_attribute("present_flag", pm.present >= min_peaks, is_flag=True)
         if rsd_thres is not None:
             pl.add_attribute("rsd_flag", pm.rsd <= rsd_thres, flagged_only=False, is_flag=True)
         for k in pls[0].metadata:
