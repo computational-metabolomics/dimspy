@@ -22,7 +22,7 @@ def check_paths(tsv, source):
 
     if tsv is None:
         if type(source) == str:
-            source.encode('string-escape')
+            source = source.encode('string-escape')
             if os.path.isdir(source):
                 filenames = [os.path.join(source, fn) for fn in os.listdir(source) if fn.lower().endswith(".mzml") or fn.lower().endswith(".raw")]
             elif zipfile.is_zipfile(source):
@@ -30,11 +30,10 @@ def check_paths(tsv, source):
                     assert len([fn for fn in zf.namelist() if fn.lower().endswith(".raw")]) == 0, "Archive with *.raw files not yet supported. Convert to mzML"
                     filenames = [fn for fn in zf.namelist() if fn.lower().endswith(".mzml")]
             elif h5py.is_hdf5(source):
-                with h5py.file(source) as h5:
-                    # filenames = h5.
-                    pass
+                f = load_peaklists_from_hdf5(source)
+                filenames = f.keys()
         elif type(source) == list:
-            assert type(source[0]) == PeakList, "Incorrect Objects in list. PeakList class required."
+            assert isinstance(source[0], PeakList), "Incorrect Objects in list. PeakList class required."
             filenames = [pl.ID for pl in source]
         else:
             pass
@@ -49,27 +48,29 @@ def check_paths(tsv, source):
 
         filenames = []
         if type(source) == list:
-            assert type(source[0]) == PeakList, "Incorrect Objects in list. Peaklist Object required."
+            assert isinstance(source[0], PeakList), "Incorrect Objects in list. Peaklist Object required."
             for fn in fm[fm.dtype.names[0]]:
                 assert fn in [pl.ID for pl in source], "{} does not exist in list with Objects".format(fn)
                 filenames.append(fn)
         elif type(source.encode('string-escape')) == str:
+            source = source.encode('string-escape')
             if os.path.isdir(source):
-                l = os.listdir(source.encode('string-escape'))
+                l = os.listdir(source)
                 for fn in fm[fm.dtype.names[0]]:
                     assert os.path.basename(fn) in l, "{} does not exist in directory provided".format(os.path.basename(fn))
                     filenames.append(os.path.join(source, fn).replace('\\', r'\\'))
 
             elif zipfile.is_zipfile(source.encode('string-escape')):
-                with zipfile.ZipFile(source) as zf:
+                with zipfile.ZipFile(source.encode('string-escape')) as zf:
                     assert len([fn for fn in zf.namelist() if fn.lower().endswith(".raw")]) == 0, "Archive with *.raw files not yet supported. Convert to mzML"
                     for fn in fm[fm.dtype.names[0]]:
                         assert fn in zf.namelist(), "{} does not exist in .zip file".format(fn)
                         filenames.append(fn)
-            elif h5py.is_hdf5(source.encode('string-escape')):
-                with h5py.file(source.encode('string-escape')) as h5:
-                    # filenames = h5.
-                    pass
+
+            elif h5py.is_hdf5(source):
+                f = load_peaklists_from_hdf5(source)
+                filenames = f.keys()
+
 
             else:
                 raise IOError("Can not read and parse {} or {}".format(source, tsv))
@@ -78,12 +79,13 @@ def check_paths(tsv, source):
 
     return filenames
 
+
 def load_peaklists(source):
 
     if type(source) == str:
         source = source.encode('string-escape')
         if h5py.is_hdf5(source):
-            peaklists = loadPeaklistsFromHDF(source)
+            peaklists = load_peaklists_from_hdf5(source)
         elif zipfile.is_zipfile(source):
             zf = zipfile.ZipFile(source)
             filenames = zf.namelist()
@@ -138,27 +140,7 @@ def text_to_peaklist(file_name, ID, attr_names_dict=None, flag_names=None, delim
     return pl
 
 
-def to_readable(pickle_file, path_out, separator, transpose=False):
-    assert os.path.isfile(pickle_file), "Pickle file does not exist"
-    assert separator in ["tab", "comma"], "Incorrect separator [tab, comma]"
-    seps = {"comma": ",", "tab": "\t"}
-    with open(pickle_file, "rb") as pkl:
-        pls = pickle.load(pkl)
-        if type(pls) == list:
-            assert isinstance(pls[0], PeakList), "Not compatible with {}".format(type(pls[0]))
-            for pl in pls:
-                with open(os.path.join(path_out, os.path.splitext(pl.ID)[0] + ".txt"), "w") as pk_out:
-                    pk_out.write(pl.to_str(seps[separator]))
-                time.sleep(1)
-
-        elif isinstance(pls, PeakMatrix):
-            assert os.path.isfile(path_out), "Provide filename for peak matrix"
-            with open(os.path.join(path_out), "w") as pk_out:
-                pk_out.write(pls.to_str(seps[separator], transpose))
-    return
-
-
-def savePeaklistsToHDF(pkls, fname):
+def save_peaklists_as_hdf5(pkls, fname):
     if os.path.isfile(fname): print '\nWARNING: HDF5 database [%s] already exists and overrided\n' % fname
     f = h5py.File(fname, 'w')
 
@@ -177,7 +159,8 @@ def savePeaklistsToHDF(pkls, fname):
 
     map(lambda x: _savepkl(*x), enumerate(pkls))
 
-def loadPeaklistsFromHDF(fname):
+
+def load_peaklists_from_hdf5(fname):
     assert os.path.isfile(fname), 'HDF5 database [%s] not exists' % fname
     assert h5py.is_hdf5(fname), 'input file [%s] is not a valid HDF5 database' % fname
     f = h5py.File(fname, 'r')
@@ -202,7 +185,7 @@ def loadPeaklistsFromHDF(fname):
     return zip(*sorted(map(_loadpkl, f.keys())))[1]
 
 
-def savePeakMatrixToHDF(pm, fname):
+def save_peak_matrix_as_hdf5(pm, fname):
     if os.path.isfile(fname): print '\nWARNING: HDF5 database [%s] already exists and overrided\n' % fname
     f = h5py.File(fname, 'w')
 
@@ -220,7 +203,8 @@ def savePeakMatrixToHDF(pm, fname):
             dset.attrs['peaklist_tags_%d' % i] = [(t if type(t) in (tuple, list) else ('NA', t)) for t in tags.to_list()]
     dset.attrs['mask'] = pm.mask
 
-def loadPeakMatrixFromHDF(fname):
+
+def load_peak_matrix_from_hdf5(fname):
     assert os.path.isfile(fname), 'HDF5 database [%s] not exists' % fname
     assert h5py.is_hdf5(fname), 'input file [%s] is not a valid HDF5 database' % fname
     f = h5py.File(fname, 'r')
@@ -235,6 +219,30 @@ def loadPeakMatrixFromHDF(fname):
     mask = dset.attrs['mask']
 
     return PeakMatrix(pids, ptgs, adct, mask)
+
+
+def hdf5_to_text(fname, path_out, separator="\t", transpose=False):
+    assert os.path.isfile(fname), 'HDF5 database [%s] not exists' % fname
+    assert h5py.is_hdf5(fname), 'input file [%s] is not a valid HDF5 database' % fname
+    seps = {"comma": ",", "tab": "\t"}
+    if separator in seps: separator = seps[separator]
+    assert separator in [",", "\t"], "Incorrect separator ('tab', 'comma', ',', '\t')"
+    f = h5py.File(fname, 'r')
+    if "mz" in f:
+        obj = load_peak_matrix_from_hdf5(fname)
+        assert isinstance(obj, PeakMatrix)
+        obj = load_peak_matrix_from_hdf5(fname)
+        with open(os.path.join(path_out), "w") as pk_out:
+            pk_out.write(obj.to_str(separator, transpose))
+    else:
+        assert os.path.isdir(path_out), "Specifiy a directory path to write peaklists to."
+        obj = load_peaklists_from_hdf5(fname)
+        assert type(obj) == list, "Incorrect format, list required"
+        assert isinstance(obj[0], PeakList), "Incorrect Objects in list. Peaklist Object required."
+        for pl in obj:
+            with open(os.path.join(path_out, os.path.splitext(pl.ID)[0] + ".txt"), "w") as pk_out:
+                pk_out.write(pl.to_str(separator))
+    return
 
 
 # testing
@@ -268,10 +276,8 @@ if __name__ == '__main__':
     pkls[0].add_attribute('snr_flag', [0, 1] * 50, is_flag = True, flagged_only = False)
     pkls[3].add_attribute('snr_flag', [1, 0] * 50, is_flag = True, flagged_only = False)
 
-
-    savePeaklistsToHDF(pkls, 'test_pl.hdf5')
-    pkls = loadPeaklistsFromHDF('test_pl.hdf5')
-
+    save_peaklists_as_hdf5(pkls, 'test_pl.hdf5')
+    pkls = load_peaklists_from_hdf5('test_pl.hdf5')
 
     for p in pkls:
         if p.has_attribute('snr_flag'): p.drop_attribute('snr_flag')
@@ -283,8 +289,9 @@ if __name__ == '__main__':
     )
     pm.unmask_tags('qc')
 
-    import pdb; pdb.set_trace()
+    #import pdb; pdb.set_trace()
 
-    savePeakMatrixToHDF(pm, 'test_pm.hdf5')
-    pm = loadPeakMatrixFromHDF('test_pm.hdf5')
+    save_peak_matrix_as_hdf5(pm, 'test_pm.hdf5')
+    pm = load_peak_matrix_from_hdf5('test_pm.hdf5')
 
+    hdf5_to_text('test_pm.hdf5', "pm.txt", "\t", transpose=False)
