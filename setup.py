@@ -23,7 +23,7 @@ def main():
         keywords=['Metabolomics', 'Mass spectrometry', 'Data Processing', 'Direct-Infusion Mass Spectrometry'],
         packages=setuptools.find_packages(),
         test_suite='tests',
-        install_requires="requirements.txt",
+        install_requires=open('requirements.txt').read().splitlines(),
         include_package_data=True,
         classifiers=[
           "Programming Language :: Python :: 2",
