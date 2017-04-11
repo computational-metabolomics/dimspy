@@ -11,9 +11,6 @@ def main():
     if sys.version_info[0] != 2 and sys.version_info[1] <= 7:
         sys.exit("Python-2.7.8 is required ")
 
-    required_unix = open('requirements.txt').read().splitlines()
-    required_win = open('requirements_win.txt').read().splitlines()
-
     setuptools.setup(name="dimspy",
         version=dimspy.__version__,
         description="Python package to process DIMS data",
@@ -26,12 +23,8 @@ def main():
         keywords=['Metabolomics', 'Mass spectrometry', 'Data Processing', 'Direct-Infusion Mass Spectrometry'],
         packages=setuptools.find_packages(),
         test_suite='tests',
-        install_requires=required_unix
-            if os.name != "nt" \
-            else required_unix.extend(required_win),
-
+        install_requires="requirements.txt",
         include_package_data=True,
-
         classifiers=[
           "Programming Language :: Python :: 2",
           "Programming Language :: Python :: 2.7",
