@@ -31,7 +31,7 @@ TODO
    :target: https://pypi.python.org/pypi/dimspy/
 
 .. |Git| image:: https://img.shields.io/badge/repository-GitHub-blue.svg?style=flat&maxAge=3600
-   :target: https://github.com/ISA-tools/dimspy
+   :target: https://github.com/computational-metabolomics/dimspy
 
 .. |Bioconda| image:: https://img.shields.io/badge/install%20with-bioconda-brightgreen.svg?style=flat&maxAge=3600
    :target: http://bioconda.github.io/recipes/dimspy/README.html
