@@ -22,8 +22,6 @@ class ThermoRaw():
 
         self.run = Business.RawFileReaderFactory.ReadFile(fname)
         self.run.SelectInstrument(Business.Device.MS, 1)
-        print self.run.get_FileName()
-        print self.run.get_CreationDate()
 
     def headers(self):
         return [str(self.run.GetScanEventStringForScanNumber(scan_id)) for scan_id in range(1, self.run.ScanEvents.ScanEvents + 1)]
@@ -37,27 +35,14 @@ class ThermoRaw():
     def peaklist(self, scan_id, mode_noise="noise_packets"):  # generator
         assert mode_noise in ["noise_packets", "mean", "median", "mad"], "select a method that is available [noise_packets, mean, median, mad]"
 
-        if self.run.IsCentroidScanFromScanNumber(scan_id):
-            # TODO: Add functions for centroid data
-            msl = self.run.GetMassListRangeFromScanNum(scan_id)
+        scan = self.run.GetCentroidStream(scan_id, True)
 
-            noiseData = self.run.GetNoiseData(scan_id)
-            mzs, ints = msl[0][0], msl[0][1]
-
-            noise = np.interp(mzs, noiseData[0], noiseData[1])
-            baseline = np.interp(mzs, noiseData[0], noiseData[2])
-        else:
-            # From profile to centroid
-            scan = self.run.GetCentroidStream(scan_id, False) # TODO: Check boolean to include/exclude flagged peaks
-
-        mz_ibn = zip(scan.Masses, scan.Intensities, scan.Baselines, scan.Noises)
+        mz_ibn = zip(scan.Masses, scan.Intensities, scan.Baselines, scan.Noises)  # SignalToNoise not available
         mz_ibn.sort()
         mzs, ints, baseline, noise = zip(*mz_ibn)
 
         if mode_noise == "noise_packets":
-            # TODO: Negative baseline?
-            snr = np.divide(np.subtract(ints, baseline), noise)
-            #snr = scan.SignalToNoise
+            snr = [p.SignalToNoise for p in scan.GetCentroids()]
         elif mode_noise == "median":
             snr = ints / np.median(ints)
         elif mode_noise == "mean":
@@ -110,11 +95,16 @@ class ThermoRaw():
         return [self.peaklist(scan_id, mode_noise=mode_noise) for scan_id in scan_ids]
 
 
-
 # testing
 if __name__ == '__main__':
-    TR = ThermoRaw("../../tests/data//MTBLS79_subset/raw/batch04_QC17_rep01_262.RAW")
-    print TR.headers()
-    print TR.headers_scan_ids()
-    with open("test_new.txt", "w") as out:
-        out.write(TR.peaklist(1).to_str("\t"))
+    TR = ThermoRaw("../../tests/data/raw/centroid.raw")
+    with open("../../tests/data/raw/centroid_scan_03.txt", "w") as out:
+        out.write(TR.peaklist(3).to_str("\t"))
+    with open("../../tests/data/raw/centroid_scan_43.txt", "w") as out:
+        out.write(TR.peaklist(43).to_str("\t"))
+
+    TR = ThermoRaw("../../tests/data/raw/profile.raw")
+    with open("../../tests/data/raw/profile_scan_03.txt", "w") as out:
+        out.write(TR.peaklist(3).to_str("\t"))
+    with open("../../tests/data/raw/profile_scan_43.txt", "w") as out:
+        out.write(TR.peaklist(43).to_str("\t"))
