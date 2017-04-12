@@ -3,6 +3,7 @@
 import os
 import numpy as np
 import collections
+import h5py
 from process.peak_alignment import align_peaks
 from process.scan_processing import read_scans
 from process.scan_processing import average_replicate_scans
@@ -16,10 +17,9 @@ from portals import check_paths
 from experiment import check_metadata
 from experiment import update_metadata
 from experiment import update_class_labels
-from portals import load_peaklists
+import portals
 
-
-def process_scans(source, function_noise, snr_thres, nscans, ppm, min_fraction=None, rsd_thres=None, filelist=None, subset_mzrs=None, block_size=2000, ncpus=None):
+def process_scans(source, function_noise, snr_thres, nscans, ppm, min_fraction=None, rsd_thres=None, filelist=None, subset_scan_events=None, block_size=2000, ncpus=None):
 
     filenames = check_paths(filelist, source)
     assert len([fn for fn in filenames if not fn.lower().endswith(".mzml") or not fn.lower().endswith(".raw")]) > 0, "Incorrect file format. Provide .mzML and .raw files"
@@ -35,7 +35,7 @@ def process_scans(source, function_noise, snr_thres, nscans, ppm, min_fraction=N
         print
         print os.path.basename(filenames[i])
 
-        scans = read_scans(filenames[i], source, function_noise, nscans, subset_mzrs)
+        scans = read_scans(filenames[i], source, function_noise, nscans, subset_scan_events)
         scans_er = remove_edges(scans)
 
         prs = average_replicate_scans(scans_er, snr_thres, ppm, min_fraction, rsd_thres, block_size, ncpus)
@@ -62,7 +62,7 @@ def replicate_filter(source, ppm, reps, min_peaks, rsd_thres=None, filelist=None
 
     filenames = check_paths(filelist, source)
     assert len(filenames) > 0, "Provide a filelist that list all the text files (columnname:filename) and assign replicate numbers to each filename/sample (columnname:replicate)"
-    peaklists = load_peaklists(source)
+    peaklists = portals.load_peaklists(source)
 
     if filelist is not None:
         fl = check_metadata(filelist)
@@ -109,7 +109,7 @@ def replicate_filter(source, ppm, reps, min_peaks, rsd_thres=None, filelist=None
 def align_samples(source, ppm, filelist=None, block_size=2000, ncpus=None):
 
     filenames = check_paths(filelist, source)
-    peaklists = load_peaklists(source)
+    peaklists = portals.load_peaklists(source)
 
     if filelist is not None:
         fl = check_metadata(filelist)
@@ -119,25 +119,38 @@ def align_samples(source, ppm, filelist=None, block_size=2000, ncpus=None):
     return align_peaks(peaklists, ppm=ppm, block_size=block_size, byunique=False, ncpus=ncpus)
 
 
-def blank_filter(peak_matrix, blank_label, min_fraction=1.0, min_fold_change=1.0, function="mean", rm_samples=True, tsv_labels=None):
+def blank_filter(peak_matrix, blank_label, min_fraction=1.0, min_fold_change=1.0, function="mean", rm_samples=True, class_labels=None):
 
     assert 0 < min_fraction <= 1, "Provide a value between 0. and 1."
     assert min_fold_change >= 0, "Provide a value larger than zero."
     assert function in ("mean", "median", "max"), "Mean, median or max intensity"
+    assert os.path.isfile(peak_matrix), "{} does not exist".format(peak_matrix)
 
-    if tsv_labels is not None:
-        peak_matrix = update_class_labels(peak_matrix, tsv_labels)
+    if h5py.is_hdf5(peak_matrix):
+        peak_matrix = portals.load_peak_matrix_from_hdf5(peak_matrix)
+    else:
+        pass  # TODO: read peakmatrix from text file
+
+    if class_labels is not None:
+        peak_matrix = update_class_labels(peak_matrix, class_labels)
 
     assert blank_label in peak_matrix.peaklist_tag_values, "Blank label ({}) does not exist".format(blank_label)
 
     return filter_blank_peaks(peak_matrix, blank_label, min_fraction, min_fold_change, function, rm_samples)
 
 
-def sample_filter(peak_matrix, min_fraction, within=False, rsd=None, qc_label=None, tsv_labels=None):
+def sample_filter(peak_matrix, min_fraction, within=False, rsd=None, qc_label=None, class_labels=None):
 
-    if tsv_labels is not None:
-        assert os.path.isfile(tsv_labels), "File with class labels not available"
-        peak_matrix = update_class_labels(peak_matrix, tsv_labels)
+    assert os.path.isfile(peak_matrix), "{} does not exist".format(peak_matrix)
+
+    if h5py.is_hdf5(peak_matrix):
+        peak_matrix = portals.load_peak_matrix_from_hdf5(peak_matrix)
+    else:
+        pass  # TODO: read peakmatrix from text file
+
+    if class_labels is not None:
+        assert os.path.isfile(class_labels), "{} does not exist".format(class_labels)
+        peak_matrix = update_class_labels(peak_matrix, class_labels)
 
     if qc_label is not None:
         assert qc_label in peak_matrix.peaklist_tag_values

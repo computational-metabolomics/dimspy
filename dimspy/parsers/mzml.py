@@ -17,11 +17,14 @@ class Mzml():
         self.archive = archive
 
     def run(self):
+        assert self.fname.lower().endswith(".mzml") or self.fname.lower().endswith(".mzml.gz") or self.fname.lower().endswith(".zip"), "Incorrect format for mzml parser"
         if self.archive is not None:
+            assert zipfile.is_zipfile(self.archive), 'input file [%s] is not a valid zip archive' % self.archive
             zf = zipfile.ZipFile(self.archive, 'r')
+            assert self.fname in zf.namelist(), "{} does not exist in zip file".format(self.fname)
             return pymzml.run.Reader('', file_object=zf.open(self.fname))
-        elif os.path.isfile(self.fname) and (
-            self.fname.lower().endswith(".mzml") or self.fname.lower().endswith(".mzml.gz")):
+        elif self.fname.lower().endswith(".mzml") or self.fname.lower().endswith(".mzml.gz"):
+            assert os.path.isfile(self.fname), "{} does not exist".format(self.fname)
             return pymzml.run.Reader(self.fname)
         else:
             return None

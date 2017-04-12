@@ -20,15 +20,15 @@ def main():
     parser_as = subparsers.add_parser('align-samples', help='Align mass spectra across samples.')
     parser_bf = subparsers.add_parser('blank-filter', help='Filter peaks present in the blank samples.')
     parser_sf = subparsers.add_parser('sample-filter', help='Filter peaks based on certain reproducibility and sample class criteria.')
-    parser_pr = subparsers.add_parser('pickle-to-readable', help='Write output to human-readable format.')
+    parser_pr = subparsers.add_parser('hdf5-to-text', help='Write HDF5 output to text format.')
 
     parser_cf.add_argument('-l', '--filelist',
                            type=str, required=True,
-                           help="Tab-delimited file that list all the MS data files (*.raw, *.mzml or tab-delimited files) and associated meta data (replicate, order, batch, class, qc, blank).")
+                           help="Tab-delimited file that list all the MS data files (*.raw, *.mzml or tab-delimited files) and associated meta data (e.g. replicate, order, batch, class, qc, blank).")
 
-    parser_cf.add_argument('-i', '--source',
+    parser_cf.add_argument('-i', '--input',
                            type=str, required=True,
-                           help="Directory (*.raw, *.mzml or tab-delimited files) or zip archive (*.mzml or tab-delimited files)")
+                           help="Directory (*.raw, *.mzml or tab-delimited peaklist files) or zip archive (*.mzml or tab-delimited peaklist files)")
 
     parser_cf.add_argument('-r', '--replicates',
                            type=int, required=False,
@@ -50,17 +50,17 @@ def main():
     # PROCESS SCANS
     #################################
 
-    parser_ps.add_argument('-i', '--source',
+    parser_ps.add_argument('-i', '--input',
                            type=str, required=True,
                            help="Directory (*.raw, *.mzml or tab-delimited files) or zip archive (*.mzml or tab-delimited files).")
 
-    parser_ps.add_argument('-o', '--hdf5-file-out',
+    parser_ps.add_argument('-o', '--output',
                            type=str, required=True,
                            help="HDF5 file to save the peaklist objects.")
 
     parser_ps.add_argument('-l', '--filelist',
                            type=str, required=False,
-                           help="File (csv or tab-separated ) that list all the data files (*.raw or *.mzml) and meta data (filename, technical replicate, group, batch). "
+                           help="Tab-separated file that list all the data files (*.raw or *.mzml) and meta data (filename, technical replicate, class, batch). "
                                 "HIGHLY RECOMMENDED when directory or zip file is provided.")
 
     parser_ps.add_argument('-m', '--function-noise',
@@ -81,13 +81,13 @@ def main():
 
     parser_ps.add_argument('-a', '--min-fraction',
                            default=1, type=float, required=False,
-                           help="Minimum number of scans a peak has to be present.")
+                           help="Minimum fraction a peak has to be present. Use 0.0 to not apply this filter.")
 
-    parser_ps.add_argument('-d', '--rsd-threshold',
+    parser_ps.add_argument('-d', '--rsd-threshold', # TODO: This should relate to ncans and min_fraction.
                            default=None, type=float, required=False,
-                           help="Maximum threshold - relative standard deviation (Only applied to peaks that have been measured across a minimum of three scans).")
+                           help="Maximum threshold - relative standard deviation (Only applied to peaks that have been measured across a minimum of two scans).")
 
-    parser_ps.add_argument('-e', '--subset-mz-ranges',
+    parser_ps.add_argument('-e', '--subset-scan-events',
                            type=str, required=False,
                            help="Filename that contains a description of the DIMS experiment.")
 
@@ -97,17 +97,17 @@ def main():
 
     parser_ps.add_argument('-c', '--ncpus',
                            default=None, type=int, required=False,
-                           help="Number of central processing units.")
+                           help="Number of central processing units (CPUs).")
 
     #################################
     # REPLICATE FILTER
     #################################
 
-    parser_rf.add_argument('-i', '--hdf5-file-in',
+    parser_rf.add_argument('-i', '--input',
                            type=str, required=False,
-                           help="HDF5 file (Peaklist objects) or directory (tab-delimited files) that contains peaklists from step 'process-scans' or 'replicate filter'.")
+                           help="HDF5 file (Peaklist objects) from step 'process-scans' or directory path that contains tab-delimited peaklists.")
 
-    parser_rf.add_argument('-o', '--hdf5-file-out',
+    parser_rf.add_argument('-o', '--output',
                            type=str, required=False,
                            help="HDF5 file to save the peaklist objects.")
 
@@ -121,7 +121,7 @@ def main():
                            required=True,
                            help="Number of technical replicates.")
 
-    parser_rf.add_argument('-m', '--min-peaks',
+    parser_rf.add_argument('-m', '--min-peak-present',
                            default=2,
                            type=int,
                            required=True,
@@ -131,23 +131,27 @@ def main():
                            default=None, type=float,  required=False,
                            help="Maximum threshold - Relative Standard Deviation.")
 
+    parser_rf.add_argument('-l', '--filelist',
+                           type=str, required=False,
+                           help="Tab-separated file that list all the data files (*.raw or *.mzml) and meta data (filename, technical replicate, class, batch).")
+
     parser_rf.add_argument('-b', '--block-size',
                            default=2000, type=int, required=False,
                            help="The size of each block of peaks to perform clustering on.")
 
     parser_rf.add_argument('-c', '--ncpus',
                            default=None, type=int, required=False,
-                           help="Number of central processing units.")
+                           help="Number of central processing units (CPUs).")
 
     #################################
     # Align Samples
     #################################
 
-    parser_as.add_argument('-i', '--hdf5-file-in',
+    parser_as.add_argument('-i', '--input',
                            type=str, required=False,
-                           help="HDF5 file (Peaklist objects) or directory (tab-delimited files) that contains peaklists from step 'process-scans' or 'replicate filter'.")
+                           help="HDF5 file (Peaklist objects) from step 'process-scans / replicate-filter' or directory path that contains tab-delimited peaklists.")
 
-    parser_as.add_argument('-o', '--hdf5-file-out',
+    parser_as.add_argument('-o', '--output',
                            type=str, required=False,
                            help="HDF5 file to save the peak matrix object.")
 
@@ -155,23 +159,27 @@ def main():
                            default=2.0, type=float, required=False,
                            help="Mass tolerance in parts per million to group peaks across scans / mass spectra.")
 
+    parser_as.add_argument('-l', '--filelist',
+                           type=str, required=False,
+                           help="Tab-separated file that list all the data files (*.raw or *.mzml) and meta data (filename, technical replicate, class, batch).")
+
     parser_as.add_argument('-b', '--block-size',
                            default=2000, type=int, required=False,
                            help="The size of each block of peaks to perform clustering on.")
 
     parser_as.add_argument('-c', '--ncpus',
                            default=None, type=int, required=False,
-                           help="Number of central processing units.")
+                           help="Number of central processing units (CPUs).")
 
     #################################
     # Blank Filter
     #################################
 
-    parser_bf.add_argument('-i', '--file-in',
+    parser_bf.add_argument('-i', '--input',
                            type=str, required=False,
                            help="HDF5 file or tab-delimited file that contains a peak matrix (object).")
 
-    parser_bf.add_argument('-o', '--hdf5-file-out',
+    parser_bf.add_argument('-o', '--output',
                            type=str, required=False,
                            help="HDF5 file to save the peak matrix object.")
 
@@ -184,7 +192,7 @@ def main():
                            help="Minium fold change blank versus sample.")
 
     parser_bf.add_argument('-f', '--function',
-                           choices=["mean", "median", "max"], required=False,
+                           default="mean", choices=["mean", "median", "max"], required=False,
                            help="Select function to calculate blank intenstiy.")
 
     parser_bf.add_argument('-c', '--min-fold-change',
@@ -203,11 +211,11 @@ def main():
     # Sample Filter
     #################################
 
-    parser_sf.add_argument('-i', '--file-in',
+    parser_sf.add_argument('-i', '--input',
                            type=str, required=False,
-                           help="HDF5 file or tab-delimited file that contains a peak matrix (object).")
+                           help="HDF5 file or tab-delimited file that contains a peak matrix.")
 
-    parser_sf.add_argument('-o', '--hdf5-file-out',
+    parser_sf.add_argument('-o', '--output',
                            type=str, required=True,
                            help="HDF5 file to save the peak matrix object.")
 
@@ -235,11 +243,11 @@ def main():
     # HDF5 to text
     #################################
 
-    parser_pr.add_argument('-i', '--hdf5-file-in',
+    parser_pr.add_argument('-i', '--input',
                            type=str, required=True,
                            help="HDF5 file that contains peaklists or a peak matrix from one of the processing steps.")
 
-    parser_pr.add_argument('-o', '--path-out',
+    parser_pr.add_argument('-o', '--output',
                            type=str, required=True,
                            help="Directory (peaklists) or text file (peak matrix) to write to.")
 
@@ -255,7 +263,7 @@ def main():
     print args
 
     if args.step == "process-scans":
-        peaklists = workflow.process_scans(source=args.source,
+        peaklists = workflow.process_scans(source=args.input,
             function_noise=args.function_noise,
             snr_thres=args.snr_threshold,
             nscans=args.nscans,
@@ -263,10 +271,10 @@ def main():
             min_fraction=args.min_fraction,
             rsd_thres=args.rsd_threshold,
             filelist=args.filelist,
-            subset_mzrs=args.subset_mz_ranges,
+            subset_scan_events=args.subset_scan_events,
             block_size=args.block_size,
             ncpus=args.ncpus)
-        portals.save_peaklists_as_hdf5(peaklists, args.hdf5_file_out)
+        portals.save_peaklists_as_hdf5(peaklists, args.output)
 
     elif args.step == "mass-calibrate":
         # TODO implement mass calibration
@@ -274,44 +282,44 @@ def main():
         print args.method
 
     elif args.step == "replicate-filter":
-        peaklists_rf = workflow.replicate_filter(args.source,
+        peaklists_rf = workflow.replicate_filter(source=args.input,
             ppm=args.ppm,
             reps=args.replicates,
-            min_peaks=args.min_peaks,
+            min_peaks=args.min_peak_present,
             rsd_thres=args.rsd_threshold,
             filelist=args.filelist,
             block_size=args.block_size,
             ncpus=args.ncpus)
-        portals.save_peaklists_as_hdf5(peaklists_rf, args.hdf5_file_out)
+        portals.save_peaklists_as_hdf5(peaklists_rf, args.output)
 
     elif args.step == "align-samples":
-        pm = workflow.align_samples(args.source,
+        pm = workflow.align_samples(source=args.input,
             ppm=args.ppm,
             filelist=args.filelist,
             block_size=args.block_size,
             ncpus=args.ncpus)
-        portals.save_peak_matrix_as_hdf5(pm, args.hdf5_file_out)
+        portals.save_peak_matrix_as_hdf5(pm, args.output)
     elif args.step == "blank-filter":
-        pm_bf = workflow.blank_filter(args.source,
+        pm_bf = workflow.blank_filter(peak_matrix=args.input,
             blank_label=args.blank_label,
             min_fraction=args.min_fraction,
             min_fold_change=args.min_fold_change,
             function=args.function,
             rm_samples=args.remove_blank_samples,
-            tsv_labels=args.class_labels)
-        portals.save_peak_matrix_as_hdf5(pm_bf, args.hdf5_file_out)
+            class_labels=args.class_labels)
+        portals.save_peak_matrix_as_hdf5(pm_bf, args.output)
 
     elif args.step == "sample-filter":
-        pm_sf = workflow.sample_filter(args.source,
+        pm_sf = workflow.sample_filter(peak_matrix=args.input,
             min_fraction=args.min_fraction,
             within=args.within,
             rsd=args.rsd_threshold,
             qc_label=args.qc_label,
-            tsv_labels=args.class_labels)
-        portals.save_peak_matrix_as_hdf5(pm_sf, args.hdf5_file_out)
+            class_labels=args.class_labels)
+        portals.save_peak_matrix_as_hdf5(pm_sf, args.output)
 
     elif args.step == "hdf5-to-text":
-        portals.hdf5_to_text(args.hdf5_file_in,
-            path_out=args.path_out,
+        portals.hdf5_to_text(args.input,
+            path_out=args.output,
             separator=args.separator,
             transpose=args.transpose)

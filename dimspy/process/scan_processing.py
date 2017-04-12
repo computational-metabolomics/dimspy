@@ -6,7 +6,7 @@ import zipfile
 import numpy as np
 from dimspy.models.peaklist import PeakList
 from dimspy.parsers import Mzml
-from dimspy.parsers import ThermoRaw, ThermoRawWine
+from dimspy.parsers import ThermoRaw
 from dimspy.process.peak_alignment import align_peaks
 from dimspy.process.peak_filters import filter_snr
 from dimspy.experiment import define_mz_ranges
@@ -45,7 +45,7 @@ def remove_edges(pls_sd):
     return pls_sd
 
 
-def read_scans(fn, source, function_noise, nscans, subset_mzrs=None):
+def read_scans(fn, source, function_noise, nscans, subset_scan_events=None):
 
     fn = fn.encode('string-escape')
     source = source.encode('string-escape')
@@ -59,30 +59,28 @@ def read_scans(fn, source, function_noise, nscans, subset_mzrs=None):
             run = Mzml(fn, source)
         else:
             run = Mzml(fn)
-
     elif fn.lower().endswith(".raw"):
-        if os.name == "nt":
-            run = ThermoRaw(fn)
-        else:
-            run = ThermoRawWine(fn)
+        run = ThermoRaw(fn)
+    else:
+        pass
 
     h_sids = run.headers_scan_ids()
     mzrs = collections.OrderedDict(zip(h_sids.keys(), [mz_range_from_header(h) for h in h_sids]))
 
-    if subset_mzrs is None:
+    if subset_scan_events is None:
         h_rm = interpret_experiment_from_headers(mzrs)
         h_sids = collections.OrderedDict((key, value) for key, value in h_sids.items() if key in h_rm)
-    elif type(subset_mzrs) == list:
-        subset = define_mz_ranges(subset_mzrs)
+    elif type(subset_scan_events) == list:
+        subset = define_mz_ranges(subset_scan_events)
         h_rm = remove_headers(subset, mzrs)
         h_sids = collections.OrderedDict((key, value) for key, value in h_sids.items() if key in h_rm)
-    elif os.path.isfile(subset_mzrs.encode('string-escape')):
-        with open(subset_mzrs.encode('string-escape'), 'r') as f:
+    elif os.path.isfile(subset_scan_events.encode('string-escape')):
+        with open(subset_scan_events.encode('string-escape'), 'r') as f:
             mzrs_from_fn = [line.strip().split("\t") for line in f]
             subset = define_mz_ranges(mzrs_from_fn)
             h_rm = remove_headers(subset, mzrs)
             h_sids = collections.OrderedDict((key, value) for key, value in h_sids.items() if key in h_rm)
-    elif subset_mzrs == "all":
+    elif subset_scan_events == "all":
         pass
 
     # Validate that there are enough scans for each window

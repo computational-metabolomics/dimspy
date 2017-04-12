@@ -2,5 +2,4 @@
 # -*- coding: utf-8 -*-
 
 from mzml import Mzml
-from thermo_raw import ThermoRaw, ThermoRawWine
-
+from thermo_raw import ThermoRaw

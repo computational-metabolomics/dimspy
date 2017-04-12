@@ -1,28 +1,46 @@
-python -m dimspy check-filelist --source E:\Dropbox\Projects\Bioinformatics\Development\DIMS-workflow-development\computational\dimspy\tests\data --filelist E:\Dropbox\Projects\Bioinformatics\Development\DIMS-workflow-development\computational\dimspy\tests\data\filelist.tsv
-
 python -m dimspy process-scans^
- --source E:\Dropbox\Projects\Bioinformatics\Development\DIMS-workflow-development\computational\dimspy\tests\data^
- --pickle-file-out E:\Dropbox\Projects\Bioinformatics\Development\DIMS-workflow-development\computational\dimspy\tests\data\peaklist.pkl^
- --filelist E:\Dropbox\Projects\Bioinformatics\Development\DIMS-workflow-development\computational\dimspy\tests\data\filelist.tsv^
- --filename-experiment None^
- --mode-noise median^
+ --input tests/data/MTBLS79_subset/MTBLS79_subset.zip^
+ --output tests/data/temp/peaklists.hdf5^
+ --filelist tests/data/MTBLS79_subset/filelist_mzML.txt^
+ --subset-scan-events None^
+ --function-noise median^
  --snr-threshold 3.0^
  --ppm 2.0^
  --nscans 1^
- --min-peaks 1^
+ --min-fraction 1^
  --rsd-threshold 30.0^
  --block-size 2000^
  --ncpus 2
 
 python -m dimspy replicate-filter^
- --pickle-file-in E:\Dropbox\Projects\Bioinformatics\Development\DIMS-workflow-development\computational\dimspy\tests\data\peaklist.pkl^
- --pickle-file-out E:\Dropbox\Projects\Bioinformatics\Development\DIMS-workflow-development\computational\dimspy\tests\data\peaklist_rf.pkl^
+ --input tests/data/temp/peaklists.hdf5^
+ --output tests/data/temp/peaklists_rf.hdf5^
  --ppm 2.0^
- --min-replicates 2
+ --replicates 3^
+ --min-peak-present 2^
+ --rsd-threshold 30.0
+
+python -m dimspy align-samples^
+ --input tests/data/temp/peaklists_rf.hdf5^
+ --output tests/data/temp/pm_a.hdf5^
+ --ppm 2.0
+
+python -m dimspy blank-filter^
+ --input tests/data/temp/pm_a.hdf5^
+ --output tests/data/temp/pm_a_bf.hdf5^
+ --blank-label blank^
+ --remove
 
 python -m dimspy sample-filter^
- --pickle-file-in E:\Dropbox\Projects\Bioinformatics\Development\DIMS-workflow-development\computational\dimspy\tests\data\pm.pkl^
- --pickle-file-out E:\Dropbox\Projects\Bioinformatics\Development\DIMS-workflow-development\computational\dimspy\tests\data\pm_sf.pkl^
- --min-fraction 0.25^
- --rsd-threshold 30.00^
- --within
+ --input tests/data/temp/pm_a_bf.hdf5^
+ --output tests/data/temp/pm_a_bf_sf.hdf5^
+ --min-fraction 0.8^
+ --rsd-threshold 30.00
+
+python -m dimspy hdf5-to-text^
+ --input tests/data/temp/peaklists_rf.hdf5^
+ --output tests/data/temp
+
+python -m dimspy hdf5-to-text^
+ --input tests/data/temp/pm_a_bf_sf.hdf5^
+ --output tests/data/temp/pm_a_bf_sf.txt

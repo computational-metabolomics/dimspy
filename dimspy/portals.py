@@ -30,8 +30,9 @@ def check_paths(tsv, source):
                     assert len([fn for fn in zf.namelist() if fn.lower().endswith(".raw")]) == 0, "Archive with *.raw files not yet supported. Convert to mzML"
                     filenames = [fn for fn in zf.namelist() if fn.lower().endswith(".mzml")]
             elif h5py.is_hdf5(source):
-                f = load_peaklists_from_hdf5(source)
-                filenames = f.keys()
+                peaklists = load_peaklists_from_hdf5(source)
+                filenames = [pl.ID for pl in peaklists]
+
         elif type(source) == list:
             assert isinstance(source[0], PeakList), "Incorrect Objects in list. PeakList class required."
             filenames = [pl.ID for pl in source]
@@ -68,8 +69,8 @@ def check_paths(tsv, source):
                         filenames.append(fn)
 
             elif h5py.is_hdf5(source):
-                f = load_peaklists_from_hdf5(source)
-                filenames = f.keys()
+                peaklists = load_peaklists_from_hdf5(source)
+                filenames = [pl.ID for pl in peaklists]
 
 
             else:
@@ -235,9 +236,8 @@ def hdf5_to_text(fname, path_out, separator="\t", transpose=False):
         with open(os.path.join(path_out), "w") as pk_out:
             pk_out.write(obj.to_str(separator, transpose))
     else:
-        assert os.path.isdir(path_out), "Specifiy a directory path to write peaklists to."
+        assert os.path.isdir(path_out), "File or Directory does not exist:".format(path_out)
         obj = load_peaklists_from_hdf5(fname)
-        assert type(obj) == list, "Incorrect format, list required"
         assert isinstance(obj[0], PeakList), "Incorrect Objects in list. Peaklist Object required."
         for pl in obj:
             with open(os.path.join(path_out, os.path.splitext(pl.ID)[0] + ".txt"), "w") as pk_out:

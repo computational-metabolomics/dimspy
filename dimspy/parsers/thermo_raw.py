@@ -2,7 +2,8 @@
 # -*- coding: utf-8 -*-
 import clr
 import sys
-sys.path.append("ThermoRawFileReader_3_0_41/Libraries")
+import os
+sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), "ThermoRawFileReader_3_0_41/Libraries"))
 clr.AddReference('ThermoFisher.CommonCore.RawFileReader')
 clr.AddReference('ThermoFisher.CommonCore.Data')
 import ThermoFisher.CommonCore.Data.Business as Business
