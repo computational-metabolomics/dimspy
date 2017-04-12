@@ -1,23 +1,26 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-import os
-import numpy as np
 import collections
+import os
+
 import h5py
-from process.peak_alignment import align_peaks
-from process.scan_processing import read_scans
-from process.scan_processing import average_replicate_scans
-from process.scan_processing import remove_edges
-from process.scan_processing import join_peaklists
-from process.peak_filters import filter_blank_peaks
-from process.peak_filters import filter_across_classes
-from process.peak_filters import filter_within_classes
-from process.peak_filters import filter_rsd
-from portals import check_paths
+import numpy as np
+
+from portals import hdf5
+from portals.hdf5 import check_paths
 from experiment import check_metadata
-from experiment import update_metadata
 from experiment import update_class_labels
-import portals
+from experiment import update_metadata
+from process.peak_alignment import align_peaks
+from process.peak_filters import filter_across_classes
+from process.peak_filters import filter_blank_peaks
+from process.peak_filters import filter_rsd
+from process.peak_filters import filter_within_classes
+from process.scan_processing import average_replicate_scans
+from process.scan_processing import join_peaklists
+from process.scan_processing import read_scans
+from process.scan_processing import remove_edges
+
 
 def process_scans(source, function_noise, snr_thres, nscans, ppm, min_fraction=None, rsd_thres=None, filelist=None, subset_scan_events=None, block_size=2000, ncpus=None):
 
@@ -62,7 +65,7 @@ def replicate_filter(source, ppm, reps, min_peaks, rsd_thres=None, filelist=None
 
     filenames = check_paths(filelist, source)
     assert len(filenames) > 0, "Provide a filelist that list all the text files (columnname:filename) and assign replicate numbers to each filename/sample (columnname:replicate)"
-    peaklists = portals.load_peaklists(source)
+    peaklists = hdf5.load_peaklists(source)
 
     if filelist is not None:
         fl = check_metadata(filelist)
@@ -109,7 +112,7 @@ def replicate_filter(source, ppm, reps, min_peaks, rsd_thres=None, filelist=None
 def align_samples(source, ppm, filelist=None, block_size=2000, ncpus=None):
 
     filenames = check_paths(filelist, source)
-    peaklists = portals.load_peaklists(source)
+    peaklists = hdf5.load_peaklists(source)
 
     if filelist is not None:
         fl = check_metadata(filelist)
@@ -127,7 +130,7 @@ def blank_filter(peak_matrix, blank_label, min_fraction=1.0, min_fold_change=1.0
     assert os.path.isfile(peak_matrix), "{} does not exist".format(peak_matrix)
 
     if h5py.is_hdf5(peak_matrix):
-        peak_matrix = portals.load_peak_matrix_from_hdf5(peak_matrix)
+        peak_matrix = hdf5.load_peak_matrix_from_hdf5(peak_matrix)
     else:
         pass  # TODO: read peakmatrix from text file
 
@@ -144,7 +147,7 @@ def sample_filter(peak_matrix, min_fraction, within=False, rsd=None, qc_label=No
     assert os.path.isfile(peak_matrix), "{} does not exist".format(peak_matrix)
 
     if h5py.is_hdf5(peak_matrix):
-        peak_matrix = portals.load_peak_matrix_from_hdf5(peak_matrix)
+        peak_matrix = hdf5.load_peak_matrix_from_hdf5(peak_matrix)
     else:
         pass  # TODO: read peakmatrix from text file
 

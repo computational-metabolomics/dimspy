@@ -5,8 +5,8 @@ import os
 import zipfile
 import numpy as np
 from dimspy.models.peaklist import PeakList
-from dimspy.parsers import Mzml
-from dimspy.parsers import ThermoRaw
+from dimspy.portals import Mzml
+from dimspy.portals import ThermoRaw
 from dimspy.process.peak_alignment import align_peaks
 from dimspy.process.peak_filters import filter_snr
 from dimspy.experiment import define_mz_ranges

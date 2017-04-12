@@ -1,9 +1,16 @@
 include README.rst
 include requirements*.txt
-include examples/*.py
+include examples/*.*
 include tests/*.py
 include tests/data/*.*
 include tests/data/MTBLS79_subset/*.*
+include tests/data/MTBLS79_subset/output/*.*
+include tests/data/MTBLS79_subset/raw/*.*
+include tests/data/temp
+include tests/data/raw/*.*
+include tests/data/txt/*.*
 include dimspy/models/*.py
-include dimspy/parsers/*.py
+include dimspy/portals/*.py
 include dimspy/process/*.py
+include dimspy-runner.py
+
