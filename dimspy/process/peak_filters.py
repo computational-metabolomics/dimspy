@@ -14,6 +14,9 @@ from __future__ import division
 
 import logging
 import numpy as np
+
+# when mask / unmask samples for filtering, use with ... as statement to auto reset the mask after filtering
+# manually call pm.mask_tags() etc. will not override the mask, but instead overlap with the existing mask by default
 from ..models.peak_matrix import mask_peakmatrix, unmask_peakmatrix
 
 

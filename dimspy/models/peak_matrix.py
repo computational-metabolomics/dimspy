@@ -9,6 +9,7 @@ origin: Nov. 10, 2016
 
 """
 
+
 import logging
 import numpy as np
 from string import join
@@ -127,12 +128,10 @@ class PeakMatrix(object):
 
     # publics
     def tags_of(self, tag_type=None):
-        assert tag_type is None or all(
-            map(lambda x: x.has_tag_type(tag_type), self._tags)), 'not all samples has tag type [%s]' % tag_type
-        tlst = map(lambda x:
-            x.tag_of(tag_type), self.peaklist_tags)
-        if tag_type is None:
-            tlst = reduce(lambda x, y: x + y, tlst)
+        assert tag_type is None or \
+               all(map(lambda x: x.has_tag_type(tag_type), self._tags)), 'not all samples has tag type [%s]' % tag_type
+        tlst = map(lambda x: x.tag_of(tag_type), self.peaklist_tags)
+        if tag_type is None: tlst = reduce(lambda x, y: x + y, tlst)
         return list(set(tlst))
 
     def mask_tags(self, *args, **kwargs):  # any
@@ -147,7 +146,8 @@ class PeakMatrix(object):
 
     def unmask_tags(self, *args, **kwargs):  # all
         if kwargs.has_key('override'):
-            override = kwargs['override']; del kwargs['override']
+            override = kwargs['override']
+            del kwargs['override']
         else:
             override = False
         mask = map(lambda x: not x.has_tags(*args, **kwargs), self._tags)
@@ -184,13 +184,23 @@ class PeakMatrix(object):
         return 0 in self.shape
 
     # exports
-    def to_str(self, delimiter='\t', transpose=False):
-        dm = [[''] + map(str, self.mz_mean_vector)] # + ['']]
-        dm += zip(*([map(str, self.peaklist_ids)] +
-                    [map(str, ln) for ln in self.intensity_matrix.T])) #+
-                    #[map(str, self.peaklist_tags)]))
-        if transpose: dm = zip(*dm)
-        return join(map(lambda x: join(x, delimiter), dm), '\n')
+    def to_str(self, attr_name='intensity', masked_only=True, delimiter='\t', transpose=False, extend=True):
+        def _dump(pm):
+            hd = [''] + (['missing', 'tags'] if extend else []) + map(str, pm.mz_mean_vector)
+            dm = zip(*(
+                [map(str, pm.peaklist_ids)] +
+               ([map(str, pm.missing), map(lambda x: x.to_str(), pm.peaklist_tags)] if extend else []) +
+                [map(str, ln) for ln in pm.attr_matrix(attr_name).T]
+            ))
+            if extend: dm = [['present', '', ''] + map(str, pm.present), ['rsd', '', ''] + map(str, pm.rsd)] + dm
+            lm = [hd] + dm
+            return zip(*lm) if transpose else lm
+
+        if masked_only:
+            lines = _dump(self)
+        else:
+            with unmask_all_peakmatrix(self) as m: lines = _dump(m)
+        return join(map(lambda x: join(x, delimiter), lines), '\n')
 
 
 # with statements
@@ -270,6 +280,9 @@ if __name__ == '__main__':
     import pdb;
     pdb.set_trace()
 
+    pm.mask_tags('sample')
+    with open('text.txt', 'w') as f: f.write(pm.to_str())
+
     # properties
     print pm.mask
     print pm.peaklist_ids
@@ -303,4 +316,4 @@ if __name__ == '__main__':
 
     # export
     print pm.to_peaklist('merged')
-    print pm.to_str(transpose=True)
+

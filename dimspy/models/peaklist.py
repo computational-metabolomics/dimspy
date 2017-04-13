@@ -9,6 +9,7 @@ origin: Sep. 27, 2016
 
 """
 
+
 import logging
 import numpy as np
 import numpy.lib.recfunctions as rfn
@@ -25,10 +26,8 @@ class _Metadata(dict):
         super(_Metadata, self).__init__(*args, **kwargs)
 
     def __getattr__(self, item):
-        if self.has_key(item):
-            return self[item]
-        else:
-            super(_Metadata, self).__getattribute__(item)  # TODO: fix no_such_method_in_root_class after txt loader
+        return self[item] if self.has_key(item) else \
+               super(_Metadata, self).__getattribute__(item)
 
     def __setattr__(self, item, value):
         assert item != '__dict__', '"__dict__" is not an acceptable metadata key'
@@ -102,6 +101,10 @@ class _Tags(object):
 
     def to_list(self):
         return self._tags['_untyped'] + self._tags['_typed'].items()
+
+    def to_str(self):
+        return join(map(str, self._tags['_untyped']) +
+                    map(lambda x: join(map(str,x), ':'), self._tags['_typed'].items()), ', ')
 
 
 # public classes
@@ -239,8 +242,8 @@ class PeakList(object):
         assert attr_name not in self.__dict__.keys(), 'attribute name already been used by property'
         assert attr_name not in ('mz', 'intensity', 'flags'), 'cannot add reserved attribute [%s]' % attr_name
         assert not self.has_attribute(attr_name), 'attribute [%s] already exists' % attr_name
-        if is_flag and self.size > 0: assert set(attr_value) in (
-        {0}, {1}, {0, 1}), 'flag attribute can only contain True/False values'
+        if is_flag and self.size > 0: assert set(attr_value) in ({0}, {1}, {0, 1}), \
+                                        'flag attribute can only contain True/False values'
 
         adt = bool if is_flag else \
               attr_dtype if attr_dtype is not None else \
@@ -448,9 +451,9 @@ if __name__ == '__main__':
     print pl
 
     pl.insert_peak((900, 20, 30, True))  # auto sort
-    print pkl
-    pkl.remove_peak(-2)
-    print pkl
+    print pl
+    pl.remove_peak(-2)
+    print pl
 
-    print pkl.to_list()[0]
-    print pkl.to_dict().keys()
+    print pl.to_list()[0]
+    print pl.to_dict().keys()

@@ -102,12 +102,11 @@ def load_peaklists(source):
     return peaklists
 
 
-def text_to_peaklist(file_name, ID, attr_names_dict=None, flag_names=None, delimiter='\t', has_flag_col=False):
+def load_peaklist_from_txt(file_name, ID, attr_names_dict=None, flag_names=None, delimiter='\t', has_flag_col=False):
     if hasattr(file_name, 'read'):
         rlns = filter(lambda x: x != '', map(strip, file_name.readlines()))
     else:
-        with open(file_name, 'rU') as f:
-            rlns = filter(lambda x: x != '', map(strip, f.readlines()))
+        with open(file_name, 'rU') as f: rlns = filter(lambda x: x != '', map(strip, f.readlines()))
 
     dlns = map(lambda x: map(strip, x.split(delimiter)), rlns)
 
@@ -123,7 +122,6 @@ def text_to_peaklist(file_name, ID, attr_names_dict=None, flag_names=None, delim
     def _eval(val):
         try: return literal_eval(val)
         except (ValueError, SyntaxError): return val
-
     ddct = dict(map(lambda x: (attr_names_dict[x[0]], (map(_eval, x[1:]), x[0] in flag_names)), zip(*dlns)))
 
     pl = PeakList(ID, ddct['mz'][0], ddct['intensity'][0])
