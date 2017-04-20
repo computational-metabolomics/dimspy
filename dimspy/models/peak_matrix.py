@@ -55,7 +55,7 @@ class PeakMatrix(object):
         return self.shape
 
     def __str__(self):
-        return self.to_str(',')
+        return self.to_str(delimiter = ',', transpose = True)
 
     # properties
     @property
@@ -186,21 +186,28 @@ class PeakMatrix(object):
     # exports
     def to_str(self, attr_name='intensity', masked_only=True, delimiter='\t', transpose=False, extend=True):
         def _dump(pm):
-            hd = [''] + (['missing', 'tags'] if extend else []) + map(str, pm.mz_mean_vector)
-            dm = zip(*(
-                [map(str, pm.peaklist_ids)] +
-               ([map(str, pm.missing), map(lambda x: x.to_str(), pm.peaklist_tags)] if extend else []) +
-                [map(str, ln) for ln in pm.attr_matrix(attr_name).T]
-            ))
-            if extend: dm = [['present', '', ''] + map(str, pm.present), ['rsd', '', ''] + map(str, pm.rsd)] + dm
-            lm = [hd] + dm
-            return zip(*lm) if transpose else lm
+            hd = ['m/z'] + map(str, pm.mz_mean_vector)
+            dm = [map(str, pm.peaklist_ids)] + [map(str, ln) for ln in pm.attr_matrix(attr_name).T]
+            if not extend: return hd, dm
+            ttypes = set(reduce(lambda x,y: x+y, map(lambda x: x.tag_types, pm.peaklist_tags)))
+            hd = [hd[0]] + ['missing'] + map(lambda x: 'tags_' + x, ttypes) + ['tags_untyped'] + hd[1:]
+            dm = [dm[0]] + \
+                 [map(str, pm.missing)] + \
+                 [map(lambda x: str(x.tag_of(t)) if x.has_tag_type(t) else '', pm.peaklist_tags) for t in ttypes] + \
+                 [map(lambda x: join(map(str, x.tag_of(None)), ';'), pm.peaklist_tags)] + \
+                 dm[1:]
+            prelst = ['present'] + ([''] * (len(ttypes) + 2)) + map(str, pm.present)
+            rsdlst = ['rsd'] + ([''] * (len(ttypes) + 2)) + map(str, pm.rsd)
+            dm = zip(*([prelst, rsdlst] + zip(*dm)))
+            return hd, dm
 
         if masked_only:
-            lines = _dump(self)
+            h,d = _dump(self)
         else:
-            with unmask_all_peakmatrix(self) as m: lines = _dump(m)
-        return join(map(lambda x: join(x, delimiter), lines), '\n')
+            with unmask_all_peakmatrix(self) as m: h,d = _dump(m)
+        lm = [h] + zip(*d)
+        if transpose: lm = zip(*lm)
+        return join(map(lambda x: join(x, delimiter), lm), '\n')
 
 
 # with statements
@@ -280,8 +287,8 @@ if __name__ == '__main__':
     import pdb;
     pdb.set_trace()
 
-    pm.mask_tags('sample')
-    with open('text.txt', 'w') as f: f.write(pm.to_str())
+    #pm.mask_tags('sample')
+    with open('text.txt', 'w') as f: f.write(pm.to_str(transpose = True, extend = True))
 
     # properties
     print pm.mask

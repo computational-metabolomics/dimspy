@@ -3,7 +3,7 @@
 import argparse
 
 import workflow
-from portals import hdf5
+from portals import hdf5Portal
 from . import __version__
 
 
@@ -275,7 +275,7 @@ def main():
             subset_scan_events=args.subset_scan_events,
             block_size=args.block_size,
             ncpus=args.ncpus)
-        hdf5.save_peaklists_as_hdf5(peaklists, args.output)
+        hdf5Portal.save_peaklists_as_hdf5(peaklists, args.output)
 
     elif args.step == "mass-calibrate":
         # TODO implement mass calibration
@@ -291,7 +291,7 @@ def main():
             filelist=args.filelist,
             block_size=args.block_size,
             ncpus=args.ncpus)
-        hdf5.save_peaklists_as_hdf5(peaklists_rf, args.output)
+        hdf5Portal.save_peaklists_as_hdf5(peaklists_rf, args.output)
 
     elif args.step == "align-samples":
         pm = workflow.align_samples(source=args.input,
@@ -299,7 +299,7 @@ def main():
             filelist=args.filelist,
             block_size=args.block_size,
             ncpus=args.ncpus)
-        hdf5.save_peak_matrix_as_hdf5(pm, args.output)
+        hdf5Portal.save_peak_matrix_as_hdf5(pm, args.output)
     elif args.step == "blank-filter":
         pm_bf = workflow.blank_filter(peak_matrix=args.input,
             blank_label=args.blank_label,
@@ -308,7 +308,7 @@ def main():
             function=args.function,
             rm_samples=args.remove_blank_samples,
             class_labels=args.class_labels)
-        hdf5.save_peak_matrix_as_hdf5(pm_bf, args.output)
+        hdf5Portal.save_peak_matrix_as_hdf5(pm_bf, args.output)
 
     elif args.step == "sample-filter":
         pm_sf = workflow.sample_filter(peak_matrix=args.input,
@@ -317,10 +317,10 @@ def main():
             rsd=args.rsd_threshold,
             qc_label=args.qc_label,
             class_labels=args.class_labels)
-        hdf5.save_peak_matrix_as_hdf5(pm_sf, args.output)
+        hdf5Portal.save_peak_matrix_as_hdf5(pm_sf, args.output)
 
     elif args.step == "hdf5-to-text":
-        hdf5.hdf5_to_text(args.input,
-                          path_out=args.output,
-                          separator=args.separator,
-                          transpose=args.transpose)
+        hdf5Portal.hdf5_to_text(args.input,
+                                path_out=args.output,
+                                separator=args.separator,
+                                transpose=args.transpose)
