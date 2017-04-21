@@ -55,7 +55,7 @@ class PeakMatrix(object):
         return self.shape
 
     def __str__(self):
-        return self.to_str(delimiter = ',', transpose = True)
+        return self.to_str(delimiter = ',', transpose = True, extend = False)
 
     # properties
     @property
@@ -97,11 +97,11 @@ class PeakMatrix(object):
 
     @property
     def present(self):
-        return np.sum(self.mz_matrix > 0, axis=0)
+        return np.sum(self.intensity_matrix > 0, axis=0)
 
     @property
     def missing(self):
-        return np.sum(self.mz_matrix == 0, axis=1)
+        return np.sum(self.intensity_matrix == 0, axis=1)
 
     @property
     def rsd(self):
@@ -109,6 +109,10 @@ class PeakMatrix(object):
         rsd = (lambda m: _nzstd(m, 0) / _nzmean(m, 0) * 100)(self.intensity_matrix)
         rsd[np.where(map(lambda x: len(set(x[np.nonzero(x)])) == 1, self.intensity_matrix.T))] = np.nan
         return rsd
+
+    @property
+    def occurance(self):
+        return np.sum(self.attr_matrix('alignment_counts'), axis = 0)
 
     @property
     def mz_matrix(self):
@@ -170,13 +174,13 @@ class PeakMatrix(object):
         self._attr_dict = {k: np.delete(v, ids, axis=0) for k, v in self._attr_dict.items()}
         self._tags = np.delete(self._tags, ids, axis=0)
         self._mask = np.delete(self._mask, ids, axis=0)
-        if remove_empty_peaks: self.remove_peaks(np.where(np.sum(self.mz_matrix, axis=0) == 0), False)
+        if remove_empty_peaks: self.remove_peaks(np.where(np.sum(self.intensity_matrix, axis=0) == 0), False)
         if self.is_empty(): logging.warning('matrix is empty after removal')
         return self
 
     def remove_peaks(self, indices, remove_empty_samples=True):
         self._attr_dict = {k: np.delete(v, indices, axis=1) for k, v in self._attr_dict.items()}
-        if remove_empty_samples: self.remove_samples(np.where(np.sum(self.mz_matrix, axis=1) == 0), False, False)
+        if remove_empty_samples: self.remove_samples(np.where(np.sum(self.intensity_matrix, axis=1) == 0), False, False)
         if self.is_empty(): logging.warning('matrix is empty after removal')
         return self
 
@@ -198,7 +202,8 @@ class PeakMatrix(object):
                  dm[1:]
             prelst = ['present'] + ([''] * (len(ttypes) + 2)) + map(str, pm.present)
             rsdlst = ['rsd'] + ([''] * (len(ttypes) + 2)) + map(str, pm.rsd)
-            dm = zip(*([prelst, rsdlst] + zip(*dm)))
+            ocrlst = ['occurance'] + ([''] * (len(ttypes) + 2)) + map(str, pm.occurance)
+            dm = zip(*([prelst, rsdlst, ocrlst] + zip(*dm)))
             return hd, dm
 
         if masked_only:
