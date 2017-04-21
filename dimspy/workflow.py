@@ -8,6 +8,7 @@ import numpy as np
 
 from portals import hdf5Portal
 from portals.hdf5Portal import check_paths
+from portals.txtPortal import load_peak_matrix_from_txt
 from experiment import check_metadata
 from experiment import update_class_labels
 from experiment import update_metadata
@@ -45,9 +46,8 @@ def process_scans(source, function_noise, snr_thres, nscans, ppm, min_fraction=N
         pl = join_peaklists(os.path.basename(filenames[i]), prs)
 
         if "class" in fl:
-            pl.add_tags(class_label=fl["class"][i])  # TODO: Tags from metadata
-            # pl.add_tags(class_label2=fl["class"][i]) # TODO: Tags from metadata
-            # TODO: assert not any(map(lambda x: x in self.tag_values, list(args) + kwargs.values())), 'tag already exists'
+            pl.add_tags(class_label=fl["class"][i])
+            # pl.add_tags(class_label2=fl["class"][i])
 
         for k in fl.keys():
             pl.metadata[k] = fl[k][i]
@@ -95,8 +95,7 @@ def replicate_filter(source, ppm, reps, min_peaks, rsd_thres=None, filelist=None
         #############################################################
 
         pl = pm.to_peaklist(ID=merged_id)
-        for j, t in enumerate(pls[0].tag_types):  # TODO:
-            pl.add_tags(t, pls[0].tag_values[j])
+        pl.add_tags(*pls[0].tag_of(None), **{t: pls[0].tag_of(t) for t in pls[0].tag_types})
         pl.add_attribute("present", pm.present)
         pl.add_attribute("rsd", pm.rsd)
         pl.add_attribute("present_flag", pm.present >= min_peaks, is_flag=True)
@@ -132,7 +131,7 @@ def blank_filter(peak_matrix, blank_label, min_fraction=1.0, min_fold_change=1.0
     if h5py.is_hdf5(peak_matrix):
         peak_matrix = hdf5Portal.load_peak_matrix_from_hdf5(peak_matrix)
     else:
-        pass  # TODO: read peakmatrix from text file
+        peak_matrix = load_peak_matrix_from_txt(peak_matrix)
 
     if class_labels is not None:
         peak_matrix = update_class_labels(peak_matrix, class_labels)
@@ -149,7 +148,7 @@ def sample_filter(peak_matrix, min_fraction, within=False, rsd=None, qc_label=No
     if h5py.is_hdf5(peak_matrix):
         peak_matrix = hdf5Portal.load_peak_matrix_from_hdf5(peak_matrix)
     else:
-        pass  # TODO: read peakmatrix from text file
+        peak_matrix = load_peak_matrix_from_txt(peak_matrix)
 
     if class_labels is not None:
         assert os.path.isfile(class_labels), "{} does not exist".format(class_labels)
@@ -161,7 +160,7 @@ def sample_filter(peak_matrix, min_fraction, within=False, rsd=None, qc_label=No
     if not within:
         peak_matrix = filter_across_classes(peak_matrix, min_fraction)
     elif within:
-        peak_matrix = filter_within_classes(peak_matrix, None, min_fraction)  # TODO: use tag_type instead of None, currently it's temp workaround
+        peak_matrix = filter_within_classes(peak_matrix, 'class_label', min_fraction)
     if rsd is not None:
         peak_matrix = filter_rsd(peak_matrix, rsd, qc_label)
     return peak_matrix

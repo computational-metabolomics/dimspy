@@ -1,5 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+
+import logging
 import collections
 import os
 import zipfile
@@ -99,7 +101,7 @@ def average_replicate_scans(pls, snr_thres=3.0, ppm=2.0, min_fraction=0.8, rsd_t
 
     print "Removing noise....."
     for h in pls:
-        pls[h] = [filter_snr(pl, snr_thres) for pl in pls[h] if len(pl.mz) > 0] # TODO: empty scans
+        pls[h] = [filter_snr(pl, snr_thres) for pl in pls[h] if len(pl.mz) > 0]
 
     print "Align, averaging and filtering peaks....."
     for h in pls:
@@ -110,28 +112,32 @@ def average_replicate_scans(pls, snr_thres=3.0, ppm=2.0, min_fraction=0.8, rsd_t
             # OR we can take the most accurate group of peaks and remove remaining peaks
             # Better to first remove clusters of higher number of peaks and log it
             pls[h] = pm.to_peaklist(ID=h)
+
             pls[h].add_attribute("snr", pm.attr_mean_vector('snr'))
             pls[h].add_attribute("snr_flag", np.ones(pls[h].full_size), flagged_only=False, is_flag=True)
             pls[h].add_attribute("present", pm.present) # np.zeros(len(pls[h].mz)))
             pls[h].add_attribute("fraction", pm.present / float(pm.shape[0]))
             pls[h].add_attribute("rsd", pm.rsd)
-            pls[h].add_attribute("fraction_flag", (pm.present / float(pm.shape[0])) >= min_fraction, flagged_only=False, is_flag=True)
-            if rsd_thres is None:
-                pls[h].add_attribute("rsd_flag", np.ones(pls[h].full_size), flagged_only=False, is_flag=True)
-            else:
-                # pls[h].add_attribute("rsd_flag", np.logical_or(np.isnan(pm.rsd), pm.rsd < rsd_thres), flagged_only=False, is_flag=True)
+
+            if min_fraction is not None:
+                pls[h].add_attribute("fraction_flag", (pm.present / float(pm.shape[0])) >= min_fraction, flagged_only=False, is_flag=True)
+            if rsd_thres is not None:
                 pls[h].add_attribute("rsd_flag", pm.rsd <= rsd_thres, flagged_only=False, is_flag=True)
 
         elif len(pls[h]) == 1:
             pls[h] = pls[h][0]
             # snr and snr_flag attribute already available
+            pls[h].remove_unflagged_peaks('snr_flag')
             pls[h].add_attribute("present", np.ones(pls[h].full_size), flagged_only=False)
             pls[h].add_attribute("fraction", np.ones(pls[h].full_size), flagged_only=False)
             pls[h].add_attribute("rsd", np.nan * np.ones(pls[h].full_size), flagged_only=False)
-            pls[h].add_attribute("fraction_flag", np.ones(pls[h].full_size), flagged_only=False, is_flag=True)
-            pls[h].add_attribute("rsd_flag", np.ones(pls[h].full_size), flagged_only=False, is_flag=True)
+            if min_fraction is not None:
+                pls[h].add_attribute("fraction_flag", np.ones(pls[h].full_size), flagged_only=False, is_flag=True)
+            if rsd_thres is not None:
+                logging.warning('applying RSD filter on single scan, all peaks removed')
+                pls[h].add_attribute("rsd_flag", np.zeros(pls[h].full_size), flagged_only=False, is_flag=True)
         else:
-            print "No scans available for {}".format(h)  # TODO: check if it is valid to remove header
+            print "No scans available for {}".format(h)
             del pls[h]
     return pls
 

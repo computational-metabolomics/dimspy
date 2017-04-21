@@ -180,7 +180,7 @@ def check_metadata(fn_tsv):
     assert os.path.isfile(fn_tsv.encode('string-escape')), "{} does not exist".format(fn_tsv)
 
     fm = np.genfromtxt(fn_tsv.encode('string-escape'), dtype=None, delimiter="\t", names=True)
-    if len(fm.shape) == 0:  # TODO: Added to check if filelist has a single row
+    if len(fm.shape) == 0:
         fm = np.array([fm])
 
     fm_dict = collections.OrderedDict()
@@ -250,7 +250,7 @@ def update_class_labels(pm, fn_tsv):
     assert os.path.isfile(fn_tsv.encode('string-escape')), "{} does not exist".format(fn_tsv)
 
     fm = np.genfromtxt(fn_tsv.encode('string-escape'), dtype=None, delimiter="\t", names=True)
-    if len(fm.shape) == 0:  # TODO: Added to check if filelist has a single row
+    if len(fm.shape) == 0:
         fm = np.array([fm])
 
     assert "sample_id" == fm.dtype.names[0] or "filename" == fm.dtype.names[0], "Column for class labels not available"
@@ -260,7 +260,7 @@ def update_class_labels(pm, fn_tsv):
     for i in range(len(fm["class"])):
         if pm.peaklist_tags[i].has_tag_type("class_label"):
             pm.peaklist_tags[i].drop_tag_types("class_label")
-            pm.peaklist_tags[i].add_tags(class_label=fm["class"][i]) # TODO: fix raw parser to remove tags from metadata
+            pm.peaklist_tags[i].add_tags(class_label=fm["class"][i])
     return pm
 
 

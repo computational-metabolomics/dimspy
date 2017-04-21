@@ -43,9 +43,9 @@ def filter_rsd(pm, threshold, qc_label):
         with mask_peakmatrix(pm, qc_label):
             rsd_values = pm.rsd
         with unmask_peakmatrix(pm, qc_label):
-            pm.remove_peaks(np.where(pm.rsd > rsd_values))  # TODO: compare when rsd values are nan?
+            pm.remove_peaks(np.where(np.logical_or(np.isnan(pm.rsd), pm.rsd > rsd_values)))
     else:
-        pm.remove_peaks(np.where(pm.rsd > threshold))
+        pm.remove_peaks(np.where(np.logical_or(np.isnan(pm.rsd), pm.rsd > threshold)))
     return pm
 
 
@@ -72,7 +72,7 @@ def filter_blank_peaks(pm, blank_label, min_fraction=1.0, min_fold=1.0, function
         ints = pm.intensity_matrix if pm.shape[0] == 1 else \
                np.max(pm.intensity_matrix, axis=0) if function == "max" else \
                np.array(map(lambda x: getattr(np, function)(x), pm.intensity_matrix.T))
-               # TODO: quick fix of unexpected dtype conversion in apply_along_axis (float64 -> int64)
+               # note: quick fix of unexpected dtype conversion in apply_along_axis (float64 -> int64)
                # np.apply_along_axis(lambda x: _skipempty(getattr(np, function), x[np.nonzero(x)]), 0, pm.intensity_matrix)
         ints *= min_fold
 

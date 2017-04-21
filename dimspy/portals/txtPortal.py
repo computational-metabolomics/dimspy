@@ -59,12 +59,12 @@ def load_peak_matrix_from_txt(file_name, delimiter='\t', transposed=False, exten
     assert all(map(lambda x: len(x) == len(dlns[0]), dlns[1:])), 'data matrix size not match'
 
     if not transposed: dlns = zip(*dlns)
-    pids = dlns[0][4:] if extended else dlns[0][1:]
+    pids = dlns[0][5:] if extended else dlns[0][1:]
 
     def _parsetags(tgs):
         for l, ln in enumerate(dlns[2:]): # line 1 = missing
             if not ln[0].startswith('tags_'): break
-            tn, tv = ln[0][5:], ln[4:]
+            tn, tv = ln[0][5:], ln[5:]
             tl = filter(lambda x: x[1] != '', enumerate(_evalv(tv)))
             for i, v in tl: tgs[i].add_tags(v) if tn == 'untyped' else tgs[i].add_tags(**{tn: v})
         return l, tgs
@@ -72,7 +72,7 @@ def load_peak_matrix_from_txt(file_name, delimiter='\t', transposed=False, exten
     if extended: tnum, tags = _parsetags(tags)
 
     rlns = zip(*dlns[2+tnum:])
-    mz, ints = np.array([rlns[0]] * len(pids), dtype = float), np.array(rlns[4:] if extended else rlns[1:], dtype = float)
+    mz, ints = np.array([rlns[0]] * len(pids), dtype = float), np.array(rlns[5:] if extended else rlns[1:], dtype = float)
     return PeakMatrix(pids, tags, {'mz': mz, 'intensity': ints})
 
 

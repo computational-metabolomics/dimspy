@@ -178,8 +178,8 @@ def align_peaks(peaks, ppm=2.0, block_size=2000, byunique=False, ncpus=None):
 
     # align
     a_pids, a_attrms = _align_peaks(cids, s_pids, *s_attrs)
-    assert 'alignment_counts' not in attrs, 'preserved attribute name [alignment_counts] already exists'
-    attrs += ('alignment_counts', )  # for cM
+    assert 'intra_count' not in attrs, 'preserved attribute name [intra_count] already exists'
+    attrs += ('intra_count', )  # for cM
 
     # sort by original pid
     pids = f_pids[sorted(np.unique(f_pids, return_index=True)[1])]

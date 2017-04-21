@@ -307,6 +307,13 @@ class PeakList(object):
         self._flags = np.delete(self._flags, rmid)
         if self.size == 0: logging.warning('all peaks are removed for peaklist [%s]' % str(self.ID))
 
+    def remove_unflagged_peaks(self, flag_name = None):
+        assert flag_name is None or flag_name in self._flag_attrs, '[%s] is not a flag attribution name'
+        rmids = np.where((self._flags if flag_name is None else self._dtable[flag_name]) == 0)
+        self._dtable = np.delete(self._dtable, rmids)
+        self._flags = np.delete(self._flags, rmids)
+        if self.size == 0: logging.warning('all peaks are removed for peaklist [%s]' % str(self.ID))
+
     def set_peak(self, peak_index, peak_value, flagged_only=True):
         if flagged_only:
             self._dtable[np.where(self._flags)[0][peak_index]] = peak_value
@@ -375,7 +382,6 @@ if __name__ == '__main__':
     pl.metadata.type = 'blank'
 
     import pdb; pdb.set_trace()
-
     import cPickle as cp
 
     s = cp.dumps(pl)

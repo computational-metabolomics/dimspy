@@ -10,6 +10,8 @@ origin: Nov. 10, 2016
 """
 
 
+from __future__ import division
+
 import logging
 import numpy as np
 from string import join
@@ -112,7 +114,12 @@ class PeakMatrix(object):
 
     @property
     def occurance(self):
-        return np.sum(self.attr_matrix('alignment_counts'), axis = 0)
+        # TODO: return all ones if intra_count not exists
+        return np.sum(self.attr_matrix('intra_count'), axis = 0)
+
+    @property
+    def impure(self):
+        return np.sum(self.attr_matrix('intra_count') > 1, axis = 0) / self.shape[0]
 
     @property
     def mz_matrix(self):
@@ -165,6 +172,7 @@ class PeakMatrix(object):
         return _nzmean(self.attr_matrix(attr_name, masked_only), 0)
 
     def to_peaklist(self, ID):
+        # TODO: add attributes (occurance, impure, etc)
         return PeakList(ID, self.mz_mean_vector, self.ints_mean_vector,
                         rsd=self.rsd, present=self.present, missing=self.missing, aligned_ids=self.peaklist_ids)
 
@@ -203,7 +211,8 @@ class PeakMatrix(object):
             prelst = ['present'] + ([''] * (len(ttypes) + 2)) + map(str, pm.present)
             rsdlst = ['rsd'] + ([''] * (len(ttypes) + 2)) + map(str, pm.rsd)
             ocrlst = ['occurance'] + ([''] * (len(ttypes) + 2)) + map(str, pm.occurance)
-            dm = zip(*([prelst, rsdlst, ocrlst] + zip(*dm)))
+            implst = ['impure'] + ([''] * (len(ttypes) + 2)) + map(str, pm.impure)
+            dm = zip(*([prelst, rsdlst, ocrlst, implst] + zip(*dm)))
             return hd, dm
 
         if masked_only:

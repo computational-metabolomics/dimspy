@@ -84,7 +84,7 @@ def main():
                            default=1, type=float, required=False,
                            help="Minimum fraction a peak has to be present. Use 0.0 to not apply this filter.")
 
-    parser_ps.add_argument('-d', '--rsd-threshold', # TODO: This should relate to ncans and min_fraction.
+    parser_ps.add_argument('-d', '--rsd-threshold',
                            default=None, type=float, required=False,
                            help="Maximum threshold - relative standard deviation (Only applied to peaks that have been measured across a minimum of two scans).")
 

@@ -41,7 +41,7 @@ def check_paths(tsv, source):
     elif os.path.isfile(tsv.encode('string-escape')):
         tsv = tsv.encode('string-escape')
         fm = np.genfromtxt(tsv, dtype=None, delimiter="\t", names=True)
-        if len(fm.shape) == 0:  # TODO: Added to check if filelist has a single row
+        if len(fm.shape) == 0:
             fm = np.array([fm])
         assert fm.dtype.names[0] == "filename" or fm.dtype.names[0] == "sample_id", \
             "Incorrect header for first column. Use filename or sample_id"
