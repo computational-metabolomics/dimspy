@@ -27,11 +27,9 @@ def _masknan(x, axis, _func):
     val[nid] = np.nan  # all values = 0 -> nanzero average / std = nan
     return val
 
-
 def _nzmean(x, axis):
     _func = lambda b: np.average(x, axis=axis, weights=b)
     return _masknan(x, axis, _func)
-
 
 def _nzstd(x, axis):
     _func = lambda b: np.sqrt(np.average(np.power(x - np.average(x, axis=axis, weights=b), 2), axis=axis, weights=b))
@@ -114,11 +112,16 @@ class PeakMatrix(object):
 
     @property
     def occurance(self):
-        # TODO: return all ones if intra_count not exists
+        if not self._attr_dict.has_key('intra_count'):
+            logging.warning("attribute matrix ['intra_count'] not exists")
+            return np.ones(self.shape[1])
         return np.sum(self.attr_matrix('intra_count'), axis = 0)
 
     @property
     def impure(self):
+        if not self._attr_dict.has_key('intra_count'):
+            logging.warning("attribute matrix ['intra_count'] not exists")
+            return np.zeros(self.shape[1])
         return np.sum(self.attr_matrix('intra_count') > 1, axis = 0) / self.shape[0]
 
     @property
@@ -166,15 +169,15 @@ class PeakMatrix(object):
         return self
 
     def attr_matrix(self, attr_name, masked_only=True):
+        if not self._attr_dict.has_key(attr_name): raise KeyError('attribute matrix [%s] not exists' % attr_name)
         return self._attr_dict[attr_name][self._mask if masked_only else slice(None)]
 
     def attr_mean_vector(self, attr_name, masked_only=True):
         return _nzmean(self.attr_matrix(attr_name, masked_only), 0)
 
     def to_peaklist(self, ID):
-        # TODO: add attributes (occurance, impure, etc)
-        return PeakList(ID, self.mz_mean_vector, self.ints_mean_vector,
-                        rsd=self.rsd, present=self.present, missing=self.missing, aligned_ids=self.peaklist_ids)
+        return PeakList(ID, self.mz_mean_vector, self.ints_mean_vector, aligned_ids=self.peaklist_ids,
+                        present=self.present, missing=self.missing, rsd=self.rsd, occurance=self.occurance, impure=self.impure)
 
     def remove_samples(self, indices, remove_empty_peaks=True, masked_only=True):
         ids = np.arange(self._pids.shape[0])[self.mask][indices] if masked_only else indices
