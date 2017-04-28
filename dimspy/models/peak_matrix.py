@@ -180,8 +180,13 @@ class PeakMatrix(object):
         return _nzmean(self.attr_matrix(attr_name, masked_only), 0)
 
     def to_peaklist(self, ID):
-        return PeakList(ID, self.mz_mean_vector, self.ints_mean_vector, aligned_ids=self.peaklist_ids,
-                        present=self.present, fraction=self.fraction, rsd=self.rsd, occurance=self.occurance, impure=self.impure)
+        pl = PeakList(ID, self.mz_mean_vector, self.ints_mean_vector, aligned_ids=self.peaklist_ids)
+        pl.add_attribute("present", self.present)  # np.zeros(len(pls[h].mz)))
+        pl.add_attribute("fraction", self.present / float(self.shape[0]))
+        pl.add_attribute("rsd", self.rsd)
+        pl.add_attribute("occurance", self.occurance)
+        pl.add_attribute("impure", self.impure)
+        return pl
 
     def remove_samples(self, indices, remove_empty_peaks=True, masked_only=True):
         ids = np.arange(self._pids.shape[0])[self.mask][indices] if masked_only else indices
