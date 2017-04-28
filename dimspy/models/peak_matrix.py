@@ -101,7 +101,7 @@ class PeakMatrix(object):
 
     @property
     def fraction(self):
-        return pm.present / pm.shape[0]
+        return self.present / self.shape[0]
 
     @property
     def missing_values(self):
