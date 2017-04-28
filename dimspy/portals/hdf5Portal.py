@@ -148,7 +148,7 @@ def save_peaklists_as_hdf5(pkls, fname):
         dset.attrs['dtable_names'], dset.attrs['dtable_types'] = zip(*pkl.dtable.dtype.descr)
 
         dset.attrs['flag_attrs'] = pkl.flag_attributes
-        dset.attrs['tags'] = [(t if type(t) in (tuple, list) else ('NA', t)) for t in pkl.tags.to_list()]
+        dset.attrs['tags'] = [(t if type(t) in (tuple, list) else ('None', t)) for t in pkl.tags.to_list()]
         for k, v in pkl.metadata.items(): dset.attrs['metadata_' + k] = v
 
     map(lambda x: _savepkl(*x), enumerate(pkls))
@@ -173,7 +173,7 @@ def load_peaklists_from_hdf5(fname):
         for n, v, t in zip(dn[2:], dm[2:], dt[2:]):
             pkl.add_attribute(n, v, t, is_flag = (n in dset.attrs['flag_attrs']), flagged_only = False)
 
-        pkl.add_tags(*[t[1] for t in dset.attrs['tags'] if t[0] == 'NA'], **dict(t for t in dset.attrs['tags'] if t[0] != 'NA'))
+        pkl.add_tags(*[t[1] for t in dset.attrs['tags'] if t[0] == 'None'], **dict(t for t in dset.attrs['tags'] if t[0] != 'None'))
         return dset.attrs['order'], pkl
 
     return zip(*sorted(map(_loadpkl, f.keys())))[1]
@@ -194,7 +194,7 @@ def save_peak_matrix_as_hdf5(pm, fname):
     with unmask_all_peakmatrix(pm):
         dset.attrs['peaklist_ids'] = pm.peaklist_ids
         for i, tags in enumerate(pm.peaklist_tags):
-            dset.attrs['peaklist_tags_%d' % i] = [(t if type(t) in (tuple, list) else ('NA', t)) for t in tags.to_list()]
+            dset.attrs['peaklist_tags_%d' % i] = [(t if type(t) in (tuple, list) else ('None', t)) for t in tags.to_list()]
     dset.attrs['mask'] = pm.mask
 
 
@@ -207,7 +207,7 @@ def load_peak_matrix_from_hdf5(fname):
     dset = f['mz']
     assert dset.attrs.get('class', '') == 'PeakMatrix', 'input database is not a valid PeakMatrix'
     pids = dset.attrs['peaklist_ids']
-    ptgs = [_Tags(*[t[1] for t in tags if t[0] == 'NA'], **dict(t for t in tags if t[0] != 'NA'))
+    ptgs = [_Tags(*[t[1] for t in tags if t[0] == 'None'], **dict(t for t in tags if t[0] != 'None'))
             for n, tags in sorted(dset.attrs.items(), key = lambda x: x[0]) if n.startswith('peaklist_tags_')]
     adct = {attr: f[attr] for attr in f}
     mask = dset.attrs['mask']
