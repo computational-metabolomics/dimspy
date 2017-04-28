@@ -100,7 +100,11 @@ class PeakMatrix(object):
         return np.sum(self.intensity_matrix > 0, axis=0)
 
     @property
-    def missing(self):
+    def fraction(self):
+        return pm.present / pm.shape[0]
+
+    @property
+    def missing_values(self):
         return np.sum(self.intensity_matrix == 0, axis=1)
 
     @property
@@ -177,7 +181,7 @@ class PeakMatrix(object):
 
     def to_peaklist(self, ID):
         return PeakList(ID, self.mz_mean_vector, self.ints_mean_vector, aligned_ids=self.peaklist_ids,
-                        present=self.present, missing=self.missing, rsd=self.rsd, occurance=self.occurance, impure=self.impure)
+                        present=self.present, fraction=self.fraction, rsd=self.rsd, occurance=self.occurance, impure=self.impure)
 
     def remove_samples(self, indices, remove_empty_peaks=True, masked_only=True):
         ids = np.arange(self._pids.shape[0])[self.mask][indices] if masked_only else indices
