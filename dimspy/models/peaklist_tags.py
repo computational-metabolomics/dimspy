@@ -54,12 +54,12 @@ class PeakList_Tags(object):
         return self.untyped_tags if tag_type is None else self._typed_tags[tag_type]
 
     def add_tags(self, *args, **kwargs):
-        if kwargs.has_key('None'): raise ValueError('["None"] is not an acceptable tag type') # reserve for hdf5 protal
+        if kwargs.has_key('None'): raise KeyError('["None"] is not an acceptable tag type') # reserve for hdf5 protal
         if None in args or None in kwargs.values(): raise ValueError('[None] is not an acceptable tag value')
         if any(map(lambda x: x in kwargs.values(), args)) or \
            any(map(lambda x: x in args, kwargs.values())): raise ValueError('assigned tags have duplication')
         if any(map(self.has_tag, args)) or any(map(self.has_tag, kwargs.values())): raise ValueError('tag(s) already exists')
-        self._untyped_tags += args
+        self._untyped_tags += list(args)
         self._typed_tags.update(kwargs)
 
     def drop_tags(self, *args):
@@ -75,7 +75,7 @@ class PeakList_Tags(object):
 
     # portals
     def to_list(self):
-        return self.untyped_tags + self.typed_tags
+        return list(self.untyped_tags + self.typed_tags)
 
     def to_str(self):
         return join(map(str, self.untyped_tags) + map(lambda x: join(map(str, x), ':'), self.typed_tags), ', ')

@@ -16,20 +16,26 @@ import numpy.lib.recfunctions as rfn
 from collections import OrderedDict, Iterable
 from string import join
 from copy import deepcopy
+from peaklist_metadata import PeakList_Metadata
+from peaklist_tags import PeakList_Tags
 
+
+_is_ordered = lambda vals: all(map(lambda x: x[0] - x[1] >= 0, zip(vals[1:], vals[:-1])))
 
 class PeakList(object):
     def __init__(self, ID, mz, intensity, **metadata):
-        assert all(
-            map(lambda x: x[0] - x[1] >= 0, zip(mz[1:], mz[:-1]))), 'mz values not in ascending order, check input data'
-        assert len(intensity) == len(mz), 'mz values and intensities must have the same size'
-        self.__dict__['_dtable'] = np.array(zip(mz, intensity), dtype=[('mz', 'f8'), ('intensity', 'f8')])
+        if not _is_ordered(mz):
+            raise ValueError('mz values not in ascending order, check input data')
+        if len(intensity) != len(mz):
+            raise ValueError('mz values and intensities must have the same size')
+
+        self._dtable = np.array(zip(mz, intensity), dtype=[('mz', 'f8'), ('intensity', 'f8')])
 
         self._id = str(ID)
-        self._tags = _Tags()
-        self._metadata = _Metadata(**metadata)
+        self._metadata = PeakList_Metadata(**metadata)
 
-        self._flags = np.ones_like(mz, dtype=np.bool)
+        self._tags = PeakList_Tags()
+        self._flags = np.ones_like(mz, dtype = np.bool)
         self._flag_attrs = []
 
     # built-ins
@@ -40,27 +46,30 @@ class PeakList(object):
         return self.to_str(', ')
 
     def __getitem__(self, item):
-        if type(item) in (int, slice):
+        if type(item) in (int, slice, list, np.ndarray):
             return self.get_peak(item)
         else:
             return self.get_attribute(item)
 
     def __setitem__(self, item, value):
-        if type(item) in (int, slice):
+        if type(item) in (int, slice, list, np.ndarray):
             self.set_peak(item, value)
         else:
             self.set_attribute(item, value)
 
     def __getattr__(self, item):
         if item.endswith('_all'):
-            return self.get_attribute(item[:-4], flagged_only=False)
+            return self.get_attribute(item[:-4], flagged_only = False)
         else:
-            return self.get_attribute(item, flagged_only=True)
+            return self.get_attribute(item, flagged_only = True)
 
     def __setattr__(self, item, value):
-        try:
-            return self.set_attribute(item[:-4] if item.endswith('_all') else item, value, flagged_only=True)
-        except AttributeError:
+        if item != '_dtable' and self.has_attribute(item):
+            if item.endswith('_all'):
+                return self.set_attribute(item[:-4], value, flagged_only = False)
+            else:
+                return self.set_attribute(item, value, flagged_only = True)
+        else:
             super(PeakList, self).__setattr__(item, value)
 
     # for proper pickling
@@ -92,20 +101,12 @@ class PeakList(object):
         return self.full_size, len(self.attributes)
 
     @property
-    def tags(self):
-        return self._tags
-
-    @property
-    def tag_types(self):
-        return self._tags.tag_types
-
-    @property
-    def tag_values(self):
-        return self._tags.tag_values
-
-    @property
     def metadata(self):
         return self._metadata
+
+    @property
+    def tags(self):
+        return self._tags
 
     @property
     def attributes(self):
@@ -113,7 +114,7 @@ class PeakList(object):
 
     @property
     def flag_attributes(self):
-        return self._flag_attrs[:] 
+        return tuple(self._flag_attrs[:])
 
     @property
     def peaks(self):
@@ -125,150 +126,140 @@ class PeakList(object):
 
     @property
     def dtable(self):
-        return self._dtable.copy()
+        return self._dtable # ref for faster access, using carefully
 
     # publics
     # manual maintainance
+    # these functions are aotumatically called internally, think twice before you manually call them
     def sort_peaks_order(self):
         sids = np.argsort(self._dtable['mz'])  # do not use self.mz, recursive calling
         self._dtable = self._dtable[sids]
         self._flags = self._flags[sids]
 
     def calculate_flags(self):
-        if len(self._flag_attrs) == 0:
-            self._flags = np.ones_like(self._flags)
-        else:
-            self._flags = np.sum(self._dtable[self._flag_attrs].tolist(), axis=1) == len(self._flag_attrs)
-            if self.size == 0: logging.warning('all peaks are removed for peaklist [%s]' % str(self.ID))
-        return self._flags
+        self._flags = np.ones_like(self._flags) if len(self._flag_attrs) == 0 else \
+                      np.sum(self._dtable[self._flag_attrs].tolist(), axis = 1) == len(self._flag_attrs)
+        if self.size == 0: logging.warning('all peaks are removed for peaklist [%s]' % str(self.ID))
+        return self.flags
 
     # attribute operations
     def has_attribute(self, attr_name):
         return attr_name in self.attributes
 
-    def add_attribute(self, attr_name, attr_value, attr_dtype=None, is_flag=False, flagged_only=True,
-                      invalid_value=np.nan):
-        assert attr_name not in self.__dict__.keys(), 'attribute name already been used by property'
-        assert attr_name not in ('mz', 'intensity', 'flags'), 'cannot add reserved attribute [%s]' % attr_name
-        assert not self.has_attribute(attr_name), 'attribute [%s] already exists' % attr_name
-        if is_flag and self.size > 0: assert set(attr_value) in ({0}, {1}, {0, 1}), \
-                                        'flag attribute can only contain True/False values'
+    def add_attribute(self, attr_name, attr_value, attr_dtype = None, is_flag = False,
+                      on_index = None, flagged_only = True, invalid_value = np.nan):
+        if self.__dict__.has_key(attr_name):
+            raise AttributeError('attribute name already been used by property')
+        if attr_name in ('mz', 'intensity', 'flags'):
+            raise AttributeError('cannot add reserved attribute [%s]' % attr_name)
+        if self.has_attribute(attr_name):
+            raise AttributeError('attribute [%s] already exists' % attr_name)
+        if is_flag and self.size > 0 and not (set(attr_value) in ({0}, {1}, {0, 1})):
+            raise ValueError('flag attribute can only contain True / False values')
 
         adt = bool if is_flag else \
               attr_dtype if attr_dtype is not None else \
               attr_value.dtype.str if hasattr(attr_value, 'dtype') else type(attr_value[0])
         if adt in (bool, 'bool', '|b1'): adt = 'b'  # fix numpy dtype bug
 
-        nattr = np.array([invalid_value] * self._dtable.shape[0]).astype([(attr_name, adt)])
-        nattr[attr_name][self._flags if flagged_only else slice(None)] = attr_value
-        self._dtable = rfn.merge_arrays((self._dtable, nattr), flatten=True)
+        if flagged_only:
+            if len(attr_value) != self.size: raise ValueError('input attibute value size not match')
+            nattr = np.array([invalid_value] * self._dtable.shape[0]).astype(adt)
+            nattr[self._flags] = attr_value
+        else:
+            if len(attr_value) != self.full_size: raise ValueError('input attibute value size not match')
+            nattr = attr_value.astype(adt)
 
-        if not is_flag:
-            return
-        self._flag_attrs += [attr_name]
-        self.calculate_flags()
+        if on_index is None or on_index == self.shape[1]:
+            # faster?
+            self._dtable = rfn.append_fields(self._dtable, attr_name, nattr, dtypes = adt, usemask = False)
+        else:
+            dts = self._dtable.dtype.descr
+            self._dtable = self._dtable.astype(dts[:on_index] + [(attr_name, adt)] + dts[on_index:])
+            self._dtable[attr_name] = nattr
+
+        if is_flag:
+            self._flag_attrs += [attr_name]
+            self.calculate_flags()
 
         return self
 
     def drop_attribute(self, attr_name):
-        assert attr_name not in ('mz', 'intensity', 'flags'), 'cannot drop reserved attribute [%s]' % attr_name
-        assert self.has_attribute(attr_name), 'attribute [%s] not exists' % attr_name
+        if attr_name in ('mz', 'intensity', 'flags'):
+            raise AttributeError('cannot drop reserved attribute [%s]' % attr_name)
+        if not self.has_attribute(attr_name):
+            raise AttributeError('attribute [%s] not exists' % attr_name)
 
         self._dtable = self._dtable[list(filter(lambda x: x != attr_name, self.attributes))]
 
-        if attr_name not in self._flag_attrs: return
-        logging.warning('flags recalculated, unflagged peaks may contain incorrect values')
-        self._flag_attrs = filter(lambda x: x != attr_name, self._flag_attrs)
-        self.calculate_flags()
+        if attr_name in self._flag_attrs:
+            logging.warning('flags recalculated, unflagged peaks may contain incorrect values')
+            self._flag_attrs = filter(lambda x: x != attr_name, self._flag_attrs)
+            self.calculate_flags()
 
         return self
 
-    def set_attribute(self, attr_name, attr_value, flagged_only=True):
-        assert attr_name not in ('flags',), 'cannot assign read-only attribute [%s]' % attr_name
+    def set_attribute(self, attr_name, attr_value, flagged_only = True, unsorted_mz = False):
+        if not self.has_attribute(attr_name):
+            raise AttributeError('attribute [%s] not exists' % attr_name)
+        if attr_name == 'flags':
+            raise AttributeError('cannot assign read-only attribute [flag]')
+        if attr_name == 'mz' and not (unsorted_mz or _is_ordered(attr_value)):
+            raise ValueError('attribute [mz] not in ascending order')
+
+        self._dtable[attr_name][self._flags if flagged_only else slice(None)] = attr_value
+        if attr_name == 'mz' and unsorted_mz: self.sort_peaks_order()
+        if attr_name in self._flag_attrs: self.calculate_flags()
+
+        return self
+
+    def get_attribute(self, attr_name, flagged_only = True):
         if not self.has_attribute(attr_name):
             raise AttributeError("cannot find attribute '%s'" % attr_name)
-
-        if flagged_only:
-            self._dtable[attr_name][self._flags] = attr_value
-        else:
-            self._dtable[attr_name] = attr_value
-
-        if attr_name == 'mz':
-            self.sort_peaks_order()
-        if attr_name in self._flag_attrs:
-            self.calculate_flags()
-
-    def get_attribute(self, attr_name, flagged_only=True):
-        if not self.has_attribute(attr_name):
-            raise AttributeError("cannot find attribute '%s'" % attr_name)
-        return self._dtable[attr_name][self._flags] if flagged_only else self._dtable[attr_name]
+        return self._dtable[attr_name][self._flags if flagged_only else slice(None)] # slice to create data copy
 
     # peaks operations
+    def set_peak(self, peak_index, peak_value, flagged_only = True):
+        self._dtable[np.where(self._flags)[0][peak_index] if flagged_only else peak_index] = peak_value
+        self.sort_peaks_order()
+        self.calculate_flags()
+        return self
+
+    def get_peak(self, peak_index, flagged_only = True):
+        return self._dtable[self._flags][peak_index] if flagged_only else self._dtable[peak_index]
+
     def insert_peak(self, peak_value):
         pid = np.where(peak_value[0] < self.mz_all)[0][0]
         self._dtable = np.insert(self._dtable, pid, peak_value)
         self._flags = np.insert(self._flags, pid, False)
         self.calculate_flags()
+        return self
 
     def remove_peak(self, peak_index):
         rmid = np.where(self._flags)[0][list(peak_index) if isinstance(peak_index, Iterable) else peak_index]
         self._dtable = np.delete(self._dtable, rmid)
         self._flags = np.delete(self._flags, rmid)
         if self.size == 0: logging.warning('all peaks are removed for peaklist [%s]' % str(self.ID))
+        return self
 
-    def remove_unflagged_peaks(self, flag_name = None):
-        assert flag_name is None or flag_name in self._flag_attrs, '[%s] is not a flag attribution name'
+    def cleanup_unflagged_peaks(self, flag_name = None):
+        if not (flag_name is None or flag_name in self._flag_attrs):
+            raise AttributeError('[%s] is not a flag attribution name')
         rmids = np.where((self._flags if flag_name is None else self._dtable[flag_name]) == 0)
         self._dtable = np.delete(self._dtable, rmids)
         self._flags = np.delete(self._flags, rmids)
         if self.size == 0: logging.warning('all peaks are removed for peaklist [%s]' % str(self.ID))
-
-    def set_peak(self, peak_index, peak_value, flagged_only=True):
-        if flagged_only:
-            self._dtable[np.where(self._flags)[0][peak_index]] = peak_value
-        else:
-            self._dtable[peak_index] = peak_value
-
-        self.sort_peaks_order()
-        self.calculate_flags()
-
-    def get_peak(self, peak_index, flagged_only=True):
-        return self._dtable[self._flags][peak_index] if flagged_only else self._dtable[peak_index]
-
-    # tags operations (wrapper of _Tags)
-    def tag_of(self, tag_type=None):
-        return self._tags.tag_of(tag_type)
-
-    def has_tags(self, *args, **kwargs):
-        return self._tags.has_tags(*args, **kwargs)
-
-    def has_any_tags(self, *args, **kwargs):
-        return self._tags.has_any_tags(*args, **kwargs)
-
-    def has_tag_type(self, tag_type):
-        return self._tags.has_tag_type(tag_type)
-
-    def add_tags(self, *args, **kwargs):
-        return self._tags.add_tags(*args, **kwargs)
-
-    def drop_tags(self, *args):
-        return self._tags.drop_tags(*args)
-
-    def drop_tag_types(self, *args):
-        return self._tags.drop_tag_types(*args)
-
-    def drop_all_tags(self):
-        return self._tags.drop_all_tags()
+        return self
 
     # exports
     def to_list(self):
         return zip(*self._dtable.tolist()) + [self._flags.tolist()]
 
-    def to_dict(self, dict_type=OrderedDict):
+    def to_dict(self, dict_type = OrderedDict):
         _conv = lambda x: (x.astype(int) if x.dtype == np.bool else x).tolist()
         return dict_type([(n, _conv(self._dtable[n])) for n in self.attributes] + [('flags', _conv(self._flags))])
 
-    def to_str(self, delimiter=','):
+    def to_str(self, delimiter = ','):
         title, data = zip(*self.to_dict().items())
         return join(map(lambda x: join(map(str, x), delimiter), [title] + zip(*data)), '\n')
 
@@ -276,9 +267,16 @@ class PeakList(object):
     def copy(self):
         return deepcopy(self)
 
-
 # test
 if __name__ == '__main__':
+    mzs = sorted(np.random.uniform(100, 1000, size = 10))
+    ints = np.abs(np.random.normal(10, 3, size = 10))
+    pl = PeakList('sample_peaklist', mzs, ints, mz_range = (100, 1000), frag_mode = 'slb')
+    pl.add_attribute('odd_flag', [1, 0] * 5, is_flag = True)
+    x = pl.peaks
+    import pdb; pdb.set_trace()
+
+
     # generate random peak
     size = 100
     mzs = sorted(np.random.uniform(100, 1000, size=size))

@@ -16,34 +16,41 @@ from dimspy.models.peaklist_metadata import PeakList_Metadata
 
 
 class PeakListMetadataTestCase(unittest.TestCase):
-    def test_create_metadata(self):
+    @staticmethod
+    def _createMetadata():
+        return PeakList_Metadata((('a', 1), ('b', 2), ('c', 3)))
+
+    def test_creation(self):
         try:
-            PeakList_Metadata((('a', 1), ('b', 2), ('c', 3)))
+            self._createMetadata()
         except Exception, e:
             self.fail('create metadata object failed: ' + str(e))
 
-    def test_dict_operations(self):
-        meta = PeakList_Metadata((('a', 1), ('b', 2), ('c', 3)))
-        self.assertSetEqual(set(meta.keys()), {'a', 'b', 'c'}, 'metadata keys not match')
-        self.assertSetEqual(set(meta.values()), {1, 2, 3}, 'metadata values not match')
-        self.assertTrue(meta['a'] == 1 and meta['b'] == 2 and meta['c'] == 3, 'metadata items not match')
-        self.assertTrue(meta.has_key('a') == True and meta.has_key('d') == False, 'metadata has_key() function failed')
-        self.assertTrue(meta.get('a', 4) == 1 and meta.get('d', 4) == 4, 'metadata get() function failed')
+    def test_operations(self):
+        meta = self._createMetadata()
+
+        self.assertListEqual(sorted(meta.keys()), ['a', 'b', 'c'])
+        self.assertListEqual(sorted(meta.values()), [1, 2, 3])
+        self.assertListEqual(sorted(meta.items()), [('a', 1), ('b', 2), ('c', 3)])
+        self.assertTrue(meta['a'] == 1 and meta['b'] == 2 and meta['c'] == 3)
+        self.assertTrue(meta.has_key('a') == True and meta.has_key('d') == False)
+        self.assertTrue(meta.get('a', 4) == 1 and meta.get('d', 4) == 4)
+
         meta['a'] = 4
-        self.assertEqual(meta['a'], 4, 'metadata setting function failed')
+        self.assertEqual(meta['a'], 4)
         meta['d'] = 5
-        self.assertEqual(meta['d'], 5, 'metadata adding function failed')
+        self.assertEqual(meta['d'], 5)
         del meta['b']
-        self.assertFalse(meta.has_key('b'), 'metadata deleting function failed')
+        self.assertFalse(meta.has_key('b'))
 
     def test_pickle(self):
-        meta = PeakList_Metadata((('a', 1), ('b', 2), ('c', 3)))
+        meta = self._createMetadata()
         try:
             mstr = cp.dumps(meta)
             meta = cp.loads(mstr)
         except Exception, e:
             self.fail('metadata pickle failed: ' + str(e))
-        self.assertTrue(meta['a'] == 1 and meta['b'] == 2 and meta['c'] == 3, 'metadata pickle incorrect')
+        self.assertTrue(meta['a'] == 1 and meta['b'] == 2 and meta['c'] == 3)
 
 
 if __name__ == '__main__':
