@@ -20,11 +20,11 @@ from peaklist_metadata import PeakList_Metadata
 from peaklist_tags import PeakList_Tags
 
 
-_is_ordered = lambda vals: all(map(lambda x: x[0] - x[1] >= 0, zip(vals[1:], vals[:-1])))
-
 class PeakList(object):
+    _is_ordered = staticmethod(lambda vals: all(map(lambda x: x[0] - x[1] >= 0, zip(vals[1:], vals[:-1]))))
+
     def __init__(self, ID, mz, intensity, **metadata):
-        if not _is_ordered(mz):
+        if not PeakList._is_ordered(mz):
             raise ValueError('mz values not in ascending order, check input data')
         if len(intensity) != len(mz):
             raise ValueError('mz values and intensities must have the same size')
@@ -156,6 +156,8 @@ class PeakList(object):
             raise AttributeError('attribute [%s] already exists' % attr_name)
         if is_flag and self.size > 0 and not (set(attr_value) in ({0}, {1}, {0, 1})):
             raise ValueError('flag attribute can only contain True / False values')
+        if on_index is not None and not (-self.shape[1]+1 < on_index < 0 or 1 < on_index < self.shape[1]):
+            raise IndexError('index [%d] out of (insertable) range' % on_index)
 
         adt = bool if is_flag else \
               attr_dtype if attr_dtype is not None else \
@@ -168,7 +170,7 @@ class PeakList(object):
             nattr[self._flags] = attr_value
         else:
             if len(attr_value) != self.full_size: raise ValueError('input attibute value size not match')
-            nattr = attr_value.astype(adt)
+            nattr = np.array(attr_value).astype(adt)
 
         if on_index is None or on_index == self.shape[1]:
             # faster?
@@ -200,12 +202,14 @@ class PeakList(object):
         return self
 
     def set_attribute(self, attr_name, attr_value, flagged_only = True, unsorted_mz = False):
-        if not self.has_attribute(attr_name):
-            raise AttributeError('attribute [%s] not exists' % attr_name)
         if attr_name == 'flags':
             raise AttributeError('cannot assign read-only attribute [flag]')
-        if attr_name == 'mz' and not (unsorted_mz or _is_ordered(attr_value)):
+        if not self.has_attribute(attr_name):
+            raise AttributeError('attribute [%s] not exists' % attr_name)
+        if attr_name == 'mz' and not (unsorted_mz or PeakList._is_ordered(attr_value)):
             raise ValueError('attribute [mz] not in ascending order')
+        if attr_name != 'mz' and unsorted_mz == True:
+            logging.warning('setting unsorted_mz flag for non-mz attribute, ignore')
 
         self._dtable[attr_name][self._flags if flagged_only else slice(None)] = attr_value
         if attr_name == 'mz' and unsorted_mz: self.sort_peaks_order()
@@ -243,7 +247,7 @@ class PeakList(object):
         return self
 
     def cleanup_unflagged_peaks(self, flag_name = None):
-        if not (flag_name is None or flag_name in self._flag_attrs):
+        if not (flag_name is None or flag_name == 'flags' or flag_name in self._flag_attrs):
             raise AttributeError('[%s] is not a flag attribution name')
         rmids = np.where((self._flags if flag_name is None else self._dtable[flag_name]) == 0)
         self._dtable = np.delete(self._dtable, rmids)
@@ -267,106 +271,4 @@ class PeakList(object):
     def copy(self):
         return deepcopy(self)
 
-# test
-if __name__ == '__main__':
-    mzs = sorted(np.random.uniform(100, 1000, size = 10))
-    ints = np.abs(np.random.normal(10, 3, size = 10))
-    pl = PeakList('sample_peaklist', mzs, ints, mz_range = (100, 1000), frag_mode = 'slb')
-    pl.add_attribute('odd_flag', [1, 0] * 5, is_flag = True)
-    x = pl.peaks
-    import pdb; pdb.set_trace()
 
-
-    # generate random peak
-    size = 100
-    mzs = sorted(np.random.uniform(100, 1000, size=size))
-    ints = np.abs(np.random.normal(10, 3, size=size))
-    snr = np.abs(np.random.normal(1000, 400, size=size))
-
-    pl = PeakList('sample_peaklist', mzs, ints, mz_range=(100, 1000))
-    pl.add_tags('sample', 'passed_qc', main_class='treatment_1')
-    pl.add_attribute('snr', snr)
-    pl.metadata.type = 'blank'
-
-    import pdb; pdb.set_trace()
-    import cPickle as cp
-
-    s = cp.dumps(pl)
-    pl = cp.loads(s)
-
-    # magic functions
-    print len(pl)
-    print pl
-
-    # tags
-    print pl.tags
-    print pl.tag_types
-    print pl.tag_values
-    pl.add_tags('not_QC')
-    pl.add_tags(time_point='1hr')
-    print pl.tag_of('time_point')
-    print pl.has_tags('1hr')
-    print pl.has_any_tags(main_class='1hr')
-    print pl.has_tag_type('main_class')
-    pl.drop_tags('not_QC')
-    pl.drop_tag_types('time_point')
-    print pl.tags.to_list()
-
-    # metadata
-    pl.metadata['replicate'] = '4'
-    pl.metadata.sample = 'S01'
-    print pl.metadata
-    del pl.metadata.sample
-    print pl.metadata
-    print pl.metadata.keys()
-
-    # add flag
-    print pl.flags
-    pl.add_attribute('odd_flags', np.arange(len(pl)) % 2 == 0, is_flag=True)
-    print pl.flags
-
-    # attrs access
-    print pl.mz  # internally == getAttribute
-    print pl.snr
-    print pl.mz_all
-    print pl.snr_all
-
-    pl.mz = np.random.uniform(100, 1000, size=len(pl))  # internally == setAttribute
-    print pl[:10]
-
-    print pl['mz']  # internally == getPeak
-    print pl['snr']
-
-    print pl[0]  # internally == getPeak
-    pl[0] = (0, 100, 200, True)  # internally == setPeak
-    print pl[:10]
-
-    pl[0][0] = 1  # not working
-    print pl[:10]
-
-    pl['mz'][0] = 2  # not working
-    print pl[:10]
-
-    # properties
-    print pl.ID
-    print pl.size
-    print pl.shape
-    print pl.attributes
-    print pl.peaks
-    print pl.dtable
-
-    # publics
-    print pl.has_attribute('snr')
-    print pl.has_attribute('no_such_thing')
-    pl.add_attribute('snr_filter_flag', pl.snr > 20, is_flag=True)  # must be all full size vector
-    print pl
-    pl.drop_attribute('snr_filter_flag')
-    print pl
-
-    pl.insert_peak((900, 20, 30, True))  # auto sort
-    print pl
-    pl.remove_peak(-2)
-    print pl
-
-    print pl.to_list()[0]
-    print pl.to_dict().keys()
