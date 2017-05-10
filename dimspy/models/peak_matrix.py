@@ -195,8 +195,8 @@ class PeakMatrix(object):
         pl.add_attribute("impure", self.impure)
         return pl
 
-    def remove_samples(self, ids, remove_empty_peaks = True):
-        rmids = np.arange(self.full_shape[0])[self.mask][list(ids)]
+    def remove_samples(self, ids, remove_empty_peaks = True, masked_only = True):
+        rmids = np.arange(self.full_shape[0])[self.mask][list(ids)] if masked_only else ids
         self._pids = np.delete(self._pids, rmids, axis = 0)
         self._tags = np.delete(self._tags, rmids, axis = 0)
         self._attr_dict = {k: np.delete(v, rmids, axis = 0) for k, v in self._attr_dict.items()}
@@ -209,9 +209,7 @@ class PeakMatrix(object):
         self._attr_dict = {k: np.delete(v, ids, axis = 1) for k, v in self._attr_dict.items()}
         if remove_empty_samples:
             with unmask_all_peakmatrix(self) as pm: rmsids = np.where(np.sum(pm.intensity_matrix, axis = 1) == 0)
-            oldmask, self.mask = self.mask, None
-            pm.remove_samples(rmsids, False)
-            self.mask = np.delete(oldmask, rmsids)
+            self.remove_samples(rmsids, False, False)
         if self.is_empty(): logging.warning('matrix is empty after removal')
         return self
 

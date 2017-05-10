@@ -123,7 +123,7 @@ class PeakListTestCase(unittest.TestCase):
         pm.unmask_tags('qc')
         self.assertListEqual(sorted(pm.peaklist_ids), sorted(('sample_2_1', 'sample_2_2')))
 
-        pm._attr_dict['intensity'][0][:] = 0 # QC_1
+        pm._attr_dict['intensity'][0][2:] = 0 # QC_1
         pm.remove_peaks((0, 1))
         self.assertListEqual(sorted(pm.peaklist_ids), sorted(('sample_2_1', 'sample_2_2')))
         self.assertEqual(pm.shape, (2, 8))
