@@ -165,11 +165,13 @@ class PeakList(object):
         if adt in (bool, 'bool', '|b1'): adt = 'b'  # fix numpy dtype bug
 
         if flagged_only:
-            if len(attr_value) != self.size: raise ValueError('input attibute value size not match')
+            if len(attr_value) != self.size:
+                raise ValueError('input attibute value size not match')
             nattr = np.array([invalid_value] * self._dtable.shape[0]).astype(adt)
             nattr[self._flags] = attr_value
         else:
-            if len(attr_value) != self.full_size: raise ValueError('input attibute value size not match')
+            if len(attr_value) != self.full_size:
+                raise ValueError('input attibute value size not match')
             nattr = np.array(attr_value).astype(adt)
 
         if on_index is None or on_index == self.shape[1]:
@@ -239,8 +241,9 @@ class PeakList(object):
         self.calculate_flags()
         return self
 
-    def remove_peak(self, peak_index):
-        rmid = np.where(self._flags)[0][list(peak_index) if isinstance(peak_index, Iterable) else peak_index]
+    def remove_peak(self, peak_index, flagged_only = True):
+        if isinstance(peak_index, Iterable): peak_index = list(peak_index)
+        rmid = np.where(self._flags)[0][peak_index] if flagged_only else peak_index
         self._dtable = np.delete(self._dtable, rmid)
         self._flags = np.delete(self._flags, rmid)
         if self.size == 0: logging.warning('all peaks are removed for peaklist [%s]' % str(self.ID))

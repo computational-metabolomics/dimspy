@@ -22,8 +22,11 @@ class PeakList_Metadata(dict):
                super(PeakList_Metadata, self).__getattribute__(item)
 
     def __setattr__(self, item, value):
-        if item == '__dict__': raise ValueError('"__dict__" is not an acceptable metadata key')
-        if type(value) == PeakList_Metadata: raise ValueError('metadata object is not an acceptable metadata value')
+        if item == '__dict__':
+            raise ValueError('"__dict__" is not an acceptable metadata key')
+        if type(value) == PeakList_Metadata:
+            raise ValueError('metadata object is not an acceptable metadata value')
+
         if not self.__dict__.has_key(item):
             self[item] = value
         else:
