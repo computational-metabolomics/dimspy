@@ -61,7 +61,7 @@ def _cluster_peaks(mzs, ppm, distype = 'euclidean', linkmode = 'centroid'):
 # multiprocess cluster
 def _cluster_peaks_mp(params): return _cluster_peaks(*params)
 
-def _cluster_peaks_map(mzs, ppm, block_size, fixed_block, edge_extend, ncpus = None):
+def _cluster_peaks_map(mzs, ppm, block_size, fixed_block, edge_extend, ncpus):
     if not np.all(mzs[1:] >= mzs[:-1]):
         raise ValueError('mz values not in ascending order')
     if not 1 <= block_size <= len(mzs):

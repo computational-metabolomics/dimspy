@@ -121,6 +121,18 @@ class PeakAlignmentTestCase(unittest.TestCase):
         self.assertTrue(np.allclose(np.sum(pm.intensity_matrix, axis = 0), [6]))
         self.assertTrue(np.allclose(np.sum(pm.attr_matrix('intra_count'), axis = 0), [60]))
 
+    # may take a while to run
+    # def test_large_peaklists(self):
+    #     pkls = [PeakList('peaklist_' + str(i),
+    #                      np.sort(np.random.uniform(100, 1200, size = 10000)),
+    #                      np.random.normal(100, 10, size = 10000))
+    #             for i in range(100)]
+    #
+    #     try:
+    #         pm = align_peaks(pkls, ppm = 2.0, block_size = 2000, fixed_block = False, edge_extend = 10, ncpus = 2)
+    #     except Exception, e:
+    #         self.fail('alignment failed: ' + str(e))
+
 
 if __name__ == '__main__':
     unittest.main()
