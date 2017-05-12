@@ -38,8 +38,8 @@ else:
 
 # single cluster
 def _cluster_peaks(mzs, ppm, distype = 'euclidean', linkmode = 'centroid'):
-    if len(mzs) == 1:
-        return np.zeros_like(mzs, dtype = int).reshape((-1, 1))
+    if len(mzs) == 0: return np.array([])
+    if len(mzs) == 1: return np.zeros_like(mzs, dtype = int).reshape((-1, 1))
 
     m = np.column_stack([mzs])
     mdist = fc.pdist(m, metric = distype)
@@ -89,8 +89,17 @@ def _cluster_peaks_map(mzs, ppm, block_size, fixed_block, edge_extend, ncpus = N
     pmap = _smap if ncpus == 1 or cpu_count() <= 2 else _mmap
 
     # align edges
-    _rng = lambda x: (lambda v: np.where(np.logical_and(x-v < mzs, mzs <= x+v))[0])(edge_extend * ppm * x * 1e-6)
+    eeppm = edge_extend * ppm * 1e-6
+    _rng = lambda x: (lambda v: np.where(np.logical_and(x-v < mzs, mzs <= x+v))[0])(eeppm * x)
     erngs = [_rng(mzs[i]) for i in sids]
+
+    overlap = [p[-1] >= s[0] for p,s in zip(erngs[:-1], erngs[1:])] # in case edges have overlap
+    if True in overlap:
+        logging.warning('[%d] edge blocks overlapped, consider increasing the block size' % (sum(overlap)+1))
+        erngs = reduce(lambda x, y: (x[:-1] + [np.unique(np.hstack((x[-1], y[0])))]) if y[1] else x + [y[0]],
+                       zip(erngs[1:], overlap), [erngs[0]])
+        sids = [sids[0]] + [s for s, o in zip(sids[1:], overlap) if not o]
+
     _cids = pmap(_cluster_peaks_mp, [(mzs[r], ppm) for r in erngs])
     eblks = [r[c == c[r == s]] for s, r, c in zip(sids, erngs, map(lambda x: x.flatten(), _cids))]
     ecids = map(lambda x: np.zeros_like(x).reshape((-1, 1)), eblks)
@@ -101,14 +110,11 @@ def _cluster_peaks_map(mzs, ppm, block_size, fixed_block, edge_extend, ncpus = N
         (0,) + reduce(lambda x,y: x+y, map(lambda x: (x[0], x[-1]+1), eblks), ()) + (len(mzs),)
     ).reshape((-1, 2))
 
-    if len(set(brngs[0])) == 1:
-        brngs = brngs[1:] # in case edges have reached mz bounds
-    if len(set(brngs[-1])) == 1:
-        brngs = brngs[:-1]
-
+    # in case edges have reached mz bounds
     bkmzs = [mzs[slice(*r)] for r in brngs]
-    if not all(map(lambda x: abs(x[-1]-x[0]) / x[0] > edge_extend * ppm * 10 * 1e-6, bkmzs[:-1])):
-        raise ValueError('mz value range in cluster block is too small, consider increase peaks number in each block')
+    slimbk = sum(map(lambda x: len(x) == 0 or abs(x[-1] - x[0]) / x[0] < eeppm * 10, bkmzs))
+    if slimbk > 0:
+        logging.warning('[%d] empty / slim clustering block(s) found, consider increasing the block size' % slimbk)
     bcids = pmap(_cluster_peaks_mp, [(m, ppm) for m in bkmzs])
 
     # combine
@@ -117,7 +123,7 @@ def _cluster_peaks_map(mzs, ppm, block_size, fixed_block, edge_extend, ncpus = N
     return cids
 
 def _cluster_peaks_reduce(clusters):
-    return reduce(lambda x, y: np.vstack((x, y + np.max(x) + 1)), clusters).flatten()
+    return reduce(lambda x, y: np.vstack((x, y + np.max(x) + 1)), filter(lambda x: len(x) > 0, clusters)).flatten()
 
 # alignment
 def _align_peaks(cids, pids, *attrs):
@@ -158,6 +164,7 @@ def align_peaks(peaks, ppm = 2.0, block_size = 2000, fixed_block = True, edge_ex
     if np.sum(emlst) > 0:
         logging.warning('droping empty peaklist(s) [%s]' % join(map(str, [p.ID for e, p in zip(emlst, peaks) if e]), ','))
         peaks = [p for e, p in zip(emlst, peaks) if not e]
+    if len(peaks) == 0: raise ValueError('all input peaklists for alignment are empty')
 
     # obtain attrs
     attrs = peaks[0].attributes
@@ -165,6 +172,14 @@ def align_peaks(peaks, ppm = 2.0, block_size = 2000, fixed_block = True, edge_ex
         raise AttributeError('PANIC: peak attributes in wrong order')
     if not all(map(lambda x: attrs == x.attributes, peaks)):
         raise ValueError('peak attributes not the same')
+    if 'intra_count' in attrs:
+        raise AttributeError('preserved attribute name [intra_count] already exists')
+
+    # single peaklist
+    if len(peaks) == 1:
+        attrdct = dict((a, peaks[0][a].reshape((1, -1))) for a in attrs)
+        attrdct.update(intra_count = np.ones((1, peaks[0].size)))
+        return PeakMatrix([peaks[0].ID], [peaks[0].tags], **attrdct)
 
     # flatten
     f_pids = np.hstack(map(lambda p: [p.ID] * p.size, peaks))
@@ -180,8 +195,6 @@ def align_peaks(peaks, ppm = 2.0, block_size = 2000, fixed_block = True, edge_ex
 
     # align
     a_pids, a_attrms = _align_peaks(cids, s_pids, *s_attrs)
-    if 'intra_count' in attrs:
-        raise AttributeError('preserved attribute name [intra_count] already exists')
     attrs += ('intra_count', )  # for cM
 
     # sort by original pid

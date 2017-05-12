@@ -24,12 +24,12 @@ class PeakList(object):
     _is_ordered = staticmethod(lambda vals: all(map(lambda x: x[0] - x[1] >= 0, zip(vals[1:], vals[:-1]))))
 
     def __init__(self, ID, mz, intensity, **metadata):
-        if not PeakList._is_ordered(mz):
+        if not self._is_ordered(mz):
             raise ValueError('mz values not in ascending order, check input data')
         if len(intensity) != len(mz):
             raise ValueError('mz values and intensities must have the same size')
 
-        self._dtable = np.array(zip(mz, intensity), dtype=[('mz', 'f8'), ('intensity', 'f8')])
+        self._dtable = np.array(zip(mz, intensity), dtype = [('mz', 'f8'), ('intensity', 'f8')])
 
         self._id = str(ID)
         self._metadata = PeakList_Metadata(**metadata)
@@ -37,6 +37,13 @@ class PeakList(object):
         self._tags = PeakList_Tags()
         self._flags = np.ones_like(mz, dtype = np.bool)
         self._flag_attrs = []
+
+    # privates
+    # reference: https://stackoverflow.com/questions/21818140/numpy-how-to-fill-multiple-fields-in-a-structured-array-at-once
+    @staticmethod
+    def _fields_view(arr, fields):
+        dtype2 = np.dtype({name: arr.dtype.fields[name] for name in fields})
+        return np.ndarray(arr.shape, dtype2, arr, 0, arr.strides)
 
     # built-ins
     def __len__(self):
@@ -174,13 +181,14 @@ class PeakList(object):
                 raise ValueError('input attibute value size not match')
             nattr = np.array(attr_value).astype(adt)
 
-        if on_index is None or on_index == self.shape[1]:
-            # faster?
-            self._dtable = rfn.append_fields(self._dtable, attr_name, nattr, dtypes = adt, usemask = False)
-        else:
-            dts = self._dtable.dtype.descr
-            self._dtable = self._dtable.astype(dts[:on_index] + [(attr_name, adt)] + dts[on_index:])
-            self._dtable[attr_name] = nattr
+        if on_index is None: on_index = self.shape[1]
+        anames, atypes = map(list, zip(*self._dtable.dtype.descr))
+        prevnm, restnm, resttp = anames[:on_index], anames[on_index:], atypes[on_index:]
+
+        prevtb = np.array(nattr, dtype = [(attr_name, adt)]) if len(prevnm) == 0 else \
+            rfn.append_fields(self._fields_view(self._dtable, prevnm), attr_name, nattr, dtypes = adt, usemask = False)
+        self._dtable = prevtb if len(restnm) == 0 else \
+            rfn.append_fields(prevtb, restnm, zip(*self._fields_view(self._dtable, restnm)), dtypes = resttp, usemask = False)
 
         if is_flag:
             self._flag_attrs += [attr_name]
@@ -208,11 +216,13 @@ class PeakList(object):
             raise AttributeError('cannot assign read-only attribute [flag]')
         if not self.has_attribute(attr_name):
             raise AttributeError('attribute [%s] not exists' % attr_name)
-        if attr_name == 'mz' and not (unsorted_mz or PeakList._is_ordered(attr_value)):
+        if attr_name == 'mz' and not (unsorted_mz or self._is_ordered(attr_value)):
             raise ValueError('attribute [mz] not in ascending order')
         if attr_name != 'mz' and unsorted_mz == True:
             logging.warning('setting unsorted_mz flag for non-mz attribute, ignore')
 
+        # May raise FutureWarning, but that shold be a false alarm, because attr_name is a string rather than a list
+        # we are not accessing multiple fields by their names here
         self._dtable[attr_name][self._flags if flagged_only else slice(None)] = attr_value
         if attr_name == 'mz' and unsorted_mz: self.sort_peaks_order()
         if attr_name in self._flag_attrs: self.calculate_flags()

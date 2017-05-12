@@ -45,15 +45,13 @@ class PeakMatrix(object):
         val[nid] = np.nan  # all values = 0 -> nanzero average / std = nan
         return val
 
-    @staticmethod
-    def _nzmean(x, axis):
+    def _nzmean(self, x, axis):
         _func = lambda b: np.average(x, axis = axis, weights = b)
-        return PeakMatrix._masknan(x, axis, _func)
+        return self._masknan(x, axis, _func)
 
-    @staticmethod
-    def _nzstd(x, axis):
+    def _nzstd(self, x, axis):
         _func = lambda b: np.sqrt(np.average(np.power(x - np.average(x, axis = axis, weights = b), 2), axis = axis, weights = b))
-        return PeakMatrix._masknan(x, axis, _func)
+        return self._masknan(x, axis, _func)
 
     # built-ins
     def __len__(self):
@@ -120,7 +118,7 @@ class PeakMatrix(object):
         if self.shape[0] < 2:
             logging.warning('calculating RSD on less than 2 samples')
             return np.ones(self.shape[1]) * np.nan
-        rsd = (lambda m: PeakMatrix._nzstd(m, 0) / PeakMatrix._nzmean(m, 0) * 100)(self.intensity_matrix)
+        rsd = (lambda m: self._nzstd(m, 0) / self._nzmean(m, 0) * 100)(self.intensity_matrix)
         rsd[np.where(map(lambda x: len(set(x[np.nonzero(x)])) == 1, self.intensity_matrix.T))] = np.nan
         return rsd
 
@@ -184,7 +182,7 @@ class PeakMatrix(object):
         return self._attr_dict[attr_name][self._mask]
 
     def attr_mean_vector(self, attr_name):
-        return PeakMatrix._nzmean(self.attr_matrix(attr_name), 0)
+        return self._nzmean(self.attr_matrix(attr_name), 0)
 
     def to_peaklist(self, ID):
         pl = PeakList(ID, self.mz_mean_vector, self.ints_mean_vector, aligned_ids = self.peaklist_ids)

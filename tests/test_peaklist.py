@@ -94,11 +94,11 @@ class PeakListTestCase(unittest.TestCase):
         self.assertRaises(AttributeError, lambda: pl.set_attribute('flags', np.ones_like(pl.size)))
         self.assertRaises(AttributeError, lambda: pl.set_attribute('values_3', np.arange(pl.size)))
         self.assertRaises(ValueError, lambda: pl.set_attribute('mz', np.arange(10)[::-1], flagged_only = False))
+
         try:
             pl.set_attribute('mz', np.arange(10)[::-1], flagged_only = False, unsorted_mz = True)
         except Exception, e:
             self.fail('unsorted_mz flag failed: ' + str(e))
-        print pl.get_attribute('mz')
         self.assertTrue(np.all(pl.get_attribute('mz') == np.arange(10)[1::2])) # setting mz reversed the snr_flag
 
         self.assertRaises(AttributeError, lambda: pl.get_attribute('values_4'))

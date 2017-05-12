@@ -10,19 +10,20 @@ origin: 04-29-2017
 """
 
 
-import unittest, logging
+import logging
+from inspect import getargspec
 
 
-def runTextSuite(suite, file_name, mode = 'w', **kwargs):
+def runTestSuite(suite, file_name, mode = 'w', **kwargs):
+    try:
+        from HTMLTestRunner import HTMLTestRunner as runner
+    except ImportError:
+        logging.warning('Module [HTMLTestRunner] not found, use default test runner.\n'
+                        'Available: http://tungwaiyip.info/software/HTMLTestRunner_0_8_2/HTMLTestRunner.py')
+        from unittest import TextTestRunner as runner
+
     with open(file_name, mode) as f:
-        runner = unittest.TextTestRunner(stream = f, **kwargs)
-        runner.run(suite)
-
-def runHtmlSuite(suite, file_name, mode = 'w', **kwargs):
-    try: from HTMLTestRunner import HTMLTestRunner
-    except ImportError: logging.error('required module [HTMLTestRunner] not found, terminated'); return
-
-    with open(file_name, mode) as f:
-        runner = HTMLTestRunner(stream = f, **kwargs)
+        kwargs = dict((k, v) for k,v in kwargs.items() if k in getargspec(runner.__init__)[0] and k != 'self')
+        runner = runner(stream = f, **kwargs)
         runner.run(suite)
 
