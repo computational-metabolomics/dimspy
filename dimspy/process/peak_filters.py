@@ -14,84 +14,71 @@ from __future__ import division
 
 import logging
 import numpy as np
-
-# when mask / unmask samples for filtering, use with ... as statement to auto reset the mask after filtering
-# manually call pm.mask_tags() etc. will not override the mask, but instead overlap with the existing mask by default
 from dimspy.models.peak_matrix import mask_peakmatrix, unmask_peakmatrix
 
 
 # peaklist filters
-def filter_abs_intensity(peaks, threshold, flag_name='cutoff_ints_filter'):
-    peaks.add_attribute(flag_name, peaks.ints > threshold, is_flag=True)
+def filter_attr(peaks, threshold, snr_attr_name, flag_name, compa = None, on_index = None):
+    if not peaks.has_attribute(snr_attr_name):
+        raise AttributeError('peaklist object does not have SNR attribute [%s]' % snr_attr_name)
+    if compa is None: compa = lambda x, t: x > t
+    peaks.add_attribute(flag_name, compa(peaks[snr_attr_name], threshold), is_flag = True, on_index = on_index)
     return peaks
-
-
-def filter_rel_intensity(peaks, threshold, flag_name='relative_ints_filter'):
-    return filter_abs_intensity(peaks, np.max(peaks.ints) * threshold, flag_name)
-
-
-def filter_snr(peaks, threshold, snr_attr_name='snr', flag_name='snr_flag'):
-    assert peaks.has_attribute(snr_attr_name), 'peak list does not have SNR attribute [%s]' % snr_attr_name
-    peaks.add_attribute(flag_name, peaks[snr_attr_name] > threshold, is_flag=True)
-    return peaks
-
 
 # PeakMatrix filters
-def filter_rsd(pm, threshold, qc_label):
-    if qc_label is not None:
-        assert qc_label in pm.peaklist_tag_values, "QC label does not exist"
+def filter_rsd(pm, rsd_threshold = None, qc_label = None):
+    if rsd_threshold is None and qc_label is None:
+        raise ValueError('must provide rsd threshold or qc label')
+
+    if qc_label is None:
+        pm.remove_peaks(np.where([np.isnan(v) or v > rsd_threshold for v in pm.rsd]))
+    else:
+        if not pm.has_attribute(qc_label):
+            raise AttributeError('peaklist object does not have QC label [%s]' % qc_label)
         with mask_peakmatrix(pm, qc_label):
             rsd_values = pm.rsd
         with unmask_peakmatrix(pm, qc_label):
-            pm.remove_peaks(np.where(np.logical_or(np.isnan(pm.rsd), pm.rsd > rsd_values)))
+            rmids = np.where([np.isnan(v) or v > rsd_values for v in pm.rsd]) # cannot remove samples inside with... statement
+        pm.remove_peaks(rmids)
+    return pm
+
+def filter_fraction(pm, fraction_threshold, within_classes = False, class_tag_type = None):
+    if not within_classes:
+        rmids = np.where(pm.fraction < fraction_threshold)
+        pm.remove_peaks(rmids)
     else:
-        pm.remove_peaks(np.where(np.logical_or(np.isnan(pm.rsd), pm.rsd > threshold)))
+        if not all(map(lambda t: t.has_tag_type(class_tag_type), pm.peaklist_tags)):
+            raise AttributeError('not all tags have tag type [%s]' % class_tag_type)
+        for tag in pm.tags_of(class_tag_type):
+            with mask_peakmatrix(pm, **{class_tag_type: tag}):
+                rmids = np.where(pm.fraction < fraction_threshold)
+            pm.remove_peaks(rmids)
     return pm
 
-
-def filter_across_classes(pm, min_fraction):
-    rmids = np.where(np.sum(pm.intensity_matrix > 0, axis=0) / pm.shape[0] < min_fraction)
-    return pm.remove_peaks(rmids)
-
-
-def filter_within_classes(pm, tag_type, min_fraction):
-    for tag in pm.tags_of(tag_type):
-        with mask_peakmatrix(pm, **{tag_type:tag}):
-            pm.remove_peaks(np.where(np.sum(pm.intensity_matrix > 0, axis=0) / pm.shape[0] < min_fraction))
-    return pm
-
-
-def filter_blank_peaks(pm, blank_label, min_fraction=1.0, min_fold=1.0, function="mean", rm_samples=True):
-
-    assert blank_label in pm.peaklist_tag_values, "Blank label does not exist"
-    assert 0 < min_fraction <= 1, "Provide a value between 0. and 1."
-    assert min_fold >= 0, "Provide a value larger than zero."
-    assert function in ("mean", "median", "max"), "Mean, median or max intensity"
+def filter_blank_peaks(pm, blank_label, fraction_threshold = 1.0, fold_threshold = 1.0, method = 'mean', rm_samples = True):
+    if blank_label not in pm.peaklist_tag_values:
+        raise ValueError('blank label [%s] does not exist' % blank_label)
+    if method not in ('mean', 'median', 'max'):
+        raise ValueError('filter method must be mean, median or max')
 
     with mask_peakmatrix(pm, blank_label):
         ints = pm.intensity_matrix if pm.shape[0] == 1 else \
-               np.max(pm.intensity_matrix, axis=0) if function == "max" else \
-               np.array(map(lambda x: getattr(np, function)(x), pm.intensity_matrix.T))
+               np.max(pm.intensity_matrix, axis = 0) if method == 'max' else \
+               np.array(map(lambda x: getattr(np, method)(x), pm.intensity_matrix.T))
                # note: quick fix of unexpected dtype conversion in apply_along_axis (float64 -> int64)
                # np.apply_along_axis(lambda x: _skipempty(getattr(np, function), x[np.nonzero(x)]), 0, pm.intensity_matrix)
-        ints *= min_fold
+        ints *= fold_threshold
 
     with unmask_peakmatrix(pm, blank_label):
-        has_blank = ints > 0
-        faild_int = np.sum(pm.intensity_matrix >= ints, axis = 0) < (min_fraction * pm.shape[0])
-        pm.remove_peaks(np.where(np.logical_and(has_blank, faild_int)))
-
-    # min_fraction of the non-zero values
-    # pm.intensity_matrix.shape[0] should non-zero value only instead
-    # column is zero
+        rmids = np.where(np.logical_and(ints > 0, pm.fraction < fraction_threshold))
+    pm.remove_peaks(rmids)
 
     if rm_samples:
-        pm = pm.remove_samples(np.where(map(lambda x: x.has_tags(blank_label), pm.peaklist_tags)))
+        pm = pm.remove_samples(np.where(map(lambda x: x.has_tag(blank_label), pm.peaklist_tags)))
     return pm
 
-
-def filter_sparsity(pm, ppm):
+def filter_sparsity(pm, ppm_threshold):
     mmzs = pm.mzs_mean_vector
-    rmids = np.where(np.abs((mmzs[1:] - mmzs[:-1]) / mmzs[1:]) * 1e+6 < ppm)
+    rmids = np.where(np.abs((mmzs[1:] - mmzs[:-1]) / mmzs[1:]) * 1e+6 < ppm_threshold)
     return pm.remove_peaks(rmids)
 
