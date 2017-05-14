@@ -14,8 +14,8 @@ import unittest, os
 import numpy as np
 from dimspy.models.peaklist import PeakList
 from dimspy.process.peak_alignment import align_peaks
-from dimspy.portals.txtPortal import save_peaklist_as_txt, load_peaklist_from_txt
-from dimspy.portals.txtPortal import save_peak_matrix_as_txt, load_peak_matrix_from_txt
+from dimspy.portals.txt_portal import save_peaklist_as_txt, load_peaklist_from_txt
+from dimspy.portals.txt_portal import save_peak_matrix_as_txt, load_peak_matrix_from_txt
 
 
 class TxtPortalsTestCase(unittest.TestCase):

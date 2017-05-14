@@ -6,9 +6,9 @@ import os
 import h5py
 import numpy as np
 
-from portals import hdf5Portal
-from portals.hdf5Portal import check_paths
-from portals.txtPortal import load_peak_matrix_from_txt
+from portals import hdf5_portal
+from portals.hdf5_portal import check_paths
+from portals.txt_portal import load_peak_matrix_from_txt
 from experiment import check_metadata
 from experiment import update_class_labels
 from experiment import update_metadata
@@ -65,7 +65,7 @@ def replicate_filter(source, ppm, reps, min_peaks, rsd_thres=None, filelist=None
 
     filenames = check_paths(filelist, source)
     assert len(filenames) > 0, "Provide a filelist that list all the text files (columnname:filename) and assign replicate numbers to each filename/sample (columnname:replicate)"
-    peaklists = hdf5Portal.load_peaklists(source)
+    peaklists = hdf5_portal.load_peaklists(source)
 
     if filelist is not None:
         fl = check_metadata(filelist)
@@ -111,7 +111,7 @@ def replicate_filter(source, ppm, reps, min_peaks, rsd_thres=None, filelist=None
 def align_samples(source, ppm, filelist=None, block_size=2000, ncpus=None):
 
     filenames = check_paths(filelist, source)
-    peaklists = hdf5Portal.load_peaklists(source)
+    peaklists = hdf5_portal.load_peaklists(source)
 
     if filelist is not None:
         fl = check_metadata(filelist)
@@ -129,7 +129,7 @@ def blank_filter(peak_matrix, blank_label, min_fraction=1.0, min_fold_change=1.0
     assert os.path.isfile(peak_matrix), "{} does not exist".format(peak_matrix)
 
     if h5py.is_hdf5(peak_matrix):
-        peak_matrix = hdf5Portal.load_peak_matrix_from_hdf5(peak_matrix)
+        peak_matrix = hdf5_portal.load_peak_matrix_from_hdf5(peak_matrix)
     else:
         peak_matrix = load_peak_matrix_from_txt(peak_matrix)
 
@@ -146,7 +146,7 @@ def sample_filter(peak_matrix, min_fraction, within=False, rsd=None, qc_label=No
     assert os.path.isfile(peak_matrix), "{} does not exist".format(peak_matrix)
 
     if h5py.is_hdf5(peak_matrix):
-        peak_matrix = hdf5Portal.load_peak_matrix_from_hdf5(peak_matrix)
+        peak_matrix = hdf5_portal.load_peak_matrix_from_hdf5(peak_matrix)
     else:
         peak_matrix = load_peak_matrix_from_txt(peak_matrix)
 
