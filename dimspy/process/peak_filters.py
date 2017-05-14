@@ -18,27 +18,31 @@ from dimspy.models.peak_matrix import mask_peakmatrix, unmask_peakmatrix
 
 
 # peaklist filters
-def filter_attr(peaks, threshold, snr_attr_name, flag_name, compa = None, on_index = None):
-    if not peaks.has_attribute(snr_attr_name):
-        raise AttributeError('peaklist object does not have SNR attribute [%s]' % snr_attr_name)
-    if compa is None: compa = lambda x, t: x > t
-    peaks.add_attribute(flag_name, compa(peaks[snr_attr_name], threshold), is_flag = True, on_index = on_index)
-    return peaks
+def filter_attr(peaks, attr_name, max_threshold = None, min_threshold = None, flag_name = None, flag_index = None):
+    if min_threshold is None and max_threshold is None:
+        raise ValueError('must specify minimum or maximum threshold value')
+    flt = lambda x: np.logical_and((min_threshold <= x) if min_threshold is not None else True,
+                                   (x <= max_threshold) if max_threshold is not None else True)
+    if flag_name is None: flag_name = attr_name + '_flag'
+    return peaks.add_attribute(flag_name, flt(peaks[attr_name]), is_flag = True, on_index = flag_index)
 
 # PeakMatrix filters
 def filter_rsd(pm, rsd_threshold = None, qc_label = None):
     if rsd_threshold is None and qc_label is None:
-        raise ValueError('must provide rsd threshold or qc label')
+        raise ValueError('must provide rsd threshold or QC label')
 
     if qc_label is None:
         pm.remove_peaks(np.where([np.isnan(v) or v > rsd_threshold for v in pm.rsd]))
     else:
-        if not pm.has_attribute(qc_label):
+        if qc_label not in pm.peaklist_tag_values:
             raise AttributeError('peaklist object does not have QC label [%s]' % qc_label)
         with mask_peakmatrix(pm, qc_label):
             rsd_values = pm.rsd
+            if np.any(np.isnan(rsd_values)): logging.warning('nan found in QC rsd values, filter might not work properly')
         with unmask_peakmatrix(pm, qc_label):
-            rmids = np.where([np.isnan(v) or v > rsd_values for v in pm.rsd]) # cannot remove samples inside with... statement
+            # cannot remove samples inside with... statement, otherwise old_mask will not match the new pm
+            # by default pm.remove_peaks will remove empty samples automatically
+            rmids = np.where([np.isnan(v) or v > rsd_values for v in pm.rsd])
         pm.remove_peaks(rmids)
     return pm
 
@@ -55,7 +59,7 @@ def filter_fraction(pm, fraction_threshold, within_classes = False, class_tag_ty
             pm.remove_peaks(rmids)
     return pm
 
-def filter_blank_peaks(pm, blank_label, fraction_threshold = 1.0, fold_threshold = 1.0, method = 'mean', rm_samples = True):
+def filter_blank_peaks(pm, blank_label, fraction_threshold = 1, fold_threshold = 1, method = 'mean', rm_blanks = True):
     if blank_label not in pm.peaklist_tag_values:
         raise ValueError('blank label [%s] does not exist' % blank_label)
     if method not in ('mean', 'median', 'max'):
@@ -70,15 +74,16 @@ def filter_blank_peaks(pm, blank_label, fraction_threshold = 1.0, fold_threshold
         ints *= fold_threshold
 
     with unmask_peakmatrix(pm, blank_label):
-        rmids = np.where(np.logical_and(ints > 0, pm.fraction < fraction_threshold))
+        faild_int = np.sum(pm.intensity_matrix >= ints, axis = 0) < (fraction_threshold * pm.shape[0])
+        rmids = np.where(np.logical_and(ints > 0, faild_int))
     pm.remove_peaks(rmids)
 
-    if rm_samples:
+    if rm_blanks:
         pm = pm.remove_samples(np.where(map(lambda x: x.has_tag(blank_label), pm.peaklist_tags)))
     return pm
 
 def filter_sparsity(pm, ppm_threshold):
-    mmzs = pm.mzs_mean_vector
+    mmzs = pm.mz_mean_vector
     rmids = np.where(np.abs((mmzs[1:] - mmzs[:-1]) / mmzs[1:]) * 1e+6 < ppm_threshold)
     return pm.remove_peaks(rmids)
 
