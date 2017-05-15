@@ -27,7 +27,7 @@ def main():
 
     print
     print "Replicate Filter....."
-    pls_rf = replicate_filter(pls, ppm=2.0, reps=3, minpeaks=2, rsd_thres=20.0)
+    pls_rf = replicate_filter(pls, ppm=2.0, reps=3, min_peaks=2, rsd_thres=20.0)
     print "Finished"
     print
     print "Align Samples...."
