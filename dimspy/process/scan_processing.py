@@ -10,7 +10,7 @@ from dimspy.models.peaklist import PeakList
 from dimspy.portals import Mzml
 from dimspy.portals import ThermoRaw
 from dimspy.process.peak_alignment import align_peaks
-from dimspy.process.peak_filters import filter_snr
+from dimspy.process.peak_filters import filter_attr
 from dimspy.experiment import define_mz_ranges
 from dimspy.experiment import interpret_experiment_from_headers
 from dimspy.experiment import remove_headers
@@ -35,7 +35,7 @@ def _calculate_edges(mz_ranges):
 
 def remove_edges(pls_sd):
 
-    if type(pls_sd) is not dict or type(pls_sd) is not collections.OrderedDict:
+    if type(pls_sd) is not dict and type(pls_sd) is not collections.OrderedDict:
         raise TypeError("Incorrect format - dict or collections.OrderedDict required")
 
     mzrs = [mz_range_from_header(h) for h in pls_sd]
@@ -54,7 +54,7 @@ def read_scans(fn, source, function_noise, nscans, subset_scan_events=None):
     source = source.encode('string-escape')
 
     # assert os.path.isfile(fn), "File does not exist"
-    if not fn.lower().endswith(".mzml") or not fn.lower().endswith(".raw"):
+    if not fn.lower().endswith(".mzml") and not fn.lower().endswith(".raw"):
         raise IOError("Check format raw data (.RAW or .mzML)")
     if type(nscans) is not int or nscans < 0:
         raise ValueError("Use an integer >= 0")
@@ -105,12 +105,12 @@ def average_replicate_scans(pls, snr_thres=3.0, ppm=2.0, min_fraction=0.8, rsd_t
 
     print "Removing noise....."
     for h in pls:
-        pls[h] = [filter_snr(pl, snr_thres) for pl in pls[h] if len(pl.mz) > 0]
+        pls[h] = [filter_attr(pl, "snr", min_threshold=snr_thres) for pl in pls[h] if len(pl.mz) > 0]
 
     print "Align, averaging and filtering peaks....."
     for h in pls:
         print h
-        if len(pls[h]) > 1:
+        if len(pls[h]) >= 1:
             pm = align_peaks(pls[h], ppm=ppm, block_size=block_size, ncpus=ncpus)
             # TODO: remove clusters that have a higher number of peaks than samples
             # OR we can take the most accurate group of peaks and remove remaining peaks
@@ -119,27 +119,25 @@ def average_replicate_scans(pls, snr_thres=3.0, ppm=2.0, min_fraction=0.8, rsd_t
 
             pls[h].add_attribute("snr", pm.attr_mean_vector('snr'))
             pls[h].add_attribute("snr_flag", np.ones(pls[h].full_size), flagged_only=False, is_flag=True)
-            pls[h].add_attribute("present", pm.present) # np.zeros(len(pls[h].mz)))
-            pls[h].add_attribute("fraction", pm.present / float(pm.shape[0]))
-            pls[h].add_attribute("rsd", pm.rsd)
 
             if min_fraction is not None:
                 pls[h].add_attribute("fraction_flag", (pm.present / float(pm.shape[0])) >= min_fraction, flagged_only=False, is_flag=True)
             if rsd_thres is not None:
                 pls[h].add_attribute("rsd_flag", pm.rsd <= rsd_thres, flagged_only=False, is_flag=True)
 
-        elif len(pls[h]) == 1:
-            pls[h] = pls[h][0]
-            # snr and snr_flag attribute already available
-            pls[h].remove_unflagged_peaks('snr_flag')
-            pls[h].add_attribute("present", np.ones(pls[h].full_size), flagged_only=False)
-            pls[h].add_attribute("fraction", np.ones(pls[h].full_size), flagged_only=False)
-            pls[h].add_attribute("rsd", np.nan * np.ones(pls[h].full_size), flagged_only=False)
-            if min_fraction is not None:
-                pls[h].add_attribute("fraction_flag", np.ones(pls[h].full_size), flagged_only=False, is_flag=True)
-            if rsd_thres is not None:
-                logging.warning('applying RSD filter on single scan, all peaks removed')
-                pls[h].add_attribute("rsd_flag", np.zeros(pls[h].full_size), flagged_only=False, is_flag=True)
+        #elif len(pls[h]) == 1:
+        #    pls[h] = pls[h][0]
+        #    # snr and snr_flag attribute already available
+        #    pls[h].remove_unflagged_peaks('snr_flag')
+        #    pls[h].add_attribute("present", np.ones(pls[h].full_size), flagged_only=False)
+        #    pls[h].add_attribute("fraction", np.ones(pls[h].full_size), flagged_only=False)
+        #    pls[h].add_attribute("rsd", np.nan * np.ones(pls[h].full_size), flagged_only=False)
+        #    if min_fraction is not None:
+        #        pls[h].add_attribute("fraction_flag", np.ones(pls[h].full_size), flagged_only=False, is_flag=True)
+        #    if rsd_thres is not None:
+        #        logging.warning('applying RSD filter on single scan, all peaks removed')
+        #        pls[h].add_attribute("rsd_flag", np.zeros(pls[h].full_size), flagged_only=False, is_flag=True)
+
         else:
             print "No scans available for {}".format(h)
             del pls[h]

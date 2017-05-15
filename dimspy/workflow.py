@@ -6,8 +6,8 @@ import collections
 import os
 import h5py
 import numpy as np
-from dimspy.models.peaklist import PeakList
-from dimspy.models.peak_matrix import PeakMatrix
+from models.peaklist import PeakList
+from models.peak_matrix import PeakMatrix
 from portals import hdf5_portal
 from portals.paths import check_paths
 from portals.txt_portal import load_peak_matrix_from_txt
@@ -48,8 +48,7 @@ def process_scans(source, function_noise, snr_thres, nscans, ppm, min_fraction=N
         pl = join_peaklists(os.path.basename(filenames[i]), prs)
 
         if "class" in fl:
-            pl.add_tags(class_label=fl["class"][i])
-            # pl.add_tags(class_label2=fl["class"][i])
+            pl.tags.add_tags(class_label=fl["class"][i])
 
         for k in fl.keys():
             pl.metadata[k] = fl[k][i]

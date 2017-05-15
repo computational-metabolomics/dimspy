@@ -18,7 +18,7 @@ def main():
     print "Process Scans....."
     pls = process_scans(source, nscans=5, function_noise="median",
         snr_thres=3.0, ppm=2.0, min_fraction=0.5, rsd_thres=30.0,
-        filelist=fn_filelist, subset_mzrs=None, block_size=2000, ncpus=None)
+        filelist=fn_filelist, subset_scan_events=None, block_size=2000, ncpus=None)
     print "Finished"
 
     for pl in pls[0:6]:
