@@ -93,7 +93,7 @@ def replicate_filter(source, ppm, reps, min_peaks, rsd_thres=None, filelist=None
     for i in range(len(idx_peaklists)-1):
 
         pls = peaklists[idx_peaklists[i]:idx_peaklists[i+1]]
-        pm = align_peaks(pls, ppm, block_size, byunique=False, ncpus=ncpus)
+        pm = align_peaks(pls, ppm, block_size, ncpus=ncpus)
         #############################################################
         # TODO: Write some sort of merging function for multiple replicate file names
         #############################################################
@@ -125,7 +125,7 @@ def align_samples(source, ppm, filelist=None, block_size=2000, ncpus=None):
         peaklists = [pl for pl in peaklists if pl.ID in [os.path.basename(fn) for fn in filenames]]
         peaklists = update_metadata(peaklists, fl)
 
-    return align_peaks(peaklists, ppm=ppm, block_size=block_size, byunique=False, ncpus=ncpus)
+    return align_peaks(peaklists, ppm=ppm, block_size=block_size, ncpus=ncpus)
 
 
 def blank_filter(peak_matrix, blank_label, min_fraction=1.0, min_fold_change=1.0, function="mean", rm_samples=True, class_labels=None):
