@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import collections
 import os
+import logging
 
 import h5py
 import numpy as np
@@ -25,7 +26,8 @@ from process.scan_processing import remove_edges
 def process_scans(source, function_noise, snr_thres, nscans, ppm, min_fraction=None, rsd_thres=None, filelist=None, subset_scan_events=None, block_size=2000, ncpus=None):
 
     filenames = check_paths(filelist, source)
-    assert len([fn for fn in filenames if not fn.lower().endswith(".mzml") or not fn.lower().endswith(".raw")]) > 0, "Incorrect file format. Provide .mzML and .raw files"
+    if len([fn for fn in filenames if not fn.lower().endswith(".mzml") or not fn.lower().endswith(".raw")]) == 0:
+        raise IOError("Incorrect file format. Provide .mzML and .raw files")
 
     if filelist is not None:
         fl = check_metadata(filelist)
@@ -63,7 +65,8 @@ def stitch(source, filelist, fn_exp, nscans, function_noise, snr_thres, ppm, pre
 def replicate_filter(source, ppm, reps, min_peaks, rsd_thres=None, filelist=None, block_size=2000, ncpus=None):
 
     filenames = check_paths(filelist, source)
-    assert len(filenames) > 0, "Provide a filelist that list all the text files (columnname:filename) and assign replicate numbers to each filename/sample (columnname:replicate)"
+    if len(filenames) == 0:
+        raise IOError("Provide a filelist that list all the text files (columnname:filename) and assign replicate numbers to each filename/sample (columnname:replicate)")
     peaklists = hdf5_portal.load_peaklists(source)
 
     if filelist is not None:
@@ -71,14 +74,20 @@ def replicate_filter(source, ppm, reps, min_peaks, rsd_thres=None, filelist=None
         peaklists = [pl for pl in peaklists if pl.ID in [os.path.basename(fn) for fn in filenames]]
         peaklists = update_metadata(peaklists, fl)
 
-    assert hasattr(peaklists[0].metadata, "replicate"), "Provide a filelist and assign replicate numbers (columnname:replicate) to each filename/sample"
+    if not hasattr(peaklists[0].metadata, "replicate"):
+        raise IOError("Provide a filelist and assign replicate numbers (columnname:replicate) to each filename/sample")
 
     unique, counts = np.unique([pl.metadata.replicate for pl in peaklists], return_counts=True)
-    assert max(unique) == reps, "replicates missing (1)"
-    assert len(counts) == reps, "replicates missing (2)"
-    assert sum(counts) == len(peaklists), "replicates missing (3)"
-    assert list(unique) == range(1, reps+1), "replicates missing (4)"
-    assert len(counts) > 1, "No technical replicates available (single) - Skip replicate filter "
+    if max(unique) != reps:
+        raise ValueError("replicates missing (1)")
+    if len(counts) != reps:
+        raise ValueError("replicates missing (2)")
+    if sum(counts) != len(peaklists):
+        raise ValueError("replicates missing (3)")
+    if list(unique) != range(1, reps+1):
+        raise ValueError("replicates missing (4)")
+    if len(counts) <= 1:
+        raise ValueError("No technical replicates available (single) - Skip replicate filter")
 
     idx_peaklists = range(0, len(peaklists) + reps, reps)
     pls_rep_filt = []
@@ -122,10 +131,14 @@ def align_samples(source, ppm, filelist=None, block_size=2000, ncpus=None):
 
 def blank_filter(peak_matrix, blank_label, min_fraction=1.0, min_fold_change=1.0, function="mean", rm_samples=True, class_labels=None):
 
-    assert 0 < min_fraction <= 1, "Provide a value between 0. and 1."
-    assert min_fold_change >= 0, "Provide a value larger than zero."
-    assert function in ("mean", "median", "max"), "Mean, median or max intensity"
-    assert os.path.isfile(peak_matrix), "{} does not exist".format(peak_matrix)
+    if min_fraction < 0.0 or min_fraction > 1.0:
+        raise ValueError("Provide a value between 0. and 1.")
+    if min_fold_change < 0:
+        raise ValueError("Provide a value larger than zero.")
+    if function not in ("mean", "median", "max"):
+        raise ValueError("Mean, median or max intensity")
+    if not os.path.isfile(peak_matrix):
+        raise IOError("{} does not exist".format(peak_matrix))
 
     if h5py.is_hdf5(peak_matrix):
         peak_matrix = hdf5_portal.load_peak_matrix_from_hdf5(peak_matrix)
@@ -135,14 +148,16 @@ def blank_filter(peak_matrix, blank_label, min_fraction=1.0, min_fold_change=1.0
     if class_labels is not None:
         peak_matrix = update_class_labels(peak_matrix, class_labels)
 
-    assert blank_label in peak_matrix.peaklist_tag_values, "Blank label ({}) does not exist".format(blank_label)
+    if blank_label not in peak_matrix.peaklist_tag_values:
+        raise IOError("Blank label ({}) does not exist".format(blank_label))
 
     return filter_blank_peaks(peak_matrix, blank_label, min_fraction, min_fold_change, function, rm_samples)
 
 
 def sample_filter(peak_matrix, min_fraction, within=False, rsd=None, qc_label=None, class_labels=None):
 
-    assert os.path.isfile(peak_matrix), "{} does not exist".format(peak_matrix)
+    if not os.path.isfile(peak_matrix):
+        raise IOError("{} does not exist".format(peak_matrix))
 
     if h5py.is_hdf5(peak_matrix):
         peak_matrix = hdf5_portal.load_peak_matrix_from_hdf5(peak_matrix)
@@ -150,11 +165,13 @@ def sample_filter(peak_matrix, min_fraction, within=False, rsd=None, qc_label=No
         peak_matrix = load_peak_matrix_from_txt(peak_matrix)
 
     if class_labels is not None:
-        assert os.path.isfile(class_labels), "{} does not exist".format(class_labels)
+        if not os.path.isfile(class_labels):
+            raise IOError("{} does not exist".format(class_labels))
         peak_matrix = update_class_labels(peak_matrix, class_labels)
 
     if qc_label is not None:
-        assert qc_label in peak_matrix.peaklist_tag_values
+        if qc_label not in peak_matrix.peaklist_tag_values:
+            raise IOError("QC label ({}) does not exist".format(qc_label))
 
     peak_matrix = filter_fraction(peak_matrix, min_fraction, within_classes=within, class_tag_type=None)
 
