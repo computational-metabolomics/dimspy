@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 import collections
 import os
-import logging
 
 import h5py
 import numpy as np
@@ -67,7 +66,7 @@ def replicate_filter(source, ppm, reps, min_peaks, rsd_thres=None, filelist=None
     filenames = check_paths(filelist, source)
     if len(filenames) == 0:
         raise IOError("Provide a filelist that list all the text files (columnname:filename) and assign replicate numbers to each filename/sample (columnname:replicate)")
-    peaklists = hdf5_portal.load_peaklists(source)
+    peaklists = hdf5_portal.load_peaklists_from_hdf5(source)
 
     if filelist is not None:
         fl = check_metadata(filelist)
@@ -119,7 +118,7 @@ def replicate_filter(source, ppm, reps, min_peaks, rsd_thres=None, filelist=None
 def align_samples(source, ppm, filelist=None, block_size=2000, ncpus=None):
 
     filenames = check_paths(filelist, source)
-    peaklists = hdf5_portal.load_peaklists(source)
+    peaklists = hdf5_portal.load_peaklists_from_hdf5(source)
 
     if filelist is not None:
         fl = check_metadata(filelist)
