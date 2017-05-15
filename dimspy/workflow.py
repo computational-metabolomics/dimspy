@@ -1,11 +1,13 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+
+
 import collections
 import os
-
 import h5py
 import numpy as np
-
+from dimspy.models.peaklist import PeakList
+from dimspy.models.peak_matrix import PeakMatrix
 from portals import hdf5_portal
 from portals.paths import check_paths
 from portals.txt_portal import load_peak_matrix_from_txt
@@ -177,3 +179,26 @@ def sample_filter(peak_matrix, min_fraction, within=False, rsd=None, qc_label=No
     if rsd is not None:
         peak_matrix = filter_rsd(peak_matrix, rsd, qc_label)
     return peak_matrix
+
+
+def hdf5_to_text(fname, path_out, separator="\t", transpose=False):
+    assert os.path.isfile(fname), 'HDF5 database [%s] not exists' % fname
+    assert h5py.is_hdf5(fname), 'input file [%s] is not a valid HDF5 database' % fname
+    seps = {"comma": ",", "tab": "\t"}
+    if separator in seps: separator = seps[separator]
+    assert separator in [",", "\t"], "Incorrect separator ('tab', 'comma', ',', '\t')"
+    f = h5py.File(fname, 'r')
+    if "mz" in f:
+        obj = hdf5_portal.load_peak_matrix_from_hdf5(fname)
+        assert isinstance(obj, PeakMatrix)
+        obj = hdf5_portal.load_peak_matrix_from_hdf5(fname)
+        with open(os.path.join(path_out), "w") as pk_out:
+            pk_out.write(obj.to_str(separator, transpose))
+    else:
+        assert os.path.isdir(path_out), "File or Directory does not exist:".format(path_out)
+        obj = hdf5_portal.load_peaklists_from_hdf5(fname)
+        assert isinstance(obj[0], PeakList), "Incorrect Objects in list. Peaklist Object required."
+        for pl in obj:
+            with open(os.path.join(path_out, os.path.splitext(pl.ID)[0] + ".txt"), "w") as pk_out:
+                pk_out.write(pl.to_str(separator))
+    return
