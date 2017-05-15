@@ -35,7 +35,8 @@ def _calculate_edges(mz_ranges):
 
 def remove_edges(pls_sd):
 
-    assert type(pls_sd) == dict or type(pls_sd) == collections.OrderedDict, "Incorrect format ()"
+    if type(pls_sd) is not dict or type(pls_sd) is not collections.OrderedDict:
+        raise TypeError("Incorrect format - dict or collections.OrderedDict required")
 
     mzrs = [mz_range_from_header(h) for h in pls_sd]
     new_mzrs = _calculate_edges(mzrs)
@@ -53,8 +54,10 @@ def read_scans(fn, source, function_noise, nscans, subset_scan_events=None):
     source = source.encode('string-escape')
 
     # assert os.path.isfile(fn), "File does not exist"
-    assert fn.lower().endswith(".mzml") or fn.lower().endswith(".raw"), "Check format raw data (.RAW or .mzML)"
-    assert type(nscans) == int and nscans >= 0, "User a integer >= 0"
+    if not fn.lower().endswith(".mzml") or not fn.lower().endswith(".raw"):
+        raise IOError("Check format raw data (.RAW or .mzML)")
+    if type(nscans) is not int or nscans < 0:
+        raise ValueError("Use an integer >= 0")
 
     if fn.lower().endswith(".mzml"):
         if zipfile.is_zipfile(source):
@@ -86,7 +89,8 @@ def read_scans(fn, source, function_noise, nscans, subset_scan_events=None):
         pass
 
     # Validate that there are enough scans for each window
-    assert min([len(scans) for h, scans in h_sids.items()]) >= nscans, "not enough scans for each window, nscans = {}".format(nscans)
+    if min([len(scans) for h, scans in h_sids.items()]) < nscans:
+        raise IOError("not enough scans for each window, nscans = {}".format(nscans))
     #retireve scan data / create a peaklist class for each scan
 
     scans = collections.OrderedDict()
@@ -149,7 +153,8 @@ def join_peaklists(ID, pls):
         for pl in pls:
             for atr in pl.attributes:
                 attrs_out.setdefault(atr, []).extend(list(pl.get_attribute(atr, flagged_only=False)))
-            assert list(pl.attributes) == attrs_out.keys(), "different attributes"
+            if list(pl.attributes) != attrs_out.keys():
+                raise IOError("Different attributes")
         return attrs_out
 
     attrs = _join_atrtributes(pls.values())
