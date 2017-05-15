@@ -123,20 +123,9 @@ def average_replicate_scans(pls, snr_thres=3.0, ppm=2.0, min_fraction=0.8, rsd_t
             if min_fraction is not None:
                 pls[h].add_attribute("fraction_flag", (pm.present / float(pm.shape[0])) >= min_fraction, flagged_only=False, is_flag=True)
             if rsd_thres is not None:
+                if pm.shape[0] == 1:
+                    logging.warning('applying RSD filter on single scan, all peaks removed')
                 pls[h].add_attribute("rsd_flag", pm.rsd <= rsd_thres, flagged_only=False, is_flag=True)
-
-        #elif len(pls[h]) == 1:
-        #    pls[h] = pls[h][0]
-        #    # snr and snr_flag attribute already available
-        #    pls[h].remove_unflagged_peaks('snr_flag')
-        #    pls[h].add_attribute("present", np.ones(pls[h].full_size), flagged_only=False)
-        #    pls[h].add_attribute("fraction", np.ones(pls[h].full_size), flagged_only=False)
-        #    pls[h].add_attribute("rsd", np.nan * np.ones(pls[h].full_size), flagged_only=False)
-        #    if min_fraction is not None:
-        #        pls[h].add_attribute("fraction_flag", np.ones(pls[h].full_size), flagged_only=False, is_flag=True)
-        #    if rsd_thres is not None:
-        #        logging.warning('applying RSD filter on single scan, all peaks removed')
-        #        pls[h].add_attribute("rsd_flag", np.zeros(pls[h].full_size), flagged_only=False, is_flag=True)
 
         else:
             print "No scans available for {}".format(h)

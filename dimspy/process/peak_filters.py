@@ -26,6 +26,7 @@ def filter_attr(peaks, attr_name, max_threshold = None, min_threshold = None, fl
     if flag_name is None: flag_name = attr_name + '_flag'
     return peaks.add_attribute(flag_name, flt(peaks[attr_name]), is_flag = True, on_index = flag_index)
 
+
 # PeakMatrix filters
 def filter_rsd(pm, rsd_threshold = None, qc_label = None):
     if rsd_threshold is None and qc_label is None:

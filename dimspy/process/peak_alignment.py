@@ -65,7 +65,7 @@ def _cluster_peaks_map(mzs, ppm, block_size, fixed_block, edge_extend, ncpus):
     if not np.all(mzs[1:] >= mzs[:-1]):
         raise ValueError('mz values not in ascending order')
     if not 1 <= block_size <= len(mzs):
-        logging.warning('block size not in range [1, #peaks]')
+        #logging.warning('block size (%d) not in range [1, #peaks (%d)]' % (block_size, len(mzs)))
         block_size = min(max(block_size, 1), len(mzs))
 
     # split blocks

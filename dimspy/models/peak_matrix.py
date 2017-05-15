@@ -116,7 +116,7 @@ class PeakMatrix(object):
     @property
     def rsd(self):
         if self.shape[0] < 2:
-            logging.warning('calculating RSD on less than 2 samples')
+            #logging.warning('calculating RSD on less than 2 samples')
             return np.ones(self.shape[1]) * np.nan
         rsd = (lambda m: self._nzstd(m, 0) / self._nzmean(m, 0) * 100)(self.intensity_matrix)
         rsd[np.where(map(lambda x: len(set(x[np.nonzero(x)])) == 1, self.intensity_matrix.T))] = np.nan
