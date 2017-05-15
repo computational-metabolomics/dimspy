@@ -13,10 +13,9 @@ from experiment import check_metadata
 from experiment import update_class_labels
 from experiment import update_metadata
 from process.peak_alignment import align_peaks
-from process.peak_filters import filter_across_classes
+from process.peak_filters import filter_fraction
 from process.peak_filters import filter_blank_peaks
 from process.peak_filters import filter_rsd
-from process.peak_filters import filter_within_classes
 from process.scan_processing import average_replicate_scans
 from process.scan_processing import join_peaklists
 from process.scan_processing import read_scans
@@ -157,10 +156,8 @@ def sample_filter(peak_matrix, min_fraction, within=False, rsd=None, qc_label=No
     if qc_label is not None:
         assert qc_label in peak_matrix.peaklist_tag_values
 
-    if not within:
-        peak_matrix = filter_across_classes(peak_matrix, min_fraction)
-    elif within:
-        peak_matrix = filter_within_classes(peak_matrix, 'class_label', min_fraction)
+    peak_matrix = filter_fraction(peak_matrix, min_fraction, within_classes=within, class_tag_type=None)
+
     if rsd is not None:
         peak_matrix = filter_rsd(peak_matrix, rsd, qc_label)
     return peak_matrix
