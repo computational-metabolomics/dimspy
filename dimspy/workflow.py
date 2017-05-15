@@ -7,7 +7,7 @@ import h5py
 import numpy as np
 
 from portals import hdf5_portal
-from portals.hdf5_portal import check_paths
+from portals.paths import check_paths
 from portals.txt_portal import load_peak_matrix_from_txt
 from experiment import check_metadata
 from experiment import update_class_labels
