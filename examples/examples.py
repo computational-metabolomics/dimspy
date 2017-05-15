@@ -16,7 +16,7 @@ def main():
     output = os.path.join("..", "tests", "data", "MTBLS79_subset", "output")
     print
     print "Process Scans....."
-    pls = process_scans(source, nscans=1, function_noise="median",
+    pls = process_scans(source, nscans=3, function_noise="median",
         snr_thres=3.0, ppm=2.0, min_fraction=0.5, rsd_thres=30.0,
         filelist=fn_filelist, subset_scan_events=None, block_size=2000, ncpus=None)
     print "Finished"

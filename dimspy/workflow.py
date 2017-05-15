@@ -6,11 +6,12 @@ import collections
 import os
 import h5py
 import numpy as np
+import zipfile
 from models.peaklist import PeakList
 from models.peak_matrix import PeakMatrix
 from portals import hdf5_portal
+from portals import txt_portal
 from portals.paths import check_paths
-from portals.txt_portal import load_peak_matrix_from_txt
 from experiment import check_metadata
 from experiment import update_class_labels
 from experiment import update_metadata
@@ -67,7 +68,7 @@ def replicate_filter(source, ppm, reps, min_peaks, rsd_thres=None, filelist=None
     filenames = check_paths(filelist, source)
     if len(filenames) == 0:
         raise IOError("Provide a filelist that list all the text files (columnname:filename) and assign replicate numbers to each filename/sample (columnname:replicate)")
-    peaklists = hdf5_portal.load_peaklists_from_hdf5(source)
+    peaklists = load_peaklists(source)
 
     if filelist is not None:
         fl = check_metadata(filelist)
@@ -103,7 +104,7 @@ def replicate_filter(source, ppm, reps, min_peaks, rsd_thres=None, filelist=None
         #############################################################
 
         pl = pm.to_peaklist(ID=merged_id)
-        pl.add_tags(*pls[0].tag_of(None), **{t: pls[0].tag_of(t) for t in pls[0].tag_types})
+        pl.tags.add_tags(*pls[0].tag_of(None), **{t: pls[0].tag_of(t) for t in pls[0].tag_types})
         pl.add_attribute("present", pm.present)
         pl.add_attribute("rsd", pm.rsd)
         pl.add_attribute("present_flag", pm.present >= min_peaks, is_flag=True)
@@ -119,7 +120,7 @@ def replicate_filter(source, ppm, reps, min_peaks, rsd_thres=None, filelist=None
 def align_samples(source, ppm, filelist=None, block_size=2000, ncpus=None):
 
     filenames = check_paths(filelist, source)
-    peaklists = hdf5_portal.load_peaklists_from_hdf5(source)
+    peaklists = load_peaklists(source)
 
     if filelist is not None:
         fl = check_metadata(filelist)
@@ -143,7 +144,7 @@ def blank_filter(peak_matrix, blank_label, min_fraction=1.0, min_fold_change=1.0
     if h5py.is_hdf5(peak_matrix):
         peak_matrix = hdf5_portal.load_peak_matrix_from_hdf5(peak_matrix)
     else:
-        peak_matrix = load_peak_matrix_from_txt(peak_matrix)
+        peak_matrix = txt_portal.load_peak_matrix_from_txt(peak_matrix)
 
     if class_labels is not None:
         peak_matrix = update_class_labels(peak_matrix, class_labels)
@@ -162,7 +163,7 @@ def sample_filter(peak_matrix, min_fraction, within=False, rsd=None, qc_label=No
     if h5py.is_hdf5(peak_matrix):
         peak_matrix = hdf5_portal.load_peak_matrix_from_hdf5(peak_matrix)
     else:
-        peak_matrix = load_peak_matrix_from_txt(peak_matrix)
+        peak_matrix = txt_portal.load_peak_matrix_from_txt(peak_matrix)
 
     if class_labels is not None:
         if not os.path.isfile(class_labels):
@@ -201,3 +202,33 @@ def hdf5_to_text(fname, path_out, separator="\t", transpose=False):
             with open(os.path.join(path_out, os.path.splitext(pl.ID)[0] + ".txt"), "w") as pk_out:
                 pk_out.write(pl.to_str(separator))
     return
+
+
+def load_peaklists(source):
+
+    if type(source) == str:
+        source = source.encode('string-escape')
+        if h5py.is_hdf5(source):
+            peaklists = hdf5_portal.load_peaklists_from_hdf5(source)
+        elif zipfile.is_zipfile(source):
+            zf = zipfile.ZipFile(source)
+            filenames = zf.namelist()
+            assert len([fn for fn in filenames if fn.lower().endswith(".mzml") or fn.lower().endswith(".raw")]) == 0,\
+                "Incorrect format. Process .mzML and .raw files first using the \'process scans\' function"
+            peaklists = [txt_portal.load_peaklist_from_txt(zf.open(fn), ID=os.path.basename(fn), has_flag_col=True) for fn in filenames]
+        elif os.path.isdir(source):
+            filenames = os.listdir(source)
+            assert len([fn for fn in filenames if fn.lower().endswith(".mzml") or fn.lower().endswith(".raw")]) == 0,\
+                "Incorrect format. Process .mzML and .raw files first using the \'process scans\' function"
+            peaklists = [txt_portal.text_to_peaklist(os.path.join(source, fn), ID=os.path.basename(fn), has_flag_col=False) for fn in filenames]
+        else:
+            raise TypeError("Incorrect format. Process .mzML and .raw files first using the 'process scans' function")
+    elif type(source) == list:
+        if not isinstance(source[0], PeakList):
+            raise TypeError("List has incorrect format. PeakList objects required.")
+        else:
+            peaklists = source
+    else:
+        raise IOError("Inccorrect input: list with peaklist objects or path")
+
+    return peaklists
