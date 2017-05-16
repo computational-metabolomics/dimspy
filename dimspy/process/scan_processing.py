@@ -126,7 +126,6 @@ def average_replicate_scans(pls, snr_thres=3.0, ppm=2.0, min_fraction=0.8, rsd_t
                 if pm.shape[0] == 1:
                     logging.warning('applying RSD filter on single scan, all peaks removed')
                 rsd_flag = map(lambda x: not np.isnan(x) and x < snr_thres, pm.rsd)
-                print rsd_flag
                 pls[h].add_attribute("rsd_flag", rsd_flag, flagged_only=False, is_flag=True)
         else:
             print "No scans available for {}".format(h)

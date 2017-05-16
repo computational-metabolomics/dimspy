@@ -8,7 +8,6 @@ python -m dimspy process-scans^
  --ppm 2.0^
  --nscans 1^
  --min-fraction 1^
- --rsd-threshold 30.0^
  --block-size 2000^
  --ncpus 2
 
@@ -39,8 +38,10 @@ python -m dimspy sample-filter^
 
 python -m dimspy hdf5-to-text^
  --input tests/data/temp/peaklists_rf.hdf5^
- --output tests/data/temp
+ --output tests/data/temp^
+ --separator tab
 
 python -m dimspy hdf5-to-text^
  --input tests/data/temp/pm_a_bf_sf.hdf5^
- --output tests/data/temp/pm_a_bf_sf.txt
+ --output tests/data/temp/pm_a_bf_sf.txt^
+ --separator tab

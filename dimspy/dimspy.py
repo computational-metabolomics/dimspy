@@ -320,7 +320,7 @@ def main():
         hdf5_portal.save_peak_matrix_as_hdf5(pm_sf, args.output)
 
     elif args.step == "hdf5-to-text":
-        workflow.hdf5_to_text(args.input,
+        workflow.hdf5_to_txt(args.input,
                                  path_out=args.output,
                                  separator=args.separator,
                                  transpose=args.transpose)
