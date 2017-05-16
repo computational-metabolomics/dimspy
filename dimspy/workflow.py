@@ -178,7 +178,7 @@ def sample_filter(peak_matrix, min_fraction, within=False, rsd=None, qc_label=No
     return peak_matrix
 
 
-def hdf5_to_txt(fname, path_out, separator="\t", transpose=False):
+def hdf5_to_txt(fname, path_out, separator="\t", transpose=False, extend=False):
     assert os.path.isfile(fname), 'HDF5 database [%s] not exists' % fname
     assert h5py.is_hdf5(fname), 'input file [%s] is not a valid HDF5 database' % fname
     seps = {"comma": ",", "tab": "\t"}
@@ -191,7 +191,7 @@ def hdf5_to_txt(fname, path_out, separator="\t", transpose=False):
         assert isinstance(obj, PeakMatrix)
         obj = hdf5_portal.load_peak_matrix_from_hdf5(fname)
         with open(os.path.join(path_out), "w") as pk_out:
-            pk_out.write(obj.to_str(delimiter=separator, transpose=transpose))
+            pk_out.write(obj.to_str(delimiter=separator, transpose=transpose, extend=extend))
     else:
         assert os.path.isdir(path_out), "File or Directory does not exist:".format(path_out)
         obj = hdf5_portal.load_peaklists_from_hdf5(fname)
