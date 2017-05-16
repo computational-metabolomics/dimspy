@@ -55,6 +55,7 @@ def process_scans(source, function_noise, snr_thres, nscans, ppm, min_fraction=N
             pl.metadata[k] = fl[k][i]
 
         pls.append(pl)
+
     return pls
 
 
@@ -104,12 +105,11 @@ def replicate_filter(source, ppm, reps, min_peaks, rsd_thres=None, filelist=None
         #############################################################
 
         pl = pm.to_peaklist(ID=merged_id)
-        pl.tags.add_tags(*pls[0].tag_of(None), **{t: pls[0].tag_of(t) for t in pls[0].tag_types})
-        pl.add_attribute("present", pm.present)
-        pl.add_attribute("rsd", pm.rsd)
+        pl.tags.add_tags(*pls[0].tags.tag_of(None), **{t: pls[0].tags.tag_of(t) for t in pls[0].tags.tag_types})
         pl.add_attribute("present_flag", pm.present >= min_peaks, is_flag=True)
         if rsd_thres is not None:
-            pl.add_attribute("rsd_flag", pm.rsd <= rsd_thres, flagged_only=False, is_flag=True)
+            rsd_flag = map(lambda x: not np.isnan(x) and x < rsd_thres, pm.rsd)
+            pl.add_attribute("rsd_flag", rsd_flag, flagged_only=False, is_flag=True)
         for k in pls[0].metadata:
             if k != "filename":
                 pl.metadata[k] = pls[0].metadata[k]
@@ -138,13 +138,12 @@ def blank_filter(peak_matrix, blank_label, min_fraction=1.0, min_fold_change=1.0
         raise ValueError("Provide a value larger than zero.")
     if function not in ("mean", "median", "max"):
         raise ValueError("Mean, median or max intensity")
-    if not os.path.isfile(peak_matrix):
-        raise IOError("{} does not exist".format(peak_matrix))
 
-    if h5py.is_hdf5(peak_matrix):
-        peak_matrix = hdf5_portal.load_peak_matrix_from_hdf5(peak_matrix)
-    else:
-        peak_matrix = txt_portal.load_peak_matrix_from_txt(peak_matrix)
+    if not isinstance(peak_matrix, PeakMatrix):
+        if h5py.is_hdf5(peak_matrix):
+            peak_matrix = hdf5_portal.load_peak_matrix_from_hdf5(peak_matrix)
+        else:
+            peak_matrix = txt_portal.load_peak_matrix_from_txt(peak_matrix)
 
     if class_labels is not None:
         peak_matrix = update_class_labels(peak_matrix, class_labels)
@@ -157,13 +156,11 @@ def blank_filter(peak_matrix, blank_label, min_fraction=1.0, min_fold_change=1.0
 
 def sample_filter(peak_matrix, min_fraction, within=False, rsd=None, qc_label=None, class_labels=None):
 
-    if not os.path.isfile(peak_matrix):
-        raise IOError("{} does not exist".format(peak_matrix))
-
-    if h5py.is_hdf5(peak_matrix):
-        peak_matrix = hdf5_portal.load_peak_matrix_from_hdf5(peak_matrix)
-    else:
-        peak_matrix = txt_portal.load_peak_matrix_from_txt(peak_matrix)
+    if not isinstance(peak_matrix, PeakMatrix):
+        if h5py.is_hdf5(peak_matrix):
+            peak_matrix = hdf5_portal.load_peak_matrix_from_hdf5(peak_matrix)
+        else:
+            peak_matrix = txt_portal.load_peak_matrix_from_txt(peak_matrix)
 
     if class_labels is not None:
         if not os.path.isfile(class_labels):
@@ -220,7 +217,7 @@ def load_peaklists(source):
             filenames = os.listdir(source)
             assert len([fn for fn in filenames if fn.lower().endswith(".mzml") or fn.lower().endswith(".raw")]) == 0,\
                 "Incorrect format. Process .mzML and .raw files first using the \'process scans\' function"
-            peaklists = [txt_portal.text_to_peaklist(os.path.join(source, fn), ID=os.path.basename(fn), has_flag_col=False) for fn in filenames]
+            peaklists = [txt_portal.load_peaklist_from_txt(os.path.join(source, fn), ID=os.path.basename(fn), delimiter = "\t", has_flag_col=False) for fn in filenames]
         else:
             raise TypeError("Incorrect format. Process .mzML and .raw files first using the 'process scans' function")
     elif type(source) == list:

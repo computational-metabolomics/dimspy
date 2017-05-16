@@ -12,12 +12,13 @@ def main():
 
     # Example 1 - mzML files (zip file)
     source = os.path.join("..", "tests", "data", "MTBLS79_subset", "MTBLS79_subset.zip")
-    fn_filelist = os.path.join("..", "tests", "data", "MTBLS79_subset", "filelist_mzML.txt")
+    fn_filelist = os.path.join("..", "tests", "data", "MTBLS79_subset", "filelist_mzML_subset.txt")
     output = os.path.join("..", "tests", "data", "MTBLS79_subset", "output")
+
     print
     print "Process Scans....."
     pls = process_scans(source, nscans=3, function_noise="median",
-        snr_thres=3.0, ppm=2.0, min_fraction=0.5, rsd_thres=30.0,
+        snr_thres=10.0, ppm=2.0, min_fraction=None, rsd_thres=None,
         filelist=fn_filelist, subset_scan_events=None, block_size=2000, ncpus=None)
     print "Finished"
 
@@ -55,7 +56,7 @@ def main():
     print "Finished"
     print
     print "Replicate Filter....."
-    pls_rf = replicate_filter(pls, ppm=2.0, reps=3, minpeaks=2, rsd_thres=None)
+    pls_rf = replicate_filter(pls, ppm=2.0, reps=3, min_peaks=2, rsd_thres=None)
     print "Finished"
     print
     print "Align Samples...."
@@ -66,7 +67,6 @@ def main():
     pm_sf = sample_filter(pm, 0.8, within=False)
     print "Finished", pm_sf.shape
 
-
     # Example 3 - Subset m/z ranges
     source = os.path.join("..", "tests", "data", "MTBLS79_subset", "raw")
     fn_filelist = os.path.join("..", "tests", "data", "MTBLS79_subset", "filelist_raw.txt")
@@ -75,18 +75,19 @@ def main():
     print
     print "Process Scans....."
     pls = process_scans(source, nscans=3, function_noise="noise_packets",
-        snr_thres=3.0, ppm=2.0, filelist=fn_filelist, subset_mzrs=[[70.0, 170.0, "sim"]])
-
+        snr_thres=3.0, ppm=2.0, filelist=fn_filelist, subset_scan_events=[[70.0, 170.0, "sim"]])
+    print
+    print
+    print "Process Scans......"
     pls = process_scans(source, nscans=3, function_noise="noise_packets",
-                        snr_thres=3.0, ppm=2.0, filelist=fn_filelist, subset_mzrs=fn_mz_ranges)
-
+        snr_thres=3.0, ppm=2.0, filelist=fn_filelist, subset_scan_events=fn_mz_ranges)
 
     # Example 3 - Replicate filter using text files
     source = os.path.join('..', 'tests', 'data', "txt")  # , "peaklists_txt.zip")# "peaklists_txt")
     fn_filelist_txt = os.path.join("..", 'tests', 'data', 'filelist_txt_subset.txt')
 
     print "Replicate Filter...."
-    pls_rf_txt = replicate_filter(source, ppm=2.0, reps=3, minpeaks=2, rsd_thres=None, filelist=fn_filelist_txt)
+    pls_rf_txt = replicate_filter(source, ppm=2.0, reps=3, min_peaks=2, rsd_thres=None, filelist=fn_filelist_txt)
     print "Finished"
     print
     print "Align Samples...."
@@ -97,29 +98,6 @@ def main():
     print "Align Samples...."
     pm = align_samples(source, ppm=2.0, filelist=fn_filelist_txt)
     print "Finished", pm.shape
-
-
-    """
-    cp.dump(pm, open(os.path.join('output', "pm.pkl"), "w"))
-    with open(os.path.join('output', "pm.txt"), "w") as out: out.write(pm.to_str('\t'))
-
-    # blank Filter
-    # ----------------------------------------------
-
-    print
-    print "Blank Filter"
-    pm_bf = blank_filter(pm, "blank", min_fraction=1.0, min_fold_change=10.0, function="mean", rm_samples=True, tsv_labels=class_labels)
-    print "Finished", pm_bf.shape
-
-    print
-    print "Sample Filter"
-    class_labels = os.path.join('..', 'tests', 'data', "MTBLS79_subset", "class_labels.tsv")
-    pm_bf_sf = sample_filter(pm_bf, 0.8, within=True, tsv_labels=class_labels)
-    print "Finished(1)", pm_bf_sf.shape
-
-    pm_bf_sf = sample_filter(pm, 0.8, within=True, rsd=30.0, qc_label=None)
-    print "Finished(4)", pm_bf_sf.shape
-    """
 
 if __name__ == '__main__':
     main()

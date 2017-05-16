@@ -7,8 +7,8 @@ import os
 import zipfile
 import numpy as np
 from dimspy.models.peaklist import PeakList
-from dimspy.portals import Mzml
-from dimspy.portals import ThermoRaw
+from dimspy.portals import mzml_portal
+from dimspy.portals import thermo_raw_portal
 from dimspy.process.peak_alignment import align_peaks
 from dimspy.process.peak_filters import filter_attr
 from dimspy.experiment import define_mz_ranges
@@ -61,11 +61,11 @@ def read_scans(fn, source, function_noise, nscans, subset_scan_events=None):
 
     if fn.lower().endswith(".mzml"):
         if zipfile.is_zipfile(source):
-            run = Mzml(fn, source)
+            run = mzml_portal.Mzml(fn, source)
         else:
-            run = Mzml(fn)
+            run = mzml_portal.Mzml(fn)
     elif fn.lower().endswith(".raw"):
-        run = ThermoRaw(fn)
+        run = thermo_raw_portal.ThermoRaw(fn)
     else:
         pass
 
@@ -125,7 +125,8 @@ def average_replicate_scans(pls, snr_thres=3.0, ppm=2.0, min_fraction=0.8, rsd_t
             if rsd_thres is not None:
                 if pm.shape[0] == 1:
                     logging.warning('applying RSD filter on single scan, all peaks removed')
-                rsd_flag = map(lambda x: not np.isnan(x) and x < rsd_thres, pm.rsd)
+                rsd_flag = map(lambda x: not np.isnan(x) and x < snr_thres, pm.rsd)
+                print rsd_flag
                 pls[h].add_attribute("rsd_flag", rsd_flag, flagged_only=False, is_flag=True)
         else:
             print "No scans available for {}".format(h)

@@ -7,6 +7,7 @@ sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), "Therm
 clr.AddReference('ThermoFisher.CommonCore.RawFileReader')
 clr.AddReference('ThermoFisher.CommonCore.Data')
 import ThermoFisher.CommonCore.Data.Business as Business
+import ThermoFisher.CommonCore.RawFileReader as RawFileReader
 import re
 import collections
 import numpy as np
@@ -20,17 +21,19 @@ def mz_range_from_header(h):
 class ThermoRaw():
 
     def __init__(self, fname):
-
-        self.run = Business.RawFileReaderFactory.ReadFile(fname)
+        self.run = RawFileReader.RawFileReaderAdapter.FileFactory(fname)
         self.run.SelectInstrument(Business.Device.MS, 1)
 
     def headers(self):
-        return [str(self.run.GetScanEventStringForScanNumber(scan_id)) for scan_id in range(1, self.run.ScanEvents.ScanEvents + 1)]
+        headers = []
+        for scan_id in range(self.run.RunHeaderEx.FirstSpectrum, self.run.RunHeaderEx.LastSpectrum + 1):
+            headers.append(str(self.run.GetFilterForScanNumber(scan_id).Filter))
+        return headers
 
     def headers_scan_ids(self):
         sids = collections.OrderedDict()
-        for scan_id in range(1, self.run.ScanEvents.ScanEvents + 1):
-            sids.setdefault(str(self.run.GetScanEventStringForScanNumber(scan_id)), []).append(scan_id)
+        for scan_id in range(self.run.RunHeaderEx.FirstSpectrum, self.run.RunHeaderEx.LastSpectrum + 1):
+            sids.setdefault(str(self.run.GetFilterForScanNumber(scan_id).Filter), []).append(scan_id)
         return sids
 
     def peaklist(self, scan_id, mode_noise="noise_packets"):  # generator
@@ -95,6 +98,8 @@ class ThermoRaw():
         assert mode_noise in ["noise_packets", "mean", "median", "mad"], "select a method that is available [noise_packets, mean, median, mad]"
         return [self.peaklist(scan_id, mode_noise=mode_noise) for scan_id in scan_ids]
 
+    def close(self):
+        self.run.Close
 
 # testing
 if __name__ == '__main__':
