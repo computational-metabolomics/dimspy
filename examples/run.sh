@@ -39,10 +39,10 @@ python -m dimspy sample-filter \
 --min-fraction 0.8 \
 --rsd-threshold 30.00
 
-python -m dimspy hdf5-to-text \
+python -m dimspy hdf5-to-txt \
 --input tests/data/temp/peaklists_rf.hdf5 \
 --output tests/data/temp
 
-python -m dimspy hdf5-to-text \
+python -m dimspy hdf5-to-txt \
 --input tests/data/temp/pm_a_bf_sf.hdf5 \
 --output tests/data/temp/pm_a_bf_sf.txt

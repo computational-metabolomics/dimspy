@@ -21,7 +21,7 @@ def main():
     parser_as = subparsers.add_parser('align-samples', help='Align mass spectra across samples.')
     parser_bf = subparsers.add_parser('blank-filter', help='Filter peaks present in the blank samples.')
     parser_sf = subparsers.add_parser('sample-filter', help='Filter peaks based on certain reproducibility and sample class criteria.')
-    parser_pr = subparsers.add_parser('hdf5-to-text', help='Write HDF5 output to text format.')
+    parser_pr = subparsers.add_parser('hdf5-to-txt', help='Write HDF5 output to text format.')
 
     parser_cf.add_argument('-l', '--filelist',
                            type=str, required=True,
@@ -319,7 +319,7 @@ def main():
             class_labels=args.class_labels)
         hdf5_portal.save_peak_matrix_as_hdf5(pm_sf, args.output)
 
-    elif args.step == "hdf5-to-text":
+    elif args.step == "hdf5-to-txt":
         workflow.hdf5_to_txt(args.input,
                                  path_out=args.output,
                                  separator=args.separator,
