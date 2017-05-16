@@ -8,7 +8,10 @@ import zipfile
 import numpy as np
 from dimspy.models.peaklist import PeakList
 from dimspy.portals import mzml_portal
-from dimspy.portals import thermo_raw_portal
+try:
+    from dimspy.portals import thermo_raw_portal
+except:
+    pass
 from dimspy.process.peak_alignment import align_peaks
 from dimspy.process.peak_filters import filter_attr
 from dimspy.experiment import define_mz_ranges
