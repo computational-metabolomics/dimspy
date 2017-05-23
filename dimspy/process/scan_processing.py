@@ -62,15 +62,20 @@ def read_scans(fn, source, function_noise, nscans, subset_scan_events=None):
     if type(nscans) is not int or nscans < 0:
         raise ValueError("Use an integer >= 0")
 
-    if fn.lower().endswith(".mzml"):
-        if zipfile.is_zipfile(source):
+    if zipfile.is_zipfile(source):
+        if fn.lower().endswith(".mzml"):
             run = mzml_portal.Mzml(fn, source)
+        elif fn.lower().endswith(".raw"):
+            raise IOError("Zip file with raw files not supported")
         else:
-            run = mzml_portal.Mzml(fn)
-    elif fn.lower().endswith(".raw"):
-        run = thermo_raw_portal.ThermoRaw(fn)
+            raise IOError("Incorrect format: {}".format(os.path.basename(fn)))
     else:
-        pass
+        if fn.lower().endswith(".mzml"):
+            run = mzml_portal.Mzml(fn)
+        elif fn.lower().endswith(".raw"):
+            run = thermo_raw_portal.ThermoRaw(fn)
+        else:
+            raise IOError("Incorrect format: {}".format(os.path.basename(fn)))
 
     h_sids = run.headers_scan_ids()
     mzrs = collections.OrderedDict(zip(h_sids.keys(), [mz_range_from_header(h) for h in h_sids]))

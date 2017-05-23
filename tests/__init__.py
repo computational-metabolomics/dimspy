@@ -10,6 +10,7 @@ from dimspy.models import mask_peakmatrix
 pp = pprint.PrettyPrinter(indent=4)
 np.random.seed(1234)
 
+"""
 class TestDimspy(unittest.TestCase):
 
     def setUp(self):
@@ -30,7 +31,7 @@ class TestDimspy(unittest.TestCase):
         pl.add_attribute('snr', snr)
         pl.metadata.type = 'blank'
 
-        """
+
         import cPickle as cp
 
         s = cp.dumps(pl)
@@ -112,7 +113,7 @@ class TestDimspy(unittest.TestCase):
 
         print pl.to_list()[0]
         print pl.to_dict().keys()
-        """
+
 
     def test_models_peak_matrix(self):
         # generate random peaklists
@@ -192,4 +193,4 @@ class TestDimspy(unittest.TestCase):
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestDimspy)
     unittest.TextTestRunner(verbosity=2).run(suite)
-
+"""

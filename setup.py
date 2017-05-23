@@ -4,6 +4,13 @@ import setuptools
 import sys
 import dimspy
 import os
+import unittest
+
+
+def test_suite():
+    test_loader = unittest.TestLoader()
+    test_suite = test_loader.discover('tests', pattern='test_*.py')
+    return test_suite
 
 
 def main():
@@ -22,7 +29,7 @@ def main():
         platforms=['Windows, UNIX'],
         keywords=['Metabolomics', 'Mass spectrometry', 'Data Processing', 'Direct-Infusion Mass Spectrometry'],
         packages=setuptools.find_packages(),
-        test_suite='tests',
+        test_suite='setup.test_suite',
         install_requires=open('requirements.txt').read().splitlines(),
         include_package_data=True,
         classifiers=[
