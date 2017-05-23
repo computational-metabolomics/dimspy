@@ -20,16 +20,16 @@ from dimspy.portals.hdf5_portal import save_peaklists_as_hdf5
 class WorkflowTestCase(unittest.TestCase):
 
     def test_process_scans_mzml_zip(self):
-        pls = process_scans(os.path.join("data", "MTBLS79_subset", "MTBLS79_mzml_subset.zip"), "median", 3.0, 1, 2.0, min_fraction=None, rsd_thres=None, filelist=None,
+        pls = process_scans(os.path.join("tests", "data", "MTBLS79_subset", "MTBLS79_mzml_subset.zip"), "median", 3.0, 1, 2.0, min_fraction=None, rsd_thres=None, filelist=None,
                       subset_scan_events=None, block_size=2000, ncpus=None)
         #pls_comp = load_peaklists(os.path.join("data", "MTBLS79_subset", "MTBLS79_mzml_subset.hdf5"))
-        save_peaklists_as_hdf5(pls, os.path.join("data", "MTBLS79_subset", "MTBLS79_mzml_subset.hdf5"))
+        save_peaklists_as_hdf5(pls, os.path.join("tests", "data", "MTBLS79_subset", "MTBLS79_mzml_subset.hdf5"))
 
     def test_process_scans_raw_path(self):
-        pls = process_scans(os.path.join("data", "MTBLS79_subset", "raw"), "median", 3.0, 1, 2.0, min_fraction=None, rsd_thres=None, filelist=None,
+        pls = process_scans(os.path.join("tests", "data", "MTBLS79_subset", "raw"), "median", 3.0, 1, 2.0, min_fraction=None, rsd_thres=None, filelist=None,
                       subset_scan_events=None, block_size=2000, ncpus=None)
         #pls_comp = load_peaklists(os.path.join("data", "MTBLS79_raw_subset.hdf5"))
-        save_peaklists_as_hdf5(pls, os.path.join("data", "MTBLS79_subset", "MTBLS79_raw_subset.hdf5"))
+        save_peaklists_as_hdf5(pls, os.path.join("tests", "data", "MTBLS79_subset", "MTBLS79_raw_subset.hdf5"))
 
 """
     def test_replicate_filter(self):

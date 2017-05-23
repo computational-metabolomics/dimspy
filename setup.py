@@ -7,12 +7,6 @@ import os
 import unittest
 
 
-def test_suite():
-    test_loader = unittest.TestLoader()
-    test_suite = test_loader.discover('tests', pattern='test_*.py')
-    return test_suite
-
-
 def main():
 
     if sys.version_info[0] != 2 and sys.version_info[1] <= 7:
@@ -29,7 +23,7 @@ def main():
         platforms=['Windows, UNIX'],
         keywords=['Metabolomics', 'Mass spectrometry', 'Data Processing', 'Direct-Infusion Mass Spectrometry'],
         packages=setuptools.find_packages(),
-        test_suite='setup.test_suite',
+        test_suite='tests.suite',
         install_requires=open('requirements.txt').read().splitlines(),
         include_package_data=True,
         classifiers=[
