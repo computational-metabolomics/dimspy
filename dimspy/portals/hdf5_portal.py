@@ -82,7 +82,7 @@ def save_peak_matrix_as_hdf5(pm, fname):
     def _saveattr(attr):
         if attr in f.keys():
             raise IOError('attribute [%s] already exists')
-        ds = f.create_dataset(attr, pm.full_shape)
+        ds = f.create_dataset(attr, pm.full_shape, dtype = np.float64)
         with unmask_all_peakmatrix(pm) as m: ds[...] = m.attr_matrix(attr)
     map(_saveattr, pm.attributes)
 
