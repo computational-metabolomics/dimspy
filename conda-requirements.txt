@@ -1,0 +1,10 @@
+# Use this file to create a conda environment using:
+# conda create -n dimspy --file conda-requirements.txt -c bgruening -c bioconda
+
+numpy=1.11.3
+scipy=0.18.1
+fastcluster=1.1.21
+pymzml=0.7.7
+h5py=2.6.0
+pythonnet=2.3.0
+
