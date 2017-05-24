@@ -31,7 +31,7 @@ def save_peaklists_as_hdf5(pkls, fname):
     def _savepkl(i, pkl):
         if pkl.ID in f.keys():
             raise IOError('peaklist [%s] already exists')
-        dset = f.create_dataset(pkl.ID, pkl.full_shape[::-1])
+        dset = f.create_dataset(pkl.ID, pkl.full_shape[::-1], dtype = np.float64)
         dset.attrs['class'] = 'PeakList'
         dset.attrs['order'] = i
 

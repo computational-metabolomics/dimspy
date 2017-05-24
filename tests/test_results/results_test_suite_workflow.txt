@@ -1,6 +1,0 @@
-test_process_scans_mzml_zip (test_workflow.WorkflowTestCase) ... ok
-
-----------------------------------------------------------------------
-Ran 1 test in 2.392s
-
-OK

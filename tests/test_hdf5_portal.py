@@ -40,6 +40,7 @@ class HDF5PortalsTestCase(unittest.TestCase):
         pkls[4].tags.add_tags('sample', treatment = 'compound_2', time_point = '6hr', plate = 2)
         pkls[5].tags.add_tags('qc', plate = 2)
 
+        for p in pkls: p.add_attribute('snr', np.random.uniform(300, 400, size = 100))
         for p in pkls: p.add_attribute('quad_flag', [0, 1, 1, 1] * 25, is_flag = True)
         return pkls
 
@@ -53,6 +54,7 @@ class HDF5PortalsTestCase(unittest.TestCase):
         self.assertListEqual(map(lambda x: x.full_size, npkls), [100] * 6)
         self.assertTrue(all(map(lambda x: np.allclose(x[0].mz_all, x[1].mz_all), zip(pkls, npkls))))
         self.assertTrue(all(map(lambda x: np.allclose(x[0].intensity, x[1].intensity), zip(pkls, npkls))))
+        self.assertTrue(all(map(lambda x: np.allclose(x[0].snr, x[1].snr, atol = 1e-30), zip(pkls, npkls))))
         self.assertTrue(all(map(lambda x: x[0].metadata.keys() == x[1].metadata.keys(), zip(pkls, npkls))))
         self.assertTrue(all(map(lambda x: x[0].tags.tag_types == x[1].tags.tag_types, zip(pkls, npkls))))
         self.assertTrue(all(map(lambda x: x[0].tags.tag_values == x[1].tags.tag_values, zip(pkls, npkls))))
