@@ -1,5 +1,0 @@
-filename	replicate
-batch04_QC17_rep01_262.mzML	1
-batch04_QC17_rep02_263.mzML	2
-batch04_QC17_rep03_264.mzML	3
-

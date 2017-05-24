@@ -1,14 +1,6 @@
 #!/usr/bin/env python
 #  -*- coding: utf-8 -*-
 
-"""
-test_suite_models
-
-author(s): Albert
-origin: 04-29-2017
-
-"""
-
 
 import unittest, os
 import test_workflow

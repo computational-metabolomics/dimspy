@@ -64,7 +64,7 @@ def stitch(source, filelist, fn_exp, nscans, function_noise, snr_thres, ppm, pre
     return process_scans(source, filelist, fn_exp, nscans, function_noise, snr_thres, ppm, presence_thres, rsd_thres, block_size, ncpus)
 
 
-def replicate_filter(source, ppm, reps, min_peaks, rsd_thres=None, filelist=None, block_size=2000, ncpus=None):
+def replicate_filter(source, ppm, replicates, min_peaks, rsd_thres=None, filelist=None, block_size=2000, ncpus=None):
 
     filenames = check_paths(filelist, source)
     if len(filenames) == 0:
@@ -80,18 +80,18 @@ def replicate_filter(source, ppm, reps, min_peaks, rsd_thres=None, filelist=None
         raise IOError("Provide a filelist and assign replicate numbers (columnname:replicate) to each filename/sample")
 
     unique, counts = np.unique([pl.metadata.replicate for pl in peaklists], return_counts=True)
-    if max(unique) != reps:
+    if max(unique) != replicates:
         raise ValueError("replicates missing (1)")
-    if len(counts) != reps:
+    if len(counts) != replicates:
         raise ValueError("replicates missing (2)")
     if sum(counts) != len(peaklists):
         raise ValueError("replicates missing (3)")
-    if list(unique) != range(1, reps+1):
+    if list(unique) != range(1, replicates+1):
         raise ValueError("replicates missing (4)")
     if len(counts) <= 1:
         raise ValueError("No technical replicates available (single) - Skip replicate filter")
 
-    idx_peaklists = range(0, len(peaklists) + reps, reps)
+    idx_peaklists = range(0, len(peaklists) + replicates, replicates)
     pls_rep_filt = []
     for i in range(len(idx_peaklists)-1):
 
