@@ -1,0 +1,3 @@
+start	end	scan_type	ms_type	mode
+50.00	125.00	SIM	FTMS	p
+105.00	180.00	SIM	FTMS	p

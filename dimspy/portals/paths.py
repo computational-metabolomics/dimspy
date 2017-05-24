@@ -32,7 +32,7 @@ def check_paths(tsv, source):
                 peaklists = hdf5_portal.load_peaklists_from_hdf5(source)
                 filenames = [pl.ID for pl in peaklists]
 #
-        elif type(source) == list:
+        elif type(source) == list or type(source) == tuple:
             assert isinstance(source[0], PeakList), "Incorrect Objects in list. PeakList class required."
             filenames = [pl.ID for pl in source]
         else:
@@ -47,7 +47,7 @@ def check_paths(tsv, source):
             "Incorrect header for first column. Use filename or sample_id"
 #
         filenames = []
-        if type(source) == list:
+        if type(source) == list or type(source) == tuple:
             assert isinstance(source[0], PeakList), "Incorrect Objects in list. Peaklist Object required."
             for fn in fm[fm.dtype.names[0]]:
                 assert fn in [pl.ID for pl in source], "{} does not exist in list with Objects".format(fn)

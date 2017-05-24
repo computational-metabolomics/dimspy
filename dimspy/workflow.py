@@ -221,7 +221,7 @@ def load_peaklists(source):
             peaklists = [txt_portal.load_peaklist_from_txt(os.path.join(source, fn), ID=os.path.basename(fn), delimiter = "\t", has_flag_col=False) for fn in filenames]
         else:
             raise TypeError("Incorrect format. Process .mzML and .raw files first using the 'process scans' function")
-    elif type(source) == list:
+    elif type(source) == list or type(source) == tuple:
         if not isinstance(source[0], PeakList):
             raise TypeError("List has incorrect format. PeakList objects required.")
         else:
