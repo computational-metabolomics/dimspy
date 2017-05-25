@@ -58,7 +58,7 @@ class PeakMatrix(object):
         return self.shape[0]
 
     def __str__(self):
-        return self.to_str(delimiter = ', ', transpose = True, extend = False)
+        return self.to_str(attr_name = 'intensity', delimiter = ', ', transpose = True, extend = False)
 
     # properties
     @property
