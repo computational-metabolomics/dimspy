@@ -8,17 +8,14 @@ import zipfile
 import numpy as np
 from dimspy.models.peaklist import PeakList
 from dimspy.portals import mzml_portal
-try:
-    from dimspy.portals import thermo_raw_portal
-except:
-    pass
+from dimspy.portals import thermo_raw_portal
 from dimspy.process.peak_alignment import align_peaks
 from dimspy.process.peak_filters import filter_attr
 from dimspy.experiment import define_mz_ranges
 from dimspy.experiment import interpret_experiment_from_headers
 from dimspy.experiment import remove_headers
 from dimspy.experiment import mz_range_from_header
-
+from string import join
 
 def _calculate_edges(mz_ranges):
     s_mz_ranges = map(sorted, mz_ranges)
@@ -118,6 +115,11 @@ def average_replicate_scans(pls, snr_thres=3.0, ppm=2.0, min_fraction=0.8, rsd_t
     print "Align, averaging and filtering peaks....."
     for h in pls:
         print h
+        emlst = np.array(map(lambda x: x.size == 0, pls[h]))
+        if np.sum(emlst) > 0:
+            logging.warning('droping empty peaklist(s) [%s]' % join(map(str, [p.ID for e, p in zip(emlst,  pls[h]) if e]), ','))
+            pls[h] = [p for e, p in zip(emlst,  pls[h]) if not e]
+
         if len(pls[h]) >= 1:
             pm = align_peaks(pls[h], ppm=ppm, block_size=block_size, ncpus=ncpus)
             # TODO: remove clusters that have a higher number of peaks than samples
@@ -136,7 +138,7 @@ def average_replicate_scans(pls, snr_thres=3.0, ppm=2.0, min_fraction=0.8, rsd_t
                 rsd_flag = map(lambda x: not np.isnan(x) and x < snr_thres, pm.rsd)
                 pls[h].add_attribute("rsd_flag", rsd_flag, flagged_only=False, is_flag=True)
         else:
-            print "No scans available for {}".format(h)
+            logging.warning("No scan data available for {}".format(h))
             del pls[h]
     return pls
 
