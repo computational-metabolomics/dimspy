@@ -107,9 +107,10 @@ def load_peak_matrix_from_hdf5(fname):
     if dset.attrs.get('class', '') != 'PeakMatrix':
         raise IOError('input database is not a valid PeakMatrix')
     pids = dset.attrs['peaklist_ids']
+    tatt = sorted(filter(lambda x: x.startswith('peaklist_tags_'), dset.attrs.keys()), key = lambda x: int(x[14:]))
     ptgs = [PeakList_Tags(*[_eval(t[1]) for t in tags if t[0] == 'None'],
                           **{t[0]: _eval(t[1]) for t in tags if t[0] != 'None'})
-            for n, tags in sorted(dset.attrs.items(), key = lambda x: x[0]) if n.startswith('peaklist_tags_')]
+            for tags in map(lambda x: dset.attrs[x], tatt)]
     adct = {attr: f[attr] for attr in f}
     mask = dset.attrs['mask']
 
