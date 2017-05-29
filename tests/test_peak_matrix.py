@@ -134,7 +134,7 @@ class PeakListTestCase(unittest.TestCase):
         self.assertFalse(pm.is_empty())
 
         try:
-            pm.to_str(extend = True)
+            pm.to_str(comprehensive = True)
         except Exception, e:
             self.fail('PeakMatrix to_str() method failed: ' + str(e))
 

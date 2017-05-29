@@ -52,8 +52,8 @@ class TxtPortalsTestCase(unittest.TestCase):
 
         pm = align_peaks(pkls, ppm = 2.0, block_size = 10, ncpus = 2)
 
-        save_peak_matrix_as_txt(pm, 'peak_matrix.txt', transpose = True, extend = True)
-        npm = load_peak_matrix_from_txt('peak_matrix.txt', transposed = True, extended = True)
+        save_peak_matrix_as_txt(pm, 'peak_matrix.txt', transpose = True, comprehensive = True)
+        npm = load_peak_matrix_from_txt('peak_matrix.txt', transposed = True, comprehensive = True)
 
         self.assertEqual(pm.shape, npm.shape)
         self.assertTrue(np.allclose(pm.intensity_matrix, npm.intensity_matrix))

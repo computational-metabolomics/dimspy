@@ -60,7 +60,7 @@ def save_peak_matrix_as_txt(pm, file_name, *args, **kwargs):
         logging.warning('plain text file [%s] already exists, override' % file_name)
     with open(file_name, 'w') as f: f.write(pm.to_str(*args, **kwargs))
 
-def load_peak_matrix_from_txt(file_name, delimiter = '\t', transposed = False, extended = False):
+def load_peak_matrix_from_txt(file_name, delimiter = '\t', transposed = False, comprehensive = False):
     if not os.path.isfile(file_name):
         raise IOError('plain text file [%s] not exists' % file_name)
     with open(file_name, 'rU') as f: rlns = filter(lambda x: x != '', f.readlines())
@@ -70,7 +70,7 @@ def load_peak_matrix_from_txt(file_name, delimiter = '\t', transposed = False, e
         raise IOError('data matrix size not match')
 
     if not transposed: dlns = zip(*dlns)
-    pids = dlns[0][5:] if extended else dlns[0][1:] # must refactor if PeakMatrix.to_str changed
+    pids = dlns[0][5:] if comprehensive else dlns[0][1:] # must refactor if PeakMatrix.to_str changed
 
     def _parsetags(tgs):
         for l, ln in enumerate(dlns[2:]): # line 1 = missing
@@ -80,10 +80,10 @@ def load_peak_matrix_from_txt(file_name, delimiter = '\t', transposed = False, e
             for i, v in tl: tgs[i].add_tags(v) if tn == 'untyped' else tgs[i].add_tags(**{tn: v})
         return l, tgs
     tnum, tags = 0, [PeakList_Tags() for _ in pids]
-    if extended: tnum, tags = _parsetags(tags)
+    if comprehensive: tnum, tags = _parsetags(tags)
 
     rlns = zip(*dlns[2+tnum:])
     mz = np.array([rlns[0]] * len(pids), dtype = float)
-    ints = np.array(rlns[5:] if extended else rlns[1:], dtype = float)
+    ints = np.array(rlns[5:] if comprehensive else rlns[1:], dtype = float)
     return PeakMatrix(pids, tags, mz = mz, intensity = ints)
 
