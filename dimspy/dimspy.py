@@ -294,7 +294,7 @@ def main():
     elif args.step == "replicate-filter":
         peaklists_rf = workflow.replicate_filter(source=args.input,
             ppm=args.ppm,
-            reps=args.replicates,
+            replicates=args.replicates,
             min_peaks=args.min_peak_present,
             rsd_thres=args.rsd_threshold,
             filelist=args.filelist,
