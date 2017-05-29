@@ -252,6 +252,10 @@ def main():
                            type=str, required=True,
                            help="Directory (peaklists) or text file (peak matrix) to write to.")
 
+    parser_pr.add_argument('-a', '--attribute_name',
+                           default="intensity", choices=["intensity", "mz"], required=False,
+                           help="Type of matrix to print.")
+
     parser_pr.add_argument('-s', '--separator',
                            default="tab", choices=["tab", "comma"],
                            help="Format of the file for further data processing or data analysis.")
@@ -259,6 +263,11 @@ def main():
     parser_pr.add_argument('-t', '--transpose',
                            action='store_true', required=False,
                            help="Transpose peak matrix")
+
+    parser_pr.add_argument('-c', '--comprehensive',
+                           action='store_true', required=False,
+                           help="Comprehensive output of the peak matrix")
+
 
     args = parser.parse_args()
     print args
@@ -321,6 +330,8 @@ def main():
 
     elif args.step == "hdf5-to-txt":
         workflow.hdf5_to_txt(args.input,
-                                 path_out=args.output,
-                                 separator=args.separator,
-                                 transpose=args.transpose)
+            path_out=args.output,
+            attr_name=args.attribute_name,
+            separator=args.separator,
+            transpose=args.transpose,
+            comprehensive=args.comprehensive)

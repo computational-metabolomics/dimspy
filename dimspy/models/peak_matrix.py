@@ -58,7 +58,7 @@ class PeakMatrix(object):
         return self.shape[0]
 
     def __str__(self):
-        return self.to_str(attr_name = 'intensity', delimiter = ', ', transpose = True, extend = False)
+        return self.to_str(attr_name = 'intensity', delimiter = ', ', transpose = True, comprehensive = False)
 
     # properties
     @property
@@ -215,11 +215,11 @@ class PeakMatrix(object):
         return 0 in self.shape
 
     # exports
-    def to_str(self, attr_name = 'intensity', delimiter = '\t', transpose = False, extend = True):
+    def to_str(self, attr_name = 'intensity', delimiter = '\t', transpose = False, comprehensive = True):
         hd = ['m/z'] + map(str, self.mz_mean_vector)
         dm = [map(str, self.peaklist_ids)] + [map(str, ln) for ln in self.attr_matrix(attr_name).T]
 
-        if extend:
+        if comprehensive:
             ttypes = set(reduce(lambda x,y: x+y, map(lambda x: x.tag_types, self.peaklist_tags)))
             tnum = len(ttypes)
             hd = [hd[0]] + ['missing values'] + map(lambda x: 'tags_' + x, ttypes) + ['tags_untyped'] + hd[1:]
