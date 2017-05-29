@@ -21,6 +21,7 @@ import logging, sys
 import numpy as np
 import fastcluster as fc
 from string import join
+from operator import itemgetter
 from multiprocessing import Pool, cpu_count
 from collections import defaultdict
 from scipy import cluster
@@ -112,9 +113,12 @@ def _cluster_peaks_map(mzs, ppm, block_size, fixed_block, edge_extend, ncpus):
 
     # in case edges have reached mz bounds
     bkmzs = [mzs[slice(*r)] for r in brngs]
-    slimbk = sum(map(lambda x: len(x) == 0 or abs(x[-1] - x[0]) / x[0] < eeppm * 10, bkmzs))
-    if slimbk > 0:
-        logging.warning('[%d] empty / slim clustering block(s) found, consider increasing the block size' % slimbk)
+    slimbk = map(lambda x: len(x) == 0 or abs(x[-1] - x[0]) / x[0] < eeppm * 10, bkmzs)
+    if np.sum(slimbk) > 0:
+        pbrngs = [map(lambda x: min(x, len(mzs)-1), (r[0], r[-1]-1 if r[-1] != r[0] else r[-1])) for r in brngs]
+        pblns = ['block %d' % i + ': [%f, %f]' % itemgetter(*r)(mzs) for i,(s,r) in enumerate(zip(slimbk, pbrngs)) if s]
+        logging.warning('[%d] empty / slim clustering block(s) found, consider increasing the block size\n%s' %
+                        (np.sum(slimbk), join(pblns, '\n')))
     bcids = pmap(_cluster_peaks_mp, [(m, ppm) for m in bkmzs])
 
     # combine
