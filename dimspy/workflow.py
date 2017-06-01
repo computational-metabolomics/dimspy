@@ -105,8 +105,12 @@ def replicate_filter(source, ppm, replicates, min_peaks, rsd_thres=None, filelis
         #############################################################
 
         pl = pm.to_peaklist(ID=merged_id)
+        if "snr" in pm.attributes:
+            pl.add_attribute("snr", pm.attr_mean_vector("snr"), on_index=2)
+
         pl.tags.add_tags(*pls[0].tags.tag_of(None), **{t: pls[0].tags.tag_of(t) for t in pls[0].tags.tag_types})
         pl.add_attribute("present_flag", pm.present >= min_peaks, is_flag=True)
+
         if rsd_thres is not None:
             rsd_flag = map(lambda x: not np.isnan(x) and x < rsd_thres, pm.rsd)
             pl.add_attribute("rsd_flag", rsd_flag, flagged_only=False, is_flag=True)
