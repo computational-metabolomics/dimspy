@@ -2,8 +2,9 @@
 # -*- coding: utf-8 -*-
 
 
-import collections
 import os
+import logging
+import collections
 import h5py
 import numpy as np
 import zipfile
@@ -19,13 +20,16 @@ from process.peak_alignment import align_peaks
 from process.peak_filters import filter_fraction
 from process.peak_filters import filter_blank_peaks
 from process.peak_filters import filter_rsd
+from process.peak_filters import filter_mz_ranges
+
 from process.scan_processing import average_replicate_scans
 from process.scan_processing import join_peaklists
 from process.scan_processing import read_scans
 from process.scan_processing import remove_edges
 
 
-def process_scans(source, function_noise, snr_thres, nscans, ppm, min_fraction=None, rsd_thres=None, filelist=None, subset_scan_events=None, block_size=2000, ncpus=None):
+
+def process_scans(source, function_noise, snr_thres, nscans, ppm, min_fraction=None, rsd_thres=None, filelist=None, mzrs_to_remove=[], subset_scan_events=None, block_size=2000, ncpus=None):
 
     filenames = check_paths(filelist, source)
     if len([fn for fn in filenames if not fn.lower().endswith(".mzml") or not fn.lower().endswith(".raw")]) == 0:
@@ -47,6 +51,12 @@ def process_scans(source, function_noise, snr_thres, nscans, ppm, min_fraction=N
 
         prs = average_replicate_scans(scans_er, snr_thres, ppm, min_fraction, rsd_thres, block_size, ncpus)
         pl = join_peaklists(os.path.basename(filenames[i]), prs)
+
+        if type(mzrs_to_remove) == list:
+            pl = filter_mz_ranges(pl, mzrs_to_remove)
+        else:
+            raise ValueError(
+                "mzr_remove: Provide a list of 'start' and 'end' values for each m/z range that needs to be removed.")
 
         if "class" in fl:
             pl.tags.add_tags(class_label=fl["class"][i])

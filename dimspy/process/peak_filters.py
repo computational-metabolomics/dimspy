@@ -27,6 +27,28 @@ def filter_attr(peaks, attr_name, max_threshold = None, min_threshold = None, fl
     return peaks.add_attribute(flag_name, flt(peaks[attr_name]), is_flag = True, on_index = flag_index)
 
 
+def filter_mz_ranges(pl, mzrs):
+    mzrs_removed_flags = np.ones(pl.shape[0], dtype=bool)
+    for mzr in mzrs:
+
+        if len(mzr) != 2:
+            raise ValueError(
+                "mzr_remove: Provide a list of 'start' and 'end' values for each m/z range that needs to be removed.")
+        elif (not isinstance(mzr[0], float) and not isinstance(mzr[0], int)) or (
+            not isinstance(mzr[0], float) and not isinstance(mzr[0], int)):
+            raise ValueError(
+                "mzr_remove: Incorrect format for 'start' and 'end' value.")
+        elif mzr[0] >= mzr[1]:
+            raise ValueError(
+                "mzr_remove: Start value cannot be larger then end value.")
+
+        for mz in pl.mz:
+            if mz >= mzr[0] and mz <= mzr[1]:
+                mzrs_removed_flags[pl.mz == mz] = False
+
+    return pl.add_attribute("mzrs_remove_flag", mzrs_removed_flags, flagged_only=False, is_flag=True)
+
+
 # PeakMatrix filters
 def filter_rsd(pm, rsd_threshold = None, qc_label = None):
     if rsd_threshold is None and qc_label is None:
