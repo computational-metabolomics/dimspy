@@ -231,7 +231,7 @@ def check_metadata(fn_tsv):
         cls = dict(zip(unique, counts))
         print "Classes:", cls
     else:
-        warnings.warn("Column for class labels missing.")
+        warnings.warn("Column 'class' for class labels missing.")
 
     return fm_dict
 

@@ -1,0 +1,7 @@
+filename	replicate	class
+batch04_QC17_rep01_262.mzML	1	sample
+batch04_QC17_rep02_263.mzML	2	sample
+batch04_QC17_rep03_264.mzML	3	sample
+batch04_B02_rep01_301.mzML	1	blank
+batch04_B02_rep02_302.mzML	2	blank
+batch04_B02_rep03_303.mzML	3	blank
