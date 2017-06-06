@@ -31,12 +31,14 @@ def check_paths(tsv, source):
             elif h5py.is_hdf5(source):
                 peaklists = hdf5_portal.load_peaklists_from_hdf5(source)
                 filenames = [pl.ID for pl in peaklists]
-#
+            else:
+                raise IOError("IOError: [Errno 2] No such file or directory: {}".format(source))
+
         elif type(source) == list or type(source) == tuple:
             assert isinstance(source[0], PeakList), "Incorrect Objects in list. PeakList class required."
             filenames = [pl.ID for pl in source]
         else:
-            pass
+            raise IOError("IOError: [Errno 2] No such file or directory: {}".format(source))
 #
     elif os.path.isfile(tsv.encode('string-escape')):
         tsv = tsv.encode('string-escape')
@@ -71,10 +73,9 @@ def check_paths(tsv, source):
                 peaklists = hdf5_portal.load_peaklists_from_hdf5(source)
                 filenames = [pl.ID for pl in peaklists]
 #
-#
             else:
-                raise IOError("Can not read and parse {} or {}".format(source, tsv))
+                raise IOError("IOError: [Errno 2] No such file or directory: {} or {}".format(source, tsv))
     else:
-        raise IOError("File {} does not exist".format(tsv))
+        raise IOError("IOError: [Errno 2] No such file or directory: {}".format(source))
 #
     return filenames

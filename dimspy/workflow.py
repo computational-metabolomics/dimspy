@@ -4,9 +4,11 @@
 
 import os
 import logging
+import operator
 import collections
 import h5py
 import numpy as np
+from itertools import combinations
 import zipfile
 from models.peaklist import PeakList
 from models.peak_matrix import PeakMatrix
@@ -16,12 +18,13 @@ from portals.paths import check_paths
 from experiment import check_metadata
 from experiment import update_class_labels
 from experiment import update_metadata
+from experiment import idxs_reps_from_filelist
 from process.peak_alignment import align_peaks
 from process.peak_filters import filter_fraction
 from process.peak_filters import filter_blank_peaks
 from process.peak_filters import filter_rsd
 from process.peak_filters import filter_mz_ranges
-
+from process.peak_filters import filter_attr
 from process.scan_processing import average_replicate_scans
 from process.scan_processing import join_peaklists
 from process.scan_processing import read_scans
@@ -29,7 +32,7 @@ from process.scan_processing import remove_edges
 
 
 
-def process_scans(source, function_noise, snr_thres, nscans, ppm, min_fraction=None, rsd_thres=None, filelist=None, mzrs_to_remove=[], subset_scan_events=None, block_size=2000, ncpus=None):
+def process_scans(source, function_noise, snr_thres, nscans, ppm, min_fraction=None, rsd_thres=None, filelist=None, mzrs_to_remove=[], scan_events=[], block_size=2000, ncpus=None):
 
     filenames = check_paths(filelist, source)
     if len([fn for fn in filenames if not fn.lower().endswith(".mzml") or not fn.lower().endswith(".raw")]) == 0:
@@ -46,25 +49,44 @@ def process_scans(source, function_noise, snr_thres, nscans, ppm, min_fraction=N
         print
         print os.path.basename(filenames[i])
 
-        scans = read_scans(filenames[i], source, function_noise, nscans, subset_scan_events)
-        scans_er = remove_edges(scans)
+        scans = read_scans(filenames[i], source, function_noise, nscans, scan_events)
 
-        prs = average_replicate_scans(scans_er, snr_thres, ppm, min_fraction, rsd_thres, block_size, ncpus)
-        pl = join_peaklists(os.path.basename(filenames[i]), prs)
+        if scan_events == "all":
+            pls_filt = average_replicate_scans(scans, snr_thres, ppm, min_fraction, rsd_thres, block_size, ncpus)
+            for h in pls_filt:
+                pl_filt_copy = join_peaklists(os.path.basename(filenames[i]), {h: pls_filt[h]})
+                for k in fl.keys():
+                    pl_filt_copy.metadata[k] = fl[k][i]
+                pl_filt_copy.metadata["header"] = h
+                pl_filt_copy.metadata["scan_ids"] = [int(pl_scan.ID) for pl_scan in scans[h]]
+                pls.append(pl_filt_copy)
 
-        if type(mzrs_to_remove) == list:
-            pl = filter_mz_ranges(pl, mzrs_to_remove)
+        elif type(scan_events) is list or scan_events is None:
+
+            scans_er = remove_edges(scans)
+            prs = average_replicate_scans(scans_er, snr_thres, ppm, min_fraction, rsd_thres, block_size, ncpus)
+            pl_filt = join_peaklists(os.path.basename(filenames[i]), prs)
+
+            if type(mzrs_to_remove) == list:
+                if len(mzrs_to_remove) > 0:
+                    pl_filt = filter_mz_ranges(pl_filt, mzrs_to_remove)
+                else:
+                    pass
+
+            elif mzrs_to_remove is not None:
+                raise ValueError("mzr_remove: Provide a list of 'start' and 'end' values for each m/z range that needs to be removed.")
+            else:
+                pass
+
+            if "class" in fl:
+                pl_filt.tags.add_tags(class_label=fl["class"][i])
+
+            for k in fl.keys():
+                pl_filt.metadata[k] = fl[k][i]
+            pls.append(pl_filt)
+
         else:
-            raise ValueError(
-                "mzr_remove: Provide a list of 'start' and 'end' values for each m/z range that needs to be removed.")
-
-        if "class" in fl:
-            pl.tags.add_tags(class_label=fl["class"][i])
-
-        for k in fl.keys():
-            pl.metadata[k] = fl[k][i]
-
-        pls.append(pl)
+            raise ValueError("scan_events: Provide a list e.g. [[50.0, 1000.0, full]] or the string 'all'")
 
     return pls
 
@@ -75,6 +97,9 @@ def stitch(source, filelist, fn_exp, nscans, function_noise, snr_thres, ppm, pre
 
 
 def replicate_filter(source, ppm, replicates, min_peaks, rsd_thres=None, filelist=None, block_size=2000, ncpus=None):
+
+    if replicates < min_peaks:
+        raise IOError("Provide realistic values for the number of replicates and minimum number of peaks present (min_peaks)")
 
     filenames = check_paths(filelist, source)
     if len(filenames) == 0:
@@ -89,45 +114,64 @@ def replicate_filter(source, ppm, replicates, min_peaks, rsd_thres=None, filelis
     if not hasattr(peaklists[0].metadata, "replicate"):
         raise IOError("Provide a filelist and assign replicate numbers (columnname:replicate) to each filename/sample")
 
+    idxs_peaklists = idxs_reps_from_filelist([pl.metadata.replicate for pl in peaklists])
     unique, counts = np.unique([pl.metadata.replicate for pl in peaklists], return_counts=True)
-    if max(unique) != replicates:
-        raise ValueError("replicates missing (1)")
-    if len(counts) != replicates:
-        raise ValueError("replicates missing (2)")
+
+    if max(unique) < replicates:
+        raise ValueError("replicates incorrectly labeled")
     if sum(counts) != len(peaklists):
-        raise ValueError("replicates missing (3)")
-    if list(unique) != range(1, replicates+1):
-        raise ValueError("replicates missing (4)")
+        raise ValueError("replicates incorrectly labeled")
     if len(counts) <= 1:
-        raise ValueError("No technical replicates available (single) - Skip replicate filter")
+        raise ValueError("No technical replicates available (single) - Skip 'replicate filter'")
 
-    idx_peaklists = range(0, len(peaklists) + replicates, replicates)
     pls_rep_filt = []
-    for i in range(len(idx_peaklists)-1):
 
-        pls = peaklists[idx_peaklists[i]:idx_peaklists[i+1]]
-        pm = align_peaks(pls, ppm, block_size, ncpus=ncpus)
-        #############################################################
-        # TODO: Write some sort of merging function for multiple replicate file names
-        #############################################################
-        prefix = os.path.commonprefix([p.ID for p in pls])
-        merged_id = "{}{}".format(prefix, "_".join(map(str, [p.ID.replace(prefix, "").split(".")[0] for p in pls])))
-        #############################################################
+    if len([True for idxs_pls in idxs_peaklists if len(idxs_pls) > replicates]) > 0:
+        print
+        print "All combinations (n={}) for each each set of replicates will be processed to calculate the most reproducible set".format(replicates)
+        print
+        print "rank\tID\tpeaks\tmedian_RSD({}/{})".format(replicates, replicates)
 
-        pl = pm.to_peaklist(ID=merged_id)
-        if "snr" in pm.attributes:
-            pl.add_attribute("snr", pm.attr_mean_vector("snr"), on_index=2)
+    for idxs_pls in idxs_peaklists:
 
-        pl.tags.add_tags(*pls[0].tags.tag_of(None), **{t: pls[0].tags.tag_of(t) for t in pls[0].tags.tag_types})
-        pl.add_attribute("present_flag", pm.present >= min_peaks, is_flag=True)
+        temp = []
 
-        if rsd_thres is not None:
-            rsd_flag = map(lambda x: not np.isnan(x) and x < rsd_thres, pm.rsd)
-            pl.add_attribute("rsd_flag", rsd_flag, flagged_only=False, is_flag=True)
-        for k in pls[0].metadata:
-            if k != "filename":
-                pl.metadata[k] = pls[0].metadata[k]
-        pls_rep_filt.append(pl)
+        for j, pls_comb in enumerate(combinations(peaklists[idxs_pls[0]:idxs_pls[-1] + 1], replicates)):
+
+            pm = align_peaks(pls_comb, ppm, block_size, ncpus=ncpus)
+
+            #############################################################
+            # TODO: Write some sort of merging function for multiple replicate file names
+            #############################################################
+            prefix = os.path.commonprefix([p.ID for p in pls_comb])
+            merged_id = "{}{}".format(prefix, "_".join(map(str, [p.ID.replace(prefix, "").split(".")[0] for p in pls_comb])))
+            #############################################################
+
+            pl = pm.to_peaklist(ID=merged_id)
+            if "snr" in pm.attributes:
+                pl.add_attribute("snr", pm.attr_mean_vector("snr"), on_index=2)
+
+            pl.tags.add_tags(*pls_comb[0].tags.tag_of(None), **{t: pls_comb[0].tags.tag_of(t) for t in pls_comb[0].tags.tag_types})
+            pl.add_attribute("present_flag", pm.present >= min_peaks, is_flag=True)
+
+            if rsd_thres is not None:
+                rsd_flag = map(lambda x: not np.isnan(x) and x < rsd_thres, pm.rsd)
+                pl.add_attribute("rsd_flag", rsd_flag, flagged_only=False, is_flag=True)
+
+            for k in pls_comb[0].metadata:
+                if k != "filename":
+                    pl.metadata[k] = pls_comb[0].metadata[k]
+
+            pl_filt = filter_attr(pl.copy(), attr_name="present", min_threshold=replicates, flag_name="pres_rsd")
+            temp.append([pl, pl_filt.shape[0], np.median(pl_filt.rsd)])
+
+        temp.sort(key=operator.itemgetter(2, 1))
+        pls_rep_filt.append(temp[0][0]) # Most reproducible set of replicates
+
+        for p in range(0, len(temp)):
+            print "{}\t{}\t{}\t{}\t".format(p+1, temp[p][0].ID, temp[p][1], temp[p][2])
+        print
+
     return pls_rep_filt
 
 

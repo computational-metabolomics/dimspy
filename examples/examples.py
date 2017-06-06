@@ -20,9 +20,10 @@ def main():
     print
     print "Process Scans....."
     pls = process_scans(source, nscans=3, function_noise="median",
-        snr_thres=10.0, ppm=2.0, min_fraction=None, rsd_thres=None,
-        filelist=fn_filelist, subset_scan_events=None, block_size=2000, ncpus=None)
+        snr_thres=3.0, ppm=2.0, min_fraction=None, rsd_thres=None,
+        filelist=fn_filelist, mzrs_to_remove=[], scan_events=None, block_size=2000, ncpus=None)
     print "Finished"
+    print
 
     for pl in pls:
         print pl.ID, pl.shape
@@ -44,10 +45,6 @@ def main():
     pm_bf = blank_filter(pm, "blank", min_fraction=1.0, min_fold_change=10.0, function="mean", rm_samples=True)
     print "Finished", pm_bf.shape
     print
-    print "Sample Filter"
-    pm_bf_sf = sample_filter(pm_bf, 0.8, within=False)
-    print "Finished", pm_bf_sf.shape
-
 
     # Example 2 - RAW files (Directory)
     source = os.path.join("..", "tests", "data", "MTBLS79_subset", "raw")
@@ -56,25 +53,23 @@ def main():
     print "Process Scans....."
     pls = process_scans(source, nscans=1, function_noise="noise_packets",
         snr_thres=3.0, ppm=2.0, min_fraction=None, rsd_thres=None,
-        filelist=fn_filelist, mzrs_to_remove=[], subset_scan_events=None, block_size=2000, ncpus=None)
+        filelist=fn_filelist, mzrs_to_remove=[], scan_events=[], block_size=2000, ncpus=None)
     print
     print "Finished"
 
     save_peaklists_as_hdf5(pls, os.path.join(output, "MTBLS79_raw_triplicates_single_scan.hdf5"))
     pls = load_peaklists_from_hdf5(os.path.join(output, "MTBLS79_raw_triplicates_single_scan.hdf5"))
 
-    print
     print "Align Samples...."
-    pm = align_samples(pls_rf, ppm=2.0)
+    pm = align_samples(pls, ppm=2.0)
     print "Finished", pm.shape
-    print
+
+    save_peak_matrix_as_hdf5(pm, os.path.join(output, "MTBLS79_raw_peak_matrix_as.hdf5"))
+    pm = load_peak_matrix_from_hdf5(os.path.join(output, "MTBLS79_raw_peak_matrix_as.hdf5"))
+
     print "Sample Filter"
     pm_sf = sample_filter(pm, 0.5, within=False)
     print "Finished", pm_sf.shape
-
-    save_peak_matrix_as_hdf5(pm_sf, os.path.join(output, "MTBLS79_raw_peak_matrix_sf.hdf5"))
-    pm = load_peak_matrix_from_hdf5(os.path.join(output, "MTBLS79_raw_peak_matrix_sf.hdf5"))
-
     print "Sample Filter"
     pm_sf = sample_filter(pm, 0.8, within=False)
     print "Finished", pm_sf.shape
@@ -82,12 +77,11 @@ def main():
     # Example 3 - Subset m/z ranges
     source = os.path.join("..", "tests", "data", "MTBLS79_subset", "raw")
     fn_filelist = os.path.join("..", "tests", "data", "MTBLS79_subset", "filelist_raw_triplicates.txt")
-    fn_mz_ranges = os.path.join("..", "tests", "data", "MTBLS79_subset", "mz_ranges.txt")
 
     print
     print "Process Scans....."
     pls = process_scans(source, nscans=3, function_noise="noise_packets",
-        snr_thres=3.0, ppm=2.0, filelist=fn_filelist, subset_scan_events=[[70.0, 170.0, "sim"]])
+        snr_thres=3.0, ppm=2.0, filelist=fn_filelist, scan_events=[[70.0, 170.0, "sim"]])
     print
     print
 
