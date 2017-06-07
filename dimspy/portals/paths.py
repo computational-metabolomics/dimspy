@@ -31,6 +31,11 @@ def check_paths(tsv, source):
             elif h5py.is_hdf5(source):
                 peaklists = hdf5_portal.load_peaklists_from_hdf5(source)
                 filenames = [pl.ID for pl in peaklists]
+            elif os.path.isfile(source):
+                if source.lower().endswith(".raw") or source.lower().endswith(".mzml"):
+                    filenames = [source]
+                else:
+                    IOError("IOError: [Errno 2] No such file or directory: {}".format(source))
             else:
                 raise IOError("IOError: [Errno 2] No such file or directory: {}".format(source))
 

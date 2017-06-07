@@ -117,12 +117,12 @@ def replicate_filter(source, ppm, replicates, min_peaks, rsd_thres=None, filelis
     idxs_peaklists = idxs_reps_from_filelist([pl.metadata.replicate for pl in peaklists])
     unique, counts = np.unique([pl.metadata.replicate for pl in peaklists], return_counts=True)
 
-    if max(unique) < replicates:
-        raise ValueError("replicates incorrectly labeled")
-    if sum(counts) != len(peaklists):
-        raise ValueError("replicates incorrectly labeled")
     if len(counts) <= 1:
         raise ValueError("No technical replicates available (single) - Skip 'replicate filter'")
+    if max(unique) < replicates:
+        raise ValueError("Replicates incorrectly labeled")
+    if sum(counts) != len(peaklists):
+        raise ValueError("Replicates incorrectly labeled")
 
     pls_rep_filt = []
 

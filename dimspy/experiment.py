@@ -187,6 +187,10 @@ def check_metadata(fn_tsv):
     for k in fm.dtype.names:
         fm_dict[k] = list(fm[k])
 
+    unique, counts = np.unique(fm_dict["filename"], return_counts=True)
+    if len(unique) != counts:
+        raise ValueError("Duplicate filenames in filelist")
+
     #if "blank" not in fm.dtype.names and "Blank" not in fm.dtype.names:
     #    warnings.warn("No samples marked as blank. Column missing.")
     #else:
@@ -201,7 +205,6 @@ def check_metadata(fn_tsv):
 
     unique_reps = [1]
     if "replicate" in fm.dtype.names:
-
         idxs_replicates = idxs_reps_from_filelist(fm["replicate"])
         counts = {}
         for idxs in idxs_replicates:
@@ -210,7 +213,7 @@ def check_metadata(fn_tsv):
             else:
                 counts[len(idxs)] += 1
         for k, v in counts.items():
-            print "{} sample(s) with {} replicates:".format(v, k)
+            print "{} sample(s) with {} replicates".format(v, k)
     else:
         print "Column for replicate numbers missing. Only required for replicate filter."
 
@@ -228,11 +231,10 @@ def check_metadata(fn_tsv):
         print "Column for sample order missing. Not required."
 
     if "class" in fm.dtype.names:
-        for i in range(len(idxs_replicates)):
-            assert len(np.unique(fm["class"][min(idxs_replicates[i]):max(idxs_replicates[i])+1])) == 1, "class names do not match with number of replicates"
-
+        if "replicate" in fm.dtype.names:
+            for i in range(len(idxs_replicates)):
+                assert len(np.unique(fm["class"][min(idxs_replicates[i]):max(idxs_replicates[i])+1])) == 1, "class names do not match with number of replicates"
         unique, counts = np.unique(fm["class"], return_counts=True)
-
         cls = dict(zip(unique, counts))
         print "Classes:", cls
     else:
@@ -251,18 +253,15 @@ def update_metadata(peaklists, fl):
 
 
 def idxs_reps_from_filelist(replicates):
-    idxs, temp = [], []
-    for i in range(len(replicates)-1):
-        if replicates[i] < replicates[i+1]:
-            temp.append(i)
-        elif replicates[i] > replicates[i+1]:
-            temp.append(i)
+    idxs, temp = [], [0]
+    for i in range(1, len(replicates)):
+        if replicates[i] == replicates[i-1] and replicates[i] == 1:
             idxs.append(temp)
-            temp = []
+            temp = [replicates[i]]
+        elif replicates[i] > replicates[i-1]:
+            temp.append(i)
         else:
-            raise ValueError("Incorrect information provided for replicates. Row []".format(i))
-
-    temp.append(i + 1)
+            raise ValueError("Incorrect numbering for replicates. Row {}".format(i))
     idxs.append(temp)
     return idxs
 
