@@ -10,8 +10,56 @@ Overview
 Install
 --------
 
+pip_
+~~~~~
+
+1. Set up a virtualenv for ``dimspy`` (this example creates a new environment in ``.venv``)
+2. Install dimspy with ``pip``.
+
+::
+
+    $ virtualenv .venv; . .venv/bin/activate
+    $ pip install --upgrade pip
+    $ pip install dimspy
+
+2a. To upgrade dimspy when already installed use:
+
+::
+
+    $ . .venv/bin/activate
+    $ pip install -U dimspy
+
+To install or update to the latest development branch of DIMSpy with ``pip``,
+use:
+
+::
+
+    $ pip install -U git+github.com/computational-metabolomics/dimspy.git
+
+
+Conda_
+~~~~~~~
+
+Another approach for installing DIMSpy is to use Conda_ (For example: `Miniconda Python distribution <http://conda.pydata.org/miniconda.html>`__).
+Run the following commands to install DIMSpy.
+
+::
+
+    $ conda config --add channels bgruening
+    $ conda config --add channels bioconda
+    $ conda install dimspy
+
+
 Usage
 ------
+
+Command line
+~~~~~~~~~~~~~
+
+::
+
+    $ python -m dimspy --help
+
 
 Workflow
 ---------
@@ -42,3 +90,7 @@ TODO
 .. |RTD doc| image:: https://img.shields.io/badge/documentation-RTD-71B360.svg?style=flat&maxAge=3600
    :target: http://dimspy.readthedocs.io/en/latest/dimspy/index.html
 
+.. _pip: https://pip.pypa.io/
+.. _Homebrew: http://brew.sh/
+.. _linuxbrew: https://github.com/Homebrew/linuxbrew
+.. _Conda: http://conda.pydata.org/docs/
