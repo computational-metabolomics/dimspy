@@ -124,13 +124,16 @@ def replicate_filter(source, ppm, replicates, min_peaks, rsd_thres=None, filelis
     if sum(counts) != len(peaklists):
         raise ValueError("Replicates incorrectly labeled")
 
-    pls_rep_filt = []
 
-    if len([True for idxs_pls in idxs_peaklists if len(idxs_pls) > replicates]) > 0:
+    if len([True for idxs_pls in idxs_peaklists if len(idxs_pls) >= replicates]) == len(idxs_peaklists):
         print
         print "All combinations (n={}) for each each set of replicates will be processed to calculate the most reproducible set".format(replicates)
         print
         print "rank\tID\tpeaks\tmedian_RSD({}/{})".format(replicates, replicates)
+    else:
+        raise ValueError("Not enough (technical) replicates available for each sample {}.")
+
+    pls_rep_filt = []
 
     for idxs_pls in idxs_peaklists:
 

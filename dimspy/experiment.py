@@ -188,7 +188,7 @@ def check_metadata(fn_tsv):
         fm_dict[k] = list(fm[k])
 
     unique, counts = np.unique(fm_dict["filename"], return_counts=True)
-    if len(unique) != counts:
+    if len(unique) != sum(counts):
         raise ValueError("Duplicate filenames in filelist")
 
     #if "blank" not in fm.dtype.names and "Blank" not in fm.dtype.names:
@@ -205,6 +205,10 @@ def check_metadata(fn_tsv):
 
     unique_reps = [1]
     if "replicate" in fm.dtype.names:
+
+        if 0 in fm["replicate"]:
+            raise IOError("Incorrect replicate number in filelist. Row {}".format(list(fm["replicate"]).index(0)))
+
         idxs_replicates = idxs_reps_from_filelist(fm["replicate"])
         counts = {}
         for idxs in idxs_replicates:
@@ -255,10 +259,10 @@ def update_metadata(peaklists, fl):
 def idxs_reps_from_filelist(replicates):
     idxs, temp = [], [0]
     for i in range(1, len(replicates)):
-        if replicates[i] == replicates[i-1] and replicates[i] == 1:
+        if (replicates[i-1] == replicates[i] or replicates[i-1] > replicates[i]) and replicates[i] == 1:
             idxs.append(temp)
-            temp = [replicates[i]]
-        elif replicates[i] > replicates[i-1]:
+            temp = [i]
+        elif replicates[i-1] < replicates[i] and replicates[i-1] - replicates[i] == -1:
             temp.append(i)
         else:
             raise ValueError("Incorrect numbering for replicates. Row {}".format(i))
