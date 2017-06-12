@@ -1,15 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-"""
-hdf5Portal: PeakList and PeakMatrix HDF5 IO portals.
-
-author(s): Albert Zhou, Ralf Weber
-origin: May. 15, 2017
-
-"""
-
-
 import os
 import numpy as np
 import zipfile
@@ -31,13 +22,20 @@ def check_paths(tsv, source):
             elif h5py.is_hdf5(source):
                 peaklists = hdf5_portal.load_peaklists_from_hdf5(source)
                 filenames = [pl.ID for pl in peaklists]
-#
+            elif os.path.isfile(source):
+                if source.lower().endswith(".raw") or source.lower().endswith(".mzml"):
+                    filenames = [source]
+                else:
+                    IOError("IOError: [Errno 2] No such file or directory: {}".format(source))
+            else:
+                raise IOError("IOError: [Errno 2] No such file or directory: {}".format(source))
+
         elif type(source) == list or type(source) == tuple:
             assert isinstance(source[0], PeakList), "Incorrect Objects in list. PeakList class required."
             filenames = [pl.ID for pl in source]
         else:
-            pass
-#
+            raise IOError("IOError: [Errno 2] No such file or directory: {}".format(source))
+
     elif os.path.isfile(tsv.encode('string-escape')):
         tsv = tsv.encode('string-escape')
         fm = np.genfromtxt(tsv, dtype=None, delimiter="\t", names=True)
@@ -45,7 +43,7 @@ def check_paths(tsv, source):
             fm = np.array([fm])
         assert fm.dtype.names[0] == "filename" or fm.dtype.names[0] == "sample_id", \
             "Incorrect header for first column. Use filename or sample_id"
-#
+
         filenames = []
         if type(source) == list or type(source) == tuple:
             assert isinstance(source[0], PeakList), "Incorrect Objects in list. Peaklist Object required."
@@ -59,22 +57,20 @@ def check_paths(tsv, source):
                 for fn in fm[fm.dtype.names[0]]:
                     assert os.path.basename(fn) in l, "{} does not exist in directory provided".format(os.path.basename(fn))
                     filenames.append(os.path.join(source, fn).replace('\\', r'\\'))
-#
+
             elif zipfile.is_zipfile(source.encode('string-escape')):
                 with zipfile.ZipFile(source.encode('string-escape')) as zf:
                     assert len([fn for fn in zf.namelist() if fn.lower().endswith(".raw")]) == 0, "Archive with *.raw files not yet supported. Convert to mzML"
                     for fn in fm[fm.dtype.names[0]]:
                         assert fn in zf.namelist(), "{} does not exist in .zip file".format(fn)
                         filenames.append(fn)
-#
+
             elif h5py.is_hdf5(source):
                 peaklists = hdf5_portal.load_peaklists_from_hdf5(source)
                 filenames = [pl.ID for pl in peaklists]
-#
-#
             else:
-                raise IOError("Can not read and parse {} or {}".format(source, tsv))
+                raise IOError("IOError: [Errno 2] No such file or directory: {} or {}".format(source, tsv))
     else:
-        raise IOError("File {} does not exist".format(tsv))
-#
+        raise IOError("IOError: [Errno 2] No such file or directory: {} or {}".format(source, tsv))
+
     return filenames

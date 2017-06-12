@@ -25,7 +25,7 @@ def _eval(v):
 # peaklists portals
 def save_peaklists_as_hdf5(pkls, fname):
     if os.path.isfile(fname):
-        logging.warning('HDF5 database [%s] already exists, override' % fname)
+        logging.warning('HDF5 database [%s] already exists and override' % fname)
     f = h5py.File(fname, 'w')
 
     def _savepkl(i, pkl):

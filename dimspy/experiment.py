@@ -161,16 +161,16 @@ def interpret_experiment_from_headers(mz_ranges):
     elif len(now) == len(mzrs):
         print "Reading scans (Adjacent m/z ranges)....."
     elif len(pow) == len(mzrs):
-        print "Reading scans (SIM-Stitch - Overlapping m/z ranges)....."
+        print "Reading scans (SIM-Stitch experiment - Overlapping m/z ranges)....."
     elif len(ffow) > 0:
         del mzrs[ffow[0]]
         pow2 = _partially_overlapping_windows(mzrs)
-        if len(pow2) == len(mzrs) - 1:
-            print "Reading scans (SIM-Stitch - Overlapping m/z ranges)....."
+        if len(pow2) == len(mzrs):
+            print "Reading scans (SIM-Stitch experiment - Overlapping m/z ranges)....."
         else:
-            print "Please, describe DIMS method - Overlapping and/or non-overlapping m/z ranges"
+            raise IOError("Describe DIMS experiment - Overlapping and/or non-overlapping m/z ranges")
     else:
-        print "Please, describe DIMS method - Overlapping and/or non-overlapping m/z ranges"
+        print IOError("describe DIMS experiment - Overlapping and/or non-overlapping m/z ranges")
 
     return mzrs.keys()
 
@@ -187,6 +187,10 @@ def check_metadata(fn_tsv):
     for k in fm.dtype.names:
         fm_dict[k] = list(fm[k])
 
+    unique, counts = np.unique(fm_dict["filename"], return_counts=True)
+    if len(unique) != sum(counts):
+        raise ValueError("Duplicate filenames in filelist")
+
     #if "blank" not in fm.dtype.names and "Blank" not in fm.dtype.names:
     #    warnings.warn("No samples marked as blank. Column missing.")
     #else:
@@ -201,10 +205,19 @@ def check_metadata(fn_tsv):
 
     unique_reps = [1]
     if "replicate" in fm.dtype.names:
-        unique_reps, counts = np.unique(fm["replicate"], return_counts=True)
-        assert len(np.unique(counts)) == 1, "Incorrect numbering of replicates"
-        assert len(unique_reps) == max(unique_reps), "Incorrect numbering of replicates"
-        print "Replicates:", dict(zip(unique_reps, counts))
+
+        if 0 in fm["replicate"]:
+            raise IOError("Incorrect replicate number in filelist. Row {}".format(list(fm["replicate"]).index(0)))
+
+        idxs_replicates = idxs_reps_from_filelist(fm["replicate"])
+        counts = {}
+        for idxs in idxs_replicates:
+            if len(idxs) not in counts:
+                counts[len(idxs)] = 1
+            else:
+                counts[len(idxs)] += 1
+        for k, v in counts.items():
+            print "{} sample(s) with {} replicates".format(v, k)
     else:
         print "Column for replicate numbers missing. Only required for replicate filter."
 
@@ -222,12 +235,10 @@ def check_metadata(fn_tsv):
         print "Column for sample order missing. Not required."
 
     if "class" in fm.dtype.names:
-        ra = range(0, len(fm["class"]), max(unique_reps))
-        for i in range(0, len(ra)-1):
-            assert len(np.unique(fm["class"][ra[i]:ra[i+1]])) == 1, "class names do not match with number of replicates"
-
+        if "replicate" in fm.dtype.names:
+            for i in range(len(idxs_replicates)):
+                assert len(np.unique(fm["class"][min(idxs_replicates[i]):max(idxs_replicates[i])+1])) == 1, "class names do not match with number of replicates"
         unique, counts = np.unique(fm["class"], return_counts=True)
-
         cls = dict(zip(unique, counts))
         print "Classes:", cls
     else:
@@ -245,6 +256,20 @@ def update_metadata(peaklists, fl):
     return peaklists
 
 
+def idxs_reps_from_filelist(replicates):
+    idxs, temp = [], [0]
+    for i in range(1, len(replicates)):
+        if (replicates[i-1] == replicates[i] or replicates[i-1] > replicates[i]) and replicates[i] == 1:
+            idxs.append(temp)
+            temp = [i]
+        elif replicates[i-1] < replicates[i] and replicates[i-1] - replicates[i] == -1:
+            temp.append(i)
+        else:
+            raise ValueError("Incorrect numbering for replicates. Row {}".format(i))
+    idxs.append(temp)
+    return idxs
+
+
 def update_class_labels(pm, fn_tsv):
 
     assert os.path.isfile(fn_tsv.encode('string-escape')), "{} does not exist".format(fn_tsv)
@@ -254,7 +279,7 @@ def update_class_labels(pm, fn_tsv):
         fm = np.array([fm])
 
     assert "sample_id" == fm.dtype.names[0] or "filename" == fm.dtype.names[0], "Column for class labels not available"
-    assert "class" in fm.dtype.names, "Column for class label not available"
+    assert "class" in fm.dtype.names, "Column for class label (class) not available"
     assert (fm[fm.dtype.names[0]] == pm.peaklist_ids).all(), "Sample ids do not match {}".format(np.setdiff1d(fm[fm.dtype.names[0]], pm.peaklist_ids))
     # TODO: class_labels
     for i in range(len(fm["class"])):
@@ -263,170 +288,3 @@ def update_class_labels(pm, fn_tsv):
             pm.peaklist_tags[i].add_tags(class_label=fm["class"][i])
     return pm
 
-
-if __name__ == '__main__':
-
-    print
-
-    """
-    fn_mzml = "../data/Pol_pos_Lung_FeOx_QC1_Rep_3.mzML"
-    msrun = pymzml.run.Reader(fn_mzml)
-
-    scan_ids, mz_ranges = collections.OrderedDict(), collections.OrderedDict()
-    for scan in msrun:
-        if "MS:1000512" in scan: # Need to check how the header for a waters files looks like
-            scan_ids.setdefault(scan['MS:1000512'], []).append(scan['id'])
-            mzr = mz_range_from_header(scan['MS:1000512'])
-            mz_ranges.setdefault(scan['MS:1000512'], mzr)
-
-    print
-    print "TEST - TEMPLATE PROVIDED"
-
-    # EXPERIMENT TEXT FILE PROVIDED
-    mzrs = sort_mz_ranges(mz_ranges)
-    experiment = read_ms_experiment("exp_design_stitch_SIM.txt")
-    print len(mzrs), mzrs
-    mzrs = remove_headers(experiment, mzrs)
-    print len(mzrs), mzrs
-
-    # EXPERIMENT TEXT FILE PROVIDED
-    mzrs = sort_mz_ranges(mz_ranges)
-    experiment = read_ms_experiment("exp_design_full_simple.txt")
-    print len(mzrs), mzrs
-    mzrs = remove_headers(experiment, mzrs)
-    print len(mzrs), mzrs
-
-    # EXPERIMENT TEXT FILE PROVIDED
-    #mzrs = sort_mz_ranges(mz_ranges)
-    #experiment = read_experiment("exp_design_full_simple_wrong_scan_type.txt")
-    #print len(mzrs), mzrs
-    #mzrs = remove_headers(experiment, mzrs)
-    #print len(mzrs), mzrs
-
-
-
-
-    print
-    print "TEST - WITHOUT TEMPLATE (1)"
-    fn_mzml = "../data/Pol_pos_Lung_FeOx_QC1_Rep_3.mzML"
-    msrun = pymzml.run.Reader(fn_mzml)
-
-    scan_ids, mz_ranges = collections.OrderedDict(), collections.OrderedDict()
-    for scan in msrun:
-        if "MS:1000512" in scan:  # Need to check how the header for a waters files looks like
-            scan_ids.setdefault(scan['MS:1000512'], []).append(scan['id'])
-            mzr = mz_range_from_header(scan['MS:1000512'])
-            mz_ranges.setdefault(scan['MS:1000512'], mzr)
-
-    mzrs = sort_mz_ranges(mz_ranges)
-
-    # ------
-    #     -------
-    #          -------
-
-    now = non_overlapping_windows(mzrs)
-    pow = partially_overlapping_windows(mzrs)
-    ffow = first_fully_overlapping_windows(mzrs)
-    print len(mzrs), len(now), len(pow), len(ffow)
-
-    if len(now) == len(mzrs):
-        print "READY TO PROCESS - MERGE"
-        print
-    elif len(pow) == len(mzrs):
-        print "READY TO PROCESS - SIM STITCH"
-        print
-    elif len(ffow) > 0:
-        print "REMOVE FULLY OVERLAPPING WINDOW"
-        del mzrs[ffow[0]]
-        pow2 = partially_overlapping_windows(mzrs)
-        if len(pow2) == len(mzrs) - 1:
-            print "READY TO PROCESS - SIM STITCH (AFTER OVERLAPPING WINDOW REMOVED (LIKELY FULL MS)"
-            print
-        else:
-            print "Please, describe DIMS experiment - experiment too complex"
-            print
-    else:
-        print "Please, describe DIMS experiment - experiment too complex"
-        print
-
-
-
-
-    print
-    print "TEST - WITHOUT TEMPLATE (2)"
-    mzrs = sort_mz_ranges(mz_ranges)
-    del mzrs['FTMS + p NSI SIM ms [215.00-290.00]'] # TO CREAT
-    # FOR EXAMPLE (TWO SECTIONS WITH OVERLAPPING WINDOWS)
-    # ------
-    #     -------
-    #          -------
-    #                       -------
-    #                            -------
-    now = non_overlapping_windows(mzrs)
-    pow = partially_overlapping_windows(mzrs)
-    ffow = first_fully_overlapping_windows(mzrs)
-    print len(mzrs), len(now), len(pow), len(ffow)
-
-    if len(now) == len(mzrs):
-        print "READY TO PROCESS - MERGE"
-        print
-    elif len(pow) == len(mzrs):
-        print "READY TO PROCESS - SIM STITCH"
-        print
-    elif len(ffow) > 0:
-        print "REMOVE FULLY OVERLAPPING WINDOW"
-        del mzrs[ffow[0]]
-        now2 = non_overlapping_windows(mzrs)
-        pow2 = partially_overlapping_windows(mzrs)
-        ffow2 = first_fully_overlapping_windows(mzrs)
-        if len(pow2) == len(mzrs) - 1:
-            print "READY TO PROCESS - SIM STITCH (AFTER OVERLAPPING WINDOW REMOVED (LIKELY FULL MS)"
-            print
-        elif len(pow2) < len(mzrs) - 1 and len(now2) == 0 and len(ffow2) == 0:
-            print "READY TO PROCESS - SIM STITCH TWO SECTIONS (AFTER OVERLAPPING WINDOW REMOVED (LIKELY FULL MS)"
-            print
-        else:
-            print "Please, describe DIMS experiment - experiment too complex"
-            print
-    else:
-        print "Please, describe DIMS experiment - experiment too complex"
-        print
-
-    print "TEST - WITHOUT TEMPLATE (3)"
-    # TO COMPLEX TO PROCESS
-    fn_mzml = "../data/SimStitchOptimisation_megamix_1e6_1.mzML"
-    msrun = pymzml.run.Reader(fn_mzml)
-
-    scan_ids, mz_ranges = collections.OrderedDict(), collections.OrderedDict()
-    for scan in msrun:
-        if "MS:1000512" in scan:  # Need to check how the header for a waters files looks like
-            scan_ids.setdefault(scan['MS:1000512'], []).append(scan['id'])
-            mzr = mz_range_from_header(scan['MS:1000512'])
-            mz_ranges.setdefault(scan['MS:1000512'], mzr)
-
-    mzrs = sort_mz_ranges(mz_ranges)
-    now = non_overlapping_windows(mzrs)
-    pow = partially_overlapping_windows(mzrs)
-    ffow = first_fully_overlapping_windows(mzrs)
-    print len(mzrs), len(now), len(pow), len(ffow)
-
-    if len(now) == len(mzrs):
-        print "READY TO PROCESS - MERGE"
-        print
-    elif len(pow) == len(mzrs):
-        print "READY TO PROCESS - SIM STITCH"
-        print
-    elif len(ffow) > 0:
-        print "REMOVE FULLY OVERLAPPING WINDOW"
-        del mzrs[ffow[0]]
-        pow2 = partially_overlapping_windows(mzrs)
-        if len(pow2) == len(mzrs) - 1:
-            print "READY TO PROCESS - SIM STITCH (AFTER OVERLAPPING WINDOW REMOVED (LIKELY FULL MS)"
-            print
-        else:
-            print "Please, describe DIMS experiment - experiment too complex"
-            print
-    else:
-        print "Please, describe DIMS experiment - experiment too complex"
-        print
-"""
