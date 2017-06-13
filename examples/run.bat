@@ -2,7 +2,7 @@ python -m dimspy process-scans^
  --input tests/data/MTBLS79_subset/MTBLS79_mzml_subset.zip^
  --output tests/test_results/peaklists.hdf5^
  --filelist tests/data/MTBLS79_subset/filelist_mzml_subset.txt^
- --subset-scan-events None^
+ --scan-events None^
  --function-noise median^
  --snr-threshold 3.0^
  --ppm 2.0^

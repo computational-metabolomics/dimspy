@@ -7,6 +7,12 @@ from portals import hdf5_portal
 from . import __version__
 
 
+def split_values(values):
+    if values is None:
+        return []
+    return [float(x) for x in values.split(',')]
+
+
 def main():
 
     print("Executing dimspy version %s." % __version__)
@@ -21,7 +27,8 @@ def main():
     parser_as = subparsers.add_parser('align-samples', help='Align mass spectra across samples.')
     parser_bf = subparsers.add_parser('blank-filter', help='Filter peaks present in the blank samples.')
     parser_sf = subparsers.add_parser('sample-filter', help='Filter peaks based on certain reproducibility and sample class criteria.')
-    parser_pr = subparsers.add_parser('hdf5-to-txt', help='Write HDF5 output to text format.')
+    parser_mp = subparsers.add_parser('merge-peaklists', help='Merge multiple HDF5 files that contain peaklist objects.')
+    parser_ht = subparsers.add_parser('hdf5-to-txt', help='Write HDF5 output to text format.')
 
     parser_cf.add_argument('-l', '--filelist',
                            type=str, required=True,
@@ -88,9 +95,17 @@ def main():
                            default=None, type=float, required=False,
                            help="Maximum threshold - relative standard deviation (Only applied to peaks that have been measured across a minimum of two scans).")
 
-    parser_ps.add_argument('-e', '--subset-scan-events',
-                           type=str, required=False,
-                           help="Filename that contains a description of the DIMS experiment.")
+    parser_ps.add_argument('-u', '--include-scan-events',
+                           type=split_values, nargs='+', required=False, default=[],
+                           help="Scan events to select. E.g. 100.0,200.0,sim 50.0,1000.0,full")
+
+    parser_ps.add_argument('-x', '--exclude-scan-events',
+                           type=split_values, nargs='+', required=False, default=[],
+                           help="Scan events to select. E.g. 100.0,200.0,sim 50.0,1000.0,full")
+
+    parser_ps.add_argument('-z', '--mz-range-to-remove',
+                           type=split_values, nargs='+', required=False, default=[],
+                           help="M/z range(s) to remove. E.g. 100,102 322,340.")
 
     parser_ps.add_argument('-b', '--block-size',
                            default=2000, type=int, required=False,
@@ -209,7 +224,7 @@ def main():
                            help="Tab delimited file (two columns) with the filenames / sample ids in the first columns and class label in the second column.")
 
     #################################
-    # Sample Filter
+    # Merge peaklists
     #################################
 
     parser_sf.add_argument('-i', '--input',
@@ -241,30 +256,42 @@ def main():
                            help="Tab delimited file (two columns) with the filenames / sample ids in the first columns and class label in the second column.")
 
     #################################
+    # Merge peaklists
+    #################################
+
+    parser_mp.add_argument('-i', '--input',
+                           required=True, default=[], action='append',
+                           help="Multiple HDF5 files that contain peaklists from one of the processing steps.")
+
+    parser_mp.add_argument('-o', '--output',
+                           required=True, type=str,
+                           help="HDF5 file to save the merged peaklist objects.")
+
+    #################################
     # HDF5 to text
     #################################
 
-    parser_pr.add_argument('-i', '--input',
+    parser_ht.add_argument('-i', '--input',
                            type=str, required=True,
                            help="HDF5 file that contains peaklists or a peak matrix from one of the processing steps.")
 
-    parser_pr.add_argument('-o', '--output',
+    parser_ht.add_argument('-o', '--output',
                            type=str, required=True,
                            help="Directory (peaklists) or text file (peak matrix) to write to.")
 
-    parser_pr.add_argument('-a', '--attribute_name',
+    parser_ht.add_argument('-a', '--attribute_name',
                            default="intensity", choices=["intensity", "mz"], required=False,
                            help="Type of matrix to print.")
 
-    parser_pr.add_argument('-s', '--separator',
+    parser_ht.add_argument('-s', '--separator',
                            default="tab", choices=["tab", "comma"],
                            help="Format of the file for further data processing or data analysis.")
 
-    parser_pr.add_argument('-t', '--transpose',
+    parser_ht.add_argument('-t', '--transpose',
                            action='store_true', required=False,
                            help="Transpose peak matrix")
 
-    parser_pr.add_argument('-c', '--comprehensive',
+    parser_ht.add_argument('-c', '--comprehensive',
                            action='store_true', required=False,
                            help="Comprehensive output of the peak matrix")
 
@@ -273,6 +300,14 @@ def main():
     print args
 
     if args.step == "process-scans":
+        scan_events = []
+        if args.exclude_scan_events != []:
+            for se in args.exclude_scan_events: scan_events.append([se[0], se[1], se[2], 0])
+        elif args.exclude_scan_events != []:
+            for se in args.include_scan_events: scan_events.append([se[0], se[1], se[2], 1])
+        elif args.exclude_scan_events != [] and args.include_scan_events != []:
+            raise argparse.ArgumentTypeError("-u/--include-scan-events and -x/--exclude-scan-events can not be used together.")
+
         peaklists = workflow.process_scans(source=args.input,
             function_noise=args.function_noise,
             snr_thres=args.snr_threshold,
@@ -281,7 +316,7 @@ def main():
             min_fraction=args.min_fraction,
             rsd_thres=args.rsd_threshold,
             filelist=args.filelist,
-            subset_scan_events=args.subset_scan_events,
+            scan_events=scan_events,
             block_size=args.block_size,
             ncpus=args.ncpus)
         hdf5_portal.save_peaklists_as_hdf5(peaklists, args.output)
@@ -327,6 +362,13 @@ def main():
             qc_label=args.qc_label,
             class_labels=args.class_labels)
         hdf5_portal.save_peak_matrix_as_hdf5(pm_sf, args.output)
+
+    elif args.step == "merge-peaklists":
+        pls_merged = []
+        for fn_hdf5 in args.input:
+            pls = hdf5_portal.load_peaklists_from_hdf5(fn_hdf5)
+            pls_merged.extend(pls)
+        hdf5_portal.save_peaklists_as_hdf5(pls_merged, args.output)
 
     elif args.step == "hdf5-to-txt":
         workflow.hdf5_to_txt(args.input,
