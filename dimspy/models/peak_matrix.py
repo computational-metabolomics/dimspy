@@ -123,7 +123,7 @@ class PeakMatrix(object):
         return rsd
 
     @property
-    def occurance(self):
+    def occurrence(self):
         if not self._attr_dict.has_key('intra_count'):
             logging.warning("attribute matrix ['intra_count'] not available")
             return np.ones(self.shape[1])
@@ -189,7 +189,7 @@ class PeakMatrix(object):
         pl.add_attribute("present", self.present)
         pl.add_attribute("fraction", self.fraction)
         pl.add_attribute("rsd", self.rsd)
-        pl.add_attribute("occurance", self.occurance)
+        pl.add_attribute("occurrence", self.occurrence)
         pl.add_attribute("impure", self.impure)
         return pl
 
@@ -233,7 +233,7 @@ class PeakMatrix(object):
                  dm[1:]
             prelst = ['present'] + ([''] * (tnum + 2)) + map(str, self.present)
             rsdlst = ['rsd'] + ([''] * (tnum + 2)) + map(str, self.rsd)
-            ocrlst = ['occurance'] + ([''] * (tnum + 2)) + map(str, self.occurance)
+            ocrlst = ['occurrence'] + ([''] * (tnum + 2)) + map(str, self.occurrence)
             implst = ['impure'] + ([''] * (tnum + 2)) + map(str, self.impure)
             dm = zip(*([prelst, rsdlst, ocrlst, implst] + zip(*dm)))
 
