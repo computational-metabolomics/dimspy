@@ -30,7 +30,7 @@ def save_peaklists_as_hdf5(pkls, fname):
 
     def _savepkl(i, pkl):
         if pkl.ID in f.keys():
-            raise IOError('peaklist [%s] already exists')
+            raise IOError('peaklist [%s] already exists' % pkl.ID)
         dset = f.create_dataset(pkl.ID, pkl.full_shape[::-1], dtype = np.float64)
         dset.attrs['class'] = 'PeakList'
         dset.attrs['order'] = i
@@ -81,7 +81,7 @@ def save_peak_matrix_as_hdf5(pm, fname):
 
     def _saveattr(attr):
         if attr in f.keys():
-            raise IOError('attribute [%s] already exists')
+            raise IOError('attribute [%s] already exists' % atrr)
         ds = f.create_dataset(attr, pm.full_shape, dtype = np.float64)
         with unmask_all_peakmatrix(pm) as m: ds[...] = m.attr_matrix(attr)
     map(_saveattr, pm.attributes)

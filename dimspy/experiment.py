@@ -251,8 +251,11 @@ def update_metadata(peaklists, fl):
     assert isinstance(peaklists[0], PeakList), "PeakList object required"
     for k in fl.keys():  # Update metadata
         for pl in peaklists:
+            assert pl.ID in fl[fl.keys()[0]], "filelist and peaklist do not match {}".format(pl.ID)
             index = fl[fl.keys()[0]].index(pl.ID)
             pl.metadata[k] = fl[k][index]
+            if "class" in fl.keys():
+                pl.tags.add_tags(class_label=fl["class"][index])
     return peaklists
 
 

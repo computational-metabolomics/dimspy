@@ -5,12 +5,12 @@ import argparse
 import workflow
 from portals import hdf5_portal
 from . import __version__
-
+from collections import defaultdict
 
 def split_values(values):
     if values is None:
         return []
-    return [float(x) for x in values.split(',')]
+    return [float(x) for x in values.split(' ')]
 
 
 def main():
@@ -59,8 +59,8 @@ def main():
     #################################
 
     parser_ps.add_argument('-i', '--input',
-                           type=str, required=True,
-                           help="Directory (*.raw, *.mzml or tab-delimited files) or zip archive (*.mzml or tab-delimited files).")
+                           type=str, action='append', required=True, metavar=('source'),
+                           help="Directory (*.raw, *.mzml or tab-delimited peaklist files), single *.mzml/*.raw file or zip archive (*.mzml only)")
 
     parser_ps.add_argument('-o', '--output',
                            type=str, required=True,
@@ -95,17 +95,18 @@ def main():
                            default=None, type=float, required=False,
                            help="Maximum threshold - relative standard deviation (Only applied to peaks that have been measured across a minimum of two scans).")
 
+    #type=split_values, 
     parser_ps.add_argument('-u', '--include-scan-events',
-                           type=split_values, nargs='+', required=False, default=[],
-                           help="Scan events to select. E.g. 100.0,200.0,sim 50.0,1000.0,full")
+                           action='append', nargs=3, required=False, metavar=('start', 'end', 'scan_type'), default=[],
+                           help="Scan events to select. E.g. 100.0 200.0 sim  or  50.0 1000.0 full")
 
     parser_ps.add_argument('-x', '--exclude-scan-events',
-                           type=split_values, nargs='+', required=False, default=[],
-                           help="Scan events to select. E.g. 100.0,200.0,sim 50.0,1000.0,full")
+                           action='append', nargs=3, required=False, metavar=('start', 'end', 'scan_type'), default=[],
+                           help="Scan events to select. E.g. 100.0 200.0 sim  or  50.0 1000.0 full")
 
-    parser_ps.add_argument('-z', '--mz-range-to-remove',
-                           type=split_values, nargs='+', required=False, default=[],
-                           help="M/z range(s) to remove. E.g. 100,102 322,340.")
+    parser_ps.add_argument('-z', '--remove-mz-range',
+                           action='append', nargs=2, required=False, metavar=('start','end'), default=[],
+                           help="M/z range(s) to remove. E.g. 100.0 102.0  or  140.0 145.0.")
 
     parser_ps.add_argument('-b', '--block-size',
                            default=2000, type=int, required=False,
@@ -224,7 +225,7 @@ def main():
                            help="Tab delimited file (two columns) with the filenames / sample ids in the first columns and class label in the second column.")
 
     #################################
-    # Merge peaklists
+    # Sample filter
     #################################
 
     parser_sf.add_argument('-i', '--input',
@@ -262,10 +263,12 @@ def main():
     parser_mp.add_argument('-i', '--input',
                            required=True, default=[], action='append',
                            help="Multiple HDF5 files that contain peaklists from one of the processing steps.")
-
     parser_mp.add_argument('-o', '--output',
                            required=True, type=str,
                            help="HDF5 file to save the merged peaklist objects.")
+    parser_mp.add_argument('-l', '--filelist',
+                           type=str, required=False,
+                           help="Tab-separated file that list all the data files (*.raw or *.mzml) and meta data (filename, technical replicate, class, batch).")
 
     #################################
     # HDF5 to text
@@ -300,13 +303,26 @@ def main():
     print args
 
     if args.step == "process-scans":
-        scan_events = []
-        if args.exclude_scan_events != []:
-            for se in args.exclude_scan_events: scan_events.append([se[0], se[1], se[2], 0])
+        filter_scan_events = {}
+        if args.include_scan_events == "all":
+            filter_scan_events = "all"
         elif args.exclude_scan_events != []:
-            for se in args.include_scan_events: scan_events.append([se[0], se[1], se[2], 1])
+            for se in args.exclude_scan_events: 
+                if "exclude" not in filter_scan_events:
+                    filter_scan_events["exclude"] = [se[0], se[1], se[2]]
+                else:
+                    filter_scan_events["exclude"].append([se[0], se[1], se[2]])
+        elif args.include_scan_events != []:
+            for se in args.include_scan_events: 
+                if "exclude" not in filter_scan_events:
+                    filter_scan_events["include"] = [se[0], se[1], se[2]]
+                else:
+                    filter_scan_events["include"].append([se[0], se[1], se[2]])
         elif args.exclude_scan_events != [] and args.include_scan_events != []:
             raise argparse.ArgumentTypeError("-u/--include-scan-events and -x/--exclude-scan-events can not be used together.")
+
+	if len(args.input) == 1: # Directory / zipfile / single filename
+            args.input = args.input[0]
 
         peaklists = workflow.process_scans(source=args.input,
             function_noise=args.function_noise,
@@ -316,7 +332,8 @@ def main():
             min_fraction=args.min_fraction,
             rsd_thres=args.rsd_threshold,
             filelist=args.filelist,
-            scan_events=scan_events,
+            filter_scan_events=filter_scan_events,
+            remove_mz_range=args.remove_mz_range,
             block_size=args.block_size,
             ncpus=args.ncpus)
         hdf5_portal.save_peaklists_as_hdf5(peaklists, args.output)
@@ -367,6 +384,9 @@ def main():
         pls_merged = []
         for fn_hdf5 in args.input:
             pls = hdf5_portal.load_peaklists_from_hdf5(fn_hdf5)
+            if args.filelist is not None:
+                fl = check_metadata(args.filelist)
+                pls = update_metadata(pls, fl)
             pls_merged.extend(pls)
         hdf5_portal.save_peaklists_as_hdf5(pls_merged, args.output)
 

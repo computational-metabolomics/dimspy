@@ -26,15 +26,25 @@ def check_paths(tsv, source):
                 if source.lower().endswith(".raw") or source.lower().endswith(".mzml"):
                     filenames = [source]
                 else:
-                    IOError("IOError: [Errno 2] No such file or directory: {}".format(source))
+                    raise IOError("Incorrect file format, provide .mzml or .raw files: {}".format(source))
             else:
-                raise IOError("IOError: [Errno 2] No such file or directory: {}".format(source))
+                raise IOError("[Errno 2] No such file or directory: {}".format(source))
 
         elif type(source) == list or type(source) == tuple:
-            assert isinstance(source[0], PeakList), "Incorrect Objects in list. PeakList class required."
-            filenames = [pl.ID for pl in source]
+            if isinstance(source[0], PeakList):
+            	filenames = [pl.ID for pl in source]
+            else:
+                filenames = []
+                for fn in source:
+                    if os.path.isfile(fn):
+                        if fn.lower().endswith(".raw") or fn.lower().endswith(".mzml"):
+                            filenames.append(fn)
+                        else:
+                            raise IOError("Incorrect file format, provide .mzml or .raw files: {}".format(source))
+                    else:
+                        raise IOError("[Errno 2] No such file or directory: {}".format(source))
         else:
-            raise IOError("IOError: [Errno 2] No such file or directory: {}".format(source))
+            raise IOError("[Errno 2] No such file or directory: {}".format(source))
 
     elif os.path.isfile(tsv.encode('string-escape')):
         tsv = tsv.encode('string-escape')
@@ -46,10 +56,22 @@ def check_paths(tsv, source):
 
         filenames = []
         if type(source) == list or type(source) == tuple:
-            assert isinstance(source[0], PeakList), "Incorrect Objects in list. Peaklist Object required."
-            for fn in fm[fm.dtype.names[0]]:
-                assert fn in [pl.ID for pl in source], "{} does not exist in list with Objects".format(fn)
-                filenames.append(fn)
+            if isinstance(source[0], PeakList):
+                for fname in fm[fm.dtype.names[0]]:
+                    if fname in [pl.ID for pl in source]:
+            	        filenames.append(fname)
+                    else:
+                        raise IOError("{} does not exist in list with Peaklist objects".format(fn))
+            else:
+                for fname in fm[fm.dtype.names[0]]:
+                    if fname not in [os.path.basename(fn) for fn in source]:
+                        raise IOError("{} (row {}) does not exist in source provided".format(fname, list(fm[fm.dtype.names[0]]).index(fname)+1))
+                for fn in source:
+                    if os.path.isfile(fn):
+                        filenames.append(fn)
+                    else:
+                        raise IOError("[Errno 2] No such file or directory: {}".format(fn))
+  
         elif type(source.encode('string-escape')) == str:
             source = source.encode('string-escape')
             if os.path.isdir(source):
@@ -69,8 +91,8 @@ def check_paths(tsv, source):
                 peaklists = hdf5_portal.load_peaklists_from_hdf5(source)
                 filenames = [pl.ID for pl in peaklists]
             else:
-                raise IOError("IOError: [Errno 2] No such file or directory: {} or {}".format(source, tsv))
+                raise IOError("[Errno 2] No such file or directory: {} or {}".format(source, tsv))
     else:
-        raise IOError("IOError: [Errno 2] No such file or directory: {} or {}".format(source, tsv))
+        raise IOError("[Errno 2] No such file or directory: {} or {}".format(source, tsv))
 
     return filenames

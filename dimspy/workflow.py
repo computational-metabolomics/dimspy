@@ -32,7 +32,7 @@ from process.scan_processing import remove_edges
 
 
 
-def process_scans(source, function_noise, snr_thres, nscans, ppm, min_fraction=None, rsd_thres=None, filelist=None, mzrs_to_remove=[], scan_events=[], block_size=2000, ncpus=None):
+def process_scans(source, function_noise, snr_thres, nscans, ppm, min_fraction=None, rsd_thres=None, filelist=None, remove_mz_range=[], filter_scan_events={}, block_size=2000, ncpus=None):
 
     filenames = check_paths(filelist, source)
     if len([fn for fn in filenames if not fn.lower().endswith(".mzml") or not fn.lower().endswith(".raw")]) == 0:
@@ -49,9 +49,12 @@ def process_scans(source, function_noise, snr_thres, nscans, ppm, min_fraction=N
         print
         print os.path.basename(filenames[i])
 
-        scans = read_scans(filenames[i], source, function_noise, nscans, scan_events)
-
-        if scan_events == "all":
+        if type(source) is not str:
+            scans = read_scans(filenames[i], "", function_noise, nscans, filter_scan_events)
+        else:
+            scans = read_scans(filenames[i], source, function_noise, nscans, filter_scan_events)
+        
+        if filter_scan_events == "all":
             pls_filt = average_replicate_scans(scans, snr_thres, ppm, min_fraction, rsd_thres, block_size, ncpus)
             for h in pls_filt:
                 pl_filt_copy = join_peaklists(os.path.basename(filenames[i]), {h: pls_filt[h]})
@@ -61,20 +64,20 @@ def process_scans(source, function_noise, snr_thres, nscans, ppm, min_fraction=N
                 pl_filt_copy.metadata["scan_ids"] = [int(pl_scan.ID) for pl_scan in scans[h]]
                 pls.append(pl_filt_copy)
 
-        elif type(scan_events) is list or scan_events is None:
+        elif type(filter_scan_events) is dict or filter_scan_events is None:
 
             scans_er = remove_edges(scans)
             prs = average_replicate_scans(scans_er, snr_thres, ppm, min_fraction, rsd_thres, block_size, ncpus)
             pl_filt = join_peaklists(os.path.basename(filenames[i]), prs)
 
-            if type(mzrs_to_remove) == list:
-                if len(mzrs_to_remove) > 0:
-                    pl_filt = filter_mz_ranges(pl_filt, mzrs_to_remove)
+            if type(remove_mz_range) == list:
+                if len(remove_mz_range) > 0:
+                    pl_filt = filter_mz_ranges(pl_filt, remove_mz_range)
                 else:
                     pass
 
-            elif mzrs_to_remove is not None:
-                raise ValueError("mzr_remove: Provide a list of 'start' and 'end' values for each m/z range that needs to be removed.")
+            elif remove_mz_range is not None:
+                raise ValueError("remove_mz_range: Provide a list of 'start' and 'end' values for each m/z range that needs to be removed.")
             else:
                 pass
 
@@ -86,7 +89,7 @@ def process_scans(source, function_noise, snr_thres, nscans, ppm, min_fraction=N
             pls.append(pl_filt)
 
         else:
-            raise ValueError("scan_events: Provide a list e.g. [[50.0, 1000.0, full]] or the string 'all'")
+            raise ValueError("filter_scan_events: Provide a list e.g. {'exclude':[[50.0, 1000.0, 'full']]} or {'include':[[50.0, 1000.0, 'full']]} the string 'all'")
 
     return pls
 

@@ -48,11 +48,11 @@ def remove_edges(pls_sd):
     return pls_sd
 
 
-def read_scans(fn, source, function_noise, nscans, scan_events=None):
+def read_scans(fn, source, function_noise, nscans, scan_events={}):
 
     fn = fn.encode('string-escape')
     source = source.encode('string-escape')
-
+    
     # assert os.path.isfile(fn), "File does not exist"
     if not fn.lower().endswith(".mzml") and not fn.lower().endswith(".raw"):
         raise IOError("Check format raw data (.RAW or .mzML)")
@@ -78,23 +78,23 @@ def read_scans(fn, source, function_noise, nscans, scan_events=None):
     h_sids = run.headers_scan_ids()
     mzrs = collections.OrderedDict(zip(h_sids.keys(), [mz_range_from_header(h) for h in h_sids]))
 
-    if scan_events is None or scan_events == []:
+    if scan_events is None or scan_events == {}:
         h_rm = interpret_experiment_from_headers(mzrs)
         h_sids = collections.OrderedDict((key, value) for key, value in h_sids.items() if key in h_rm)
-    elif type(scan_events) == list:
-        print "Reading scans....."
+    elif type(scan_events) is dict:
         subset = define_mz_ranges(scan_events)
         h_rm = remove_headers(subset, mzrs)
         h_sids = collections.OrderedDict((key, value) for key, value in h_sids.items() if key in h_rm)
-    elif os.path.isfile(scan_events.encode('string-escape')):
-        print "Reading scans....."
-        with open(scan_events.encode('string-escape'), 'r') as f:
-            mzrs_from_fn = [line.strip().split("\t") for line in f]
-            subset = define_mz_ranges(mzrs_from_fn)
-            h_rm = remove_headers(subset, mzrs)
-            h_sids = collections.OrderedDict((key, value) for key, value in h_sids.items() if key in h_rm)
     elif scan_events == "all":
-        print "Reading scans....."
+        pass
+
+    #elif os.path.isfile(scan_events.encode('string-escape')):
+    #    print "Reading scans....."
+    #    with open(scan_events.encode('string-escape'), 'r') as f:
+    #        mzrs_from_fn = [line.strip().split("\t") for line in f]
+    #        subset = define_mz_ranges(mzrs_from_fn)
+    #        h_rm = remove_headers(subset, mzrs)
+    #        h_sids = collections.OrderedDict((key, value) for key, value in h_sids.items() if key in h_rm)
 
     # Validate that there are enough scans for each window
     if nscans is not None:
