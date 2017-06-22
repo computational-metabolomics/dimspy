@@ -93,15 +93,21 @@ def main():
 
     parser_ps.add_argument('-d', '--rsd-threshold',
                            default=None, type=float, required=False,
-                           help="Maximum threshold - relative standard deviation (Only applied to peaks that have been measured across a minimum of two scans).")
+                           help="Maximum threshold - relative standard deviation (Calculated for peaks that have been measured across a minimum of two scans).")
 
     #type=split_values, 
+    parser_ps.add_argument('-k', '--skip-stitching',
+                           action='store_true', required=False,
+                           help="Skip the step where (SIM) windows are 'stitched' or 'joined' together. Individual peaklists are generated for each window.")
+
     parser_ps.add_argument('-u', '--include-scan-events',
-                           action='append', nargs=3, required=False, metavar=('start', 'end', 'scan_type'), default=[],
+                           action='append', nargs=3, required=False, 
+                           metavar=('start', 'end', 'scan_type'), default=[],
                            help="Scan events to select. E.g. 100.0 200.0 sim  or  50.0 1000.0 full")
 
     parser_ps.add_argument('-x', '--exclude-scan-events',
-                           action='append', nargs=3, required=False, metavar=('start', 'end', 'scan_type'), default=[],
+                           action='append', nargs=3, required=False, 
+                           metavar=('start', 'end', 'scan_type'), default=[],
                            help="Scan events to select. E.g. 100.0 200.0 sim  or  50.0 1000.0 full")
 
     parser_ps.add_argument('-z', '--remove-mz-range',
@@ -304,22 +310,20 @@ def main():
 
     if args.step == "process-scans":
         filter_scan_events = {}
-        if args.include_scan_events == "all":
-            filter_scan_events = "all"
-        elif args.exclude_scan_events != []:
+        if args.exclude_scan_events != []:
             for se in args.exclude_scan_events: 
                 if "exclude" not in filter_scan_events:
-                    filter_scan_events["exclude"] = [se[0], se[1], se[2]]
-                else:
-                    filter_scan_events["exclude"].append([se[0], se[1], se[2]])
+                    filter_scan_events["exclude"] = []
+                filter_scan_events["exclude"].append([se[0], se[1], se[2]])
         elif args.include_scan_events != []:
             for se in args.include_scan_events: 
                 if "exclude" not in filter_scan_events:
-                    filter_scan_events["include"] = [se[0], se[1], se[2]]
-                else:
-                    filter_scan_events["include"].append([se[0], se[1], se[2]])
+                    filter_scan_events["include"] = []
+                filter_scan_events["include"].append([se[0], se[1], se[2]])
         elif args.exclude_scan_events != [] and args.include_scan_events != []:
             raise argparse.ArgumentTypeError("-u/--include-scan-events and -x/--exclude-scan-events can not be used together.")
+
+        remove_mz_range = [[float(mzr[0]), float(mzr[1])] for mzr in args.remove_mz_range]
 
 	if len(args.input) == 1: # Directory / zipfile / single filename
             args.input = args.input[0]
@@ -332,8 +336,9 @@ def main():
             min_fraction=args.min_fraction,
             rsd_thres=args.rsd_threshold,
             filelist=args.filelist,
+            skip_stitching=args.skip_stitching,
             filter_scan_events=filter_scan_events,
-            remove_mz_range=args.remove_mz_range,
+            remove_mz_range=remove_mz_range,
             block_size=args.block_size,
             ncpus=args.ncpus)
         hdf5_portal.save_peaklists_as_hdf5(peaklists, args.output)

@@ -32,7 +32,7 @@ from process.scan_processing import read_scans
 from process.scan_processing import remove_edges
 
 
-def process_scans(source, function_noise, snr_thres, nscans, ppm, min_fraction=None, rsd_thres=None, filelist=None, stitch=True, remove_mz_range=[], filter_scan_events={}, block_size=2000, ncpus=None):
+def process_scans(source, function_noise, snr_thres, nscans, ppm, min_fraction=None, rsd_thres=None, filelist=None, skip_stitching=False, remove_mz_range=[], filter_scan_events={}, block_size=2000, ncpus=None):
 
     filenames = check_paths(filelist, source)
     if len([fn for fn in filenames if not fn.lower().endswith(".mzml") or not fn.lower().endswith(".raw")]) == 0:
@@ -54,15 +54,15 @@ def process_scans(source, function_noise, snr_thres, nscans, ppm, min_fraction=N
 
         pls_scans = read_scans(filenames[i], source, function_noise, nscans, stitch, filter_scan_events)
 
-        if stitch:
+        if not skip_stitching:
             pls_scans = remove_edges(pls_scans)
 
         pls_avg = average_replicate_scans(pls_scans, snr_thres, ppm, min_fraction, rsd_thres, block_size, ncpus)
 
         if type(remove_mz_range) == list and len(remove_mz_range) > 0:
-            pls_avg = filter_mz_ranges(pls_avg, remove_mz_range)
-
-        if stitch:
+            pls_avg = [filter_mz_ranges(pl, remove_mz_range) for pl in pls_avg]
+             
+        if not skip_stitching:
             pl = join_peaklists(os.path.basename(filenames[i]), pls_avg)
             if "class" in fl:
                 pl.tags.add_tags(class_label=fl["class"][i])

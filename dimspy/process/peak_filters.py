@@ -30,7 +30,6 @@ def filter_attr(peaks, attr_name, max_threshold = None, min_threshold = None, fl
 def filter_mz_ranges(pl, mzrs):
     mzrs_removed_flags = np.ones(pl.shape[0], dtype=bool)
     for mzr in mzrs:
-
         if len(mzr) != 2:
             raise ValueError(
                 "mzr_remove: Provide a list of 'start' and 'end' values for each m/z range that needs to be removed.")
