@@ -147,6 +147,33 @@ class PeakListTestCase(unittest.TestCase):
             self.fail('PeakMatrix pickle failed: ' + str(e))
         self.assertListEqual(sorted(pm.attributes), sorted(('mz', 'intensity', 'intra_count')))
 
+    def test_get_peaklist(self):
+        pm = self._createPeakMatrix()
+        peaklists = pm.get_peaklists()
+
+        self.assertEqual(len(peaklists), 6)
+
+        mzs = np.array([[101., 201., 301., 401., 501., 601., 701., 801., 901.],
+               [1., 201., 301., 401., 501., 601., 701., 801., 901.],
+               [1., 101., 301., 401., 501., 601., 701., 801., 901.],
+               [1., 101., 201., 401., 501., 601., 701., 801., 901.],
+               [1., 101., 201., 301., 501., 601., 701., 801., 901.],
+               [1., 101., 201., 301., 401., 601., 701., 801., 901.]])
+
+        ints = np.array([[0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45],
+               [0.5, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95],
+               [1., 1.05, 1.15, 1.2, 1.25, 1.3, 1.35, 1.4, 1.45],
+               [1.5, 1.55, 1.6, 1.7, 1.75, 1.8, 1.85, 1.9, 1.95],
+               [2., 2.05, 2.1, 2.15, 2.25, 2.3, 2.35, 2.4, 2.45],
+               [2.5, 2.55, 2.6, 2.65, 2.7, 2.8, 2.85, 2.9, 2.95]])
+
+        mz_test = np.array([p.to_list()[0] for p in peaklists])
+        ints_test = np.array([p.to_list()[1] for p in peaklists])
+
+        self.assertTrue(np.alltrue(mz_test == mzs))
+        self.assertTrue(np.alltrue(ints_test == ints))
+
+
 
 if __name__ == '__main__':
     unittest.main()

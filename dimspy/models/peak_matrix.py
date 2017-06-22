@@ -193,6 +193,36 @@ class PeakMatrix(object):
         pl.add_attribute("impure", self.impure)
         return pl
 
+    def get_peaklist(self, peaklist_id, all_attr):
+        # get peaklist by id
+        if peaklist_id not in self.peaklist_ids:
+            raise ValueError('peaklist id has to match those in the peak matrix')
+
+        # first get the index of the peaklist of interest
+        idx = self.peaklist_ids.index(peaklist_id)
+
+        # Get the MZ matrix first, we only want to include values where the mz > 0
+        mzm = self._attr_dict['mz'][idx]
+
+        # obtain an index for the non_zero values
+        nzero_idx = np.nonzero(mzm)
+
+        # initiate a PeakList using the MZ matrix and intensity (note that both only include values where the mz > 0
+        # i.e. where there was actually a peak)
+        pl = PeakList(peaklist_id, mzm[nzero_idx], self._attr_dict['intensity'][idx][nzero_idx])
+
+        # Add any remaining attributes
+        for k, v in self._attr_dict.iteritems():
+            if k not in ["intensity", "mz", "intra_count"]:
+                if all_attr or k in ["present", "fraction", "rsd", "occurrence", "impure"]:
+                    pl.add_attribute(k, v[idx][nzero_idx])
+        return pl
+
+    def get_peaklists(self, all_attr=True):
+        # Recreate all peaklists used for the peak matrix
+        return [self.get_peaklist(pid, all_attr) for pid in self.peaklist_ids]
+
+
     def remove_samples(self, ids, remove_empty_peaks = True, masked_only = True):
         rmids = np.arange(self.full_shape[0])[self.mask][list(ids)] if masked_only else ids
         self._pids = np.delete(self._pids, rmids, axis = 0)
