@@ -19,6 +19,7 @@ from experiment import check_metadata
 from experiment import update_class_labels
 from experiment import update_metadata
 from experiment import idxs_reps_from_filelist
+from experiment import mz_range_from_header
 from process.peak_alignment import align_peaks
 from process.peak_filters import filter_fraction
 from process.peak_filters import filter_blank_peaks
@@ -31,8 +32,7 @@ from process.scan_processing import read_scans
 from process.scan_processing import remove_edges
 
 
-
-def process_scans(source, function_noise, snr_thres, nscans, ppm, min_fraction=None, rsd_thres=None, filelist=None, remove_mz_range=[], filter_scan_events={}, block_size=2000, ncpus=None):
+def process_scans(source, function_noise, snr_thres, nscans, ppm, min_fraction=None, rsd_thres=None, filelist=None, stitch=True, remove_mz_range=[], filter_scan_events={}, block_size=2000, ncpus=None):
 
     filenames = check_paths(filelist, source)
     if len([fn for fn in filenames if not fn.lower().endswith(".mzml") or not fn.lower().endswith(".raw")]) == 0:
@@ -50,53 +50,37 @@ def process_scans(source, function_noise, snr_thres, nscans, ppm, min_fraction=N
         print os.path.basename(filenames[i])
 
         if type(source) is not str:
-            scans = read_scans(filenames[i], "", function_noise, nscans, filter_scan_events)
-        else:
-            scans = read_scans(filenames[i], source, function_noise, nscans, filter_scan_events)
-        
-        if filter_scan_events == "all":
-            pls_filt = average_replicate_scans(scans, snr_thres, ppm, min_fraction, rsd_thres, block_size, ncpus)
-            for h in pls_filt:
-                pl_filt_copy = join_peaklists(os.path.basename(filenames[i]), {h: pls_filt[h]})
-                for k in fl.keys():
-                    pl_filt_copy.metadata[k] = fl[k][i]
-                pl_filt_copy.metadata["header"] = h
-                pl_filt_copy.metadata["scan_ids"] = [int(pl_scan.ID) for pl_scan in scans[h]]
-                pls.append(pl_filt_copy)
+            source = ""
 
-        elif type(filter_scan_events) is dict or filter_scan_events is None:
+        pls_scans = read_scans(filenames[i], source, function_noise, nscans, stitch, filter_scan_events)
 
-            scans_er = remove_edges(scans)
-            prs = average_replicate_scans(scans_er, snr_thres, ppm, min_fraction, rsd_thres, block_size, ncpus)
-            pl_filt = join_peaklists(os.path.basename(filenames[i]), prs)
+        if stitch:
+            pls_scans = remove_edges(pls_scans)
 
-            if type(remove_mz_range) == list:
-                if len(remove_mz_range) > 0:
-                    pl_filt = filter_mz_ranges(pl_filt, remove_mz_range)
-                else:
-                    pass
+        pls_avg = average_replicate_scans(pls_scans, snr_thres, ppm, min_fraction, rsd_thres, block_size, ncpus)
 
-            elif remove_mz_range is not None:
-                raise ValueError("remove_mz_range: Provide a list of 'start' and 'end' values for each m/z range that needs to be removed.")
-            else:
-                pass
+        if type(remove_mz_range) == list and len(remove_mz_range) > 0:
+            pls_avg = filter_mz_ranges(pls_avg, remove_mz_range)
 
+        if stitch:
+            pl = join_peaklists(os.path.basename(filenames[i]), pls_avg)
             if "class" in fl:
-                pl_filt.tags.add_tags(class_label=fl["class"][i])
-
-            for k in fl.keys():
-                pl_filt.metadata[k] = fl[k][i]
-            pls.append(pl_filt)
-
+                pl.tags.add_tags(class_label=fl["class"][i])
+            pls.append(pl)
         else:
-            raise ValueError("filter_scan_events: Provide a list e.g. {'exclude':[[50.0, 1000.0, 'full']]} or {'include':[[50.0, 1000.0, 'full']]} the string 'all'")
+            for pl in pls_avg:
+                pl = join_peaklists(os.path.basename(filenames[i]), [pl])  # copy
+                pls.append(pl)
+
+        for k in fl.keys():
+            pl.metadata[k] = fl[k][i]
 
     return pls
 
 
 # placeholder (synonym)
-def stitch(source, filelist, fn_exp, nscans, function_noise, snr_thres, ppm, presence_thres=None, rsd_thres=None, block_size=2000, ncpus=None):
-    return process_scans(source, filelist, fn_exp, nscans, function_noise, snr_thres, ppm, presence_thres, rsd_thres, block_size, ncpus)
+def stitch(source, function_noise, snr_thres, nscans, ppm, min_fraction=None, rsd_thres=None, filelist=None, stitch=True, remove_mz_range=[], filter_scan_events={}, block_size=2000, ncpus=None):
+    return process_scans(source, function_noise, snr_thres, nscans, ppm, min_fraction, rsd_thres, filelist, stitch, remove_mz_range, filter_scan_events, block_size, ncpus)
 
 
 def replicate_filter(source, ppm, replicates, min_peaks, rsd_thres=None, filelist=None, block_size=2000, ncpus=None):
@@ -165,8 +149,7 @@ def replicate_filter(source, ppm, replicates, min_peaks, rsd_thres=None, filelis
                 pl.add_attribute("rsd_flag", rsd_flag, flagged_only=False, is_flag=True)
 
             for k in pls_comb[0].metadata:
-                if k != "filename":
-                    pl.metadata[k] = pls_comb[0].metadata[k]
+                pl.metadata[k] = [plc.metadata[k] for plc in pls_comb]
 
             pl_filt = filter_attr(pl.copy(), attr_name="present", min_threshold=replicates, flag_name="pres_rsd")
             temp.append([pl, pl_filt.shape[0], np.median(pl_filt.rsd)])

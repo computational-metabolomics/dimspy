@@ -32,7 +32,7 @@ def check_paths(tsv, source):
 
         elif type(source) == list or type(source) == tuple:
             if isinstance(source[0], PeakList):
-            	filenames = [pl.ID for pl in source]
+                filenames = [pl.ID for pl in source]
             else:
                 filenames = []
                 for fn in source:

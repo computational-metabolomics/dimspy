@@ -86,7 +86,6 @@ class ThermoRaw():
                            scan_time=scan_time,
                            tic=tic,
                            segment=segment,
-                           instrument=instrument,
                            mode_noise=mode_noise)
 
         pl.add_attribute('snr', snr)
