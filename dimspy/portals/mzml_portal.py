@@ -32,9 +32,9 @@ class Mzml():
     def headers(self):
         return list(set([scan['MS:1000512'] for scan in self.run() if 'MS:1000512' in scan]))
 
-    def peaklist(self, scan_id, mode="median"):
+    def peaklist(self, scan_id, mode_noise="median"):
 
-        assert mode in ["mean", "median", "mad"], "select a method that is available [msfilereader, mean, median, mad]"
+        assert mode_noise in ["mean", "median", "mad"], "select a method that is available [msfilereader, mean, median, mad]"
         for scan in self.run():
             if scan["id"] == scan_id:
 
@@ -55,11 +55,9 @@ class Mzml():
                               ion_injection_time=ion_injection_time,
                               scan_time=scan_time,
                               tic=tic,
-                              segment=None,
-                              calibraton=None,
-                              instrument=None)
+                              mode_noise=mode_noise)
 
-                snr = np.divide(ints, scan.estimatedNoiseLevel(mode=mode))
+                snr = np.divide(ints, scan.estimatedNoiseLevel(mode=mode_noise))
                 pl.add_attribute('snr', snr)
                 return pl
         return None

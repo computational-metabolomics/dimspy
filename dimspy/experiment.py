@@ -113,34 +113,6 @@ def _match_header_description(h, v, e):
     return False
 
 
-def remove_headers(exp, mzrs):
-
-    for w in exp:
-
-        if "start" in w:
-            assert type(w["start"]) == float, "Wrong format for start"
-        if "end" in w:
-            assert type(w["end"]) == float, "Wrong format for end"
-        if "mode" in w:
-            assert w["mode"].lower() in ["p", "c"], "Wrong mode (p or c)"
-        if "scan_type" in w:
-            assert w["scan_type"].lower() in ["sim", "full"], "Scan type does not exist"
-        if "ms_type" in w:
-            assert w["ms_type"].lower() in ["ftms", "itms"], "MS type does not exist"
-
-    for h, r in copy.copy(mzrs).items():
-        incl = False
-        for e in exp:
-            if _match_header_description(h, r, e):
-                incl = True
-                break
-        if not incl:
-            del mzrs[h]
-
-    assert len(mzrs) == len(exp), "No matching window descriptions"
-    return mzrs
-
-
 def define_mz_ranges(subset_mzrs):
     assert len(subset_mzrs[0]) > 1 and len(subset_mzrs[0]) <= 3, "Incorect number value in subset_mzrs"
     return [dict(zip(["start", "end", "scan_type"], [float(mzr[0]), float(mzr[1]), str(mzr[2])])) for mzr in subset_mzrs]
@@ -255,6 +227,8 @@ def update_metadata(peaklists, fl):
             index = fl[fl.keys()[0]].index(pl.ID)
             pl.metadata[k] = fl[k][index]
             if "class" in fl.keys():
+                if pl.tags.has_tag_type("class_label"):
+                    pl.tags.drop_tag_types("class_label")
                 pl.tags.add_tags(class_label=fl["class"][index])
     return peaklists
 

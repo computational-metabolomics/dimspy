@@ -11,11 +11,11 @@ from dimspy.portals import mzml_portal
 from dimspy.portals import thermo_raw_portal
 from dimspy.process.peak_alignment import align_peaks
 from dimspy.process.peak_filters import filter_attr
-from dimspy.experiment import define_mz_ranges
+from dimspy.experiment import scan_type_from_header
 from dimspy.experiment import interpret_experiment_from_headers
-from dimspy.experiment import remove_headers
 from dimspy.experiment import mz_range_from_header
 from string import join
+
 
 def _calculate_edges(mz_ranges):
     s_mz_ranges = map(sorted, mz_ranges)
@@ -47,12 +47,13 @@ def remove_edges(pls_sd):
             pls_sd[h][i].remove_peak(remove)
     return pls_sd
 
+from dimspy.portals.paths import check_paths
 
-def read_scans(fn, source, function_noise, nscans, scan_events={}):
+def read_scans(fn, source, function_noise, nscans, stitch=True, filter_scan_events={}):
 
     fn = fn.encode('string-escape')
     source = source.encode('string-escape')
-    
+
     # assert os.path.isfile(fn), "File does not exist"
     if not fn.lower().endswith(".mzml") and not fn.lower().endswith(".raw"):
         raise IOError("Check format raw data (.RAW or .mzML)")
@@ -78,23 +79,32 @@ def read_scans(fn, source, function_noise, nscans, scan_events={}):
     h_sids = run.headers_scan_ids()
     mzrs = collections.OrderedDict(zip(h_sids.keys(), [mz_range_from_header(h) for h in h_sids]))
 
-    if scan_events is None or scan_events == {}:
+    if type(filter_scan_events) is dict and len(filter_scan_events) > 0:
+
+        if ("include" in filter_scan_events and "exclude" in filter_scan_events) or \
+                ("include" not in filter_scan_events and "exclude" not in filter_scan_events):
+            raise ValueError("Use 'exclude' or 'include' for filter_scan_events not both. E.g {'include': [[70.0, 170.0, 'sim']]}")
+
+        if len([True for fse in filter_scan_events.values()[0] if len(fse) == 3]) != len(filter_scan_events.values()[0]):
+            raise ValueError("Provide a start, end and scan type (sim or full) for filter_scan_events.")
+
+        filter_scan_events = {filter_scan_events.keys()[0]:
+                                  [[float(fse[0]), float(fse[1]), str(fse[2])] for fse in filter_scan_events.values()[0]]}
+        for h in h_sids.copy():
+            mzr = mz_range_from_header(h)
+            if filter_scan_events.keys()[0] == "include":
+                if [mzr[0], mzr[1], scan_type_from_header(h).lower()] not in filter_scan_events["include"]:
+                   del h_sids[h]
+            elif filter_scan_events.keys()[0] == "exclude":
+                if [mzr[0], mzr[1], scan_type_from_header(h).lower()] in filter_scan_events["exclude"]:
+                    del h_sids[h]
+
+    if len(h_sids) == 0:
+        raise Exception("No scan data to process. Check filter_scan_events")
+
+    if stitch:
         h_rm = interpret_experiment_from_headers(mzrs)
         h_sids = collections.OrderedDict((key, value) for key, value in h_sids.items() if key in h_rm)
-    elif type(scan_events) is dict:
-        subset = define_mz_ranges(scan_events)
-        h_rm = remove_headers(subset, mzrs)
-        h_sids = collections.OrderedDict((key, value) for key, value in h_sids.items() if key in h_rm)
-    elif scan_events == "all":
-        pass
-
-    #elif os.path.isfile(scan_events.encode('string-escape')):
-    #    print "Reading scans....."
-    #    with open(scan_events.encode('string-escape'), 'r') as f:
-    #        mzrs_from_fn = [line.strip().split("\t") for line in f]
-    #        subset = define_mz_ranges(mzrs_from_fn)
-    #        h_rm = remove_headers(subset, mzrs)
-    #        h_sids = collections.OrderedDict((key, value) for key, value in h_sids.items() if key in h_rm)
 
     # Validate that there are enough scans for each window
     if nscans is not None:
@@ -115,6 +125,7 @@ def average_replicate_scans(pls, snr_thres=3.0, ppm=2.0, min_fraction=0.8, rsd_t
 
     print "Removing noise....."
     pls_c = collections.OrderedDict()
+    pls_out = []
     for h in pls:
         pls_c[h] = [filter_attr(pl.copy(), "snr", min_threshold=snr_thres) for pl in pls[h] if len(pl.mz) > 0]
 
@@ -131,25 +142,35 @@ def average_replicate_scans(pls, snr_thres=3.0, ppm=2.0, min_fraction=0.8, rsd_t
             # TODO: remove clusters that have a higher number of peaks than samples
             # OR we can take the most accurate group of peaks and remove remaining peaks
             # Better to first remove clusters of higher number of peaks and log it
-            pls_c[h] = pm.to_peaklist(ID=h)
 
-            pls_c[h].add_attribute("snr", pm.attr_mean_vector('snr'), on_index=2)
-            pls_c[h].add_attribute("snr_flag", np.ones(pls_c[h].full_size), flagged_only=False, is_flag=True)
+            pl_avg = pm.to_peaklist(ID=h)
+            # meta data
+            for pl in pls_c[h]:
+                for k, v in pl.metadata.items():
+                    if k not in pl_avg.metadata:
+                        pl_avg.metadata[k] = []
+                    if v is not None:
+                        pl_avg.metadata[k].append(v)
+
+            pl_avg.add_attribute("snr", pm.attr_mean_vector('snr'), on_index=2)
+            pl_avg.add_attribute("snr_flag", np.ones(pl_avg.full_size), flagged_only=False, is_flag=True)
 
             if min_fraction is not None:
-                pls_c[h].add_attribute("fraction_flag", (pm.present / float(pm.shape[0])) >= min_fraction, flagged_only=False, is_flag=True)
+                pl_avg.add_attribute("fraction_flag", (pm.present / float(pm.shape[0])) >= min_fraction, flagged_only=False, is_flag=True)
             if rsd_thres is not None:
                 if pm.shape[0] == 1:
                     logging.warning('applying RSD filter on single scan, all peaks removed')
                 rsd_flag = map(lambda x: not np.isnan(x) and x < snr_thres, pm.rsd)
-                pls_c[h].add_attribute("rsd_flag", rsd_flag, flagged_only=False, is_flag=True)
+                pl_avg.add_attribute("rsd_flag", rsd_flag, flagged_only=False, is_flag=True)
+            pls_out.append(pl_avg)
         else:
             logging.warning("No scan data available for {}".format(h))
-            del pls_c[h]
-    return pls_c
+
+    return pls_out
 
 
 def join_peaklists(ID, pls):
+
     def _join_atrtributes(pls):
         attrs_out = collections.OrderedDict()
         for pl in pls:
@@ -159,9 +180,20 @@ def join_peaklists(ID, pls):
                 raise IOError("Different attributes")
         return attrs_out
 
-    attrs = _join_atrtributes(pls.values())
+    def _join_meta_data(pl, pls):
+        # meta data
+        for pl_ in pls:
+            for k, v in pl_.metadata.items():
+                if k not in pl.metadata:
+                    pl.metadata[k] = []
+                if v is not None:
+                    pl.metadata[k].extend(v)
+        return pl
+
+    attrs = _join_atrtributes(pls)
     pl_j = PeakList(ID=ID, mz=attrs["mz"], intensity=attrs["intensity"])
     del attrs["mz"], attrs["intensity"]  # default attributes
     for a in attrs:
-        pl_j.add_attribute(a, attrs[a], is_flag=(a in pls.values()[0].flag_attributes), flagged_only=False)
-    return pl_j
+        pl_j.add_attribute(a, attrs[a], is_flag=(a in pls[0].flag_attributes), flagged_only=False)
+
+    return _join_meta_data(pl_j, pls)

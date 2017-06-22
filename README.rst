@@ -18,6 +18,7 @@ pip_
 
 ::
 
+    $ pip install virtualenv
     $ virtualenv .venv; . .venv/bin/activate
     $ pip install --upgrade pip
     $ pip install dimspy
@@ -43,11 +44,24 @@ Conda_
 Another approach for installing DIMSpy is to use Conda_ (For example: `Miniconda Python distribution <http://conda.pydata.org/miniconda.html>`__).
 Run the following commands to install DIMSpy.
 
+Linux-64
+
 ::
 
+    $ conda create -n dimspy python=2.7 --file conda-requirements.txt -c conda-forge -c bioconda
+    $ python setup.py install
+
+
+Windows-64
+
+::
+
+    $ conda create -n dimspy python=2.7
+    $ conda config --add channels conda-forge
     $ conda config --add channels bgruening
-    $ conda config --add channels bioconda
-    $ conda install dimspy
+    $ conda install numpy=1.11.3 scipy=0.18.1
+    $ pip install pythonnet pymzml h5py
+    $ python setup.py install
 
 
 Usage
@@ -91,6 +105,4 @@ TODO
    :target: http://dimspy.readthedocs.io/en/latest/dimspy/index.html
 
 .. _pip: https://pip.pypa.io/
-.. _Homebrew: http://brew.sh/
-.. _linuxbrew: https://github.com/Homebrew/linuxbrew
 .. _Conda: http://conda.pydata.org/docs/

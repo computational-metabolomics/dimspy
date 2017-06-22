@@ -19,9 +19,9 @@ def main():
 
     print
     print "Process Scans....."
-    pls = process_scans(source, nscans=3, function_noise="median",
+    pls = process_scans(source, nscans=1, function_noise="median",
         snr_thres=3.0, ppm=2.0, min_fraction=None, rsd_thres=None,
-        filelist=fn_filelist, mzrs_to_remove=[], scan_events=None, block_size=2000, ncpus=None)
+        filelist=fn_filelist, remove_mz_range=[], filter_scan_events={}, stitch=True, block_size=2000, ncpus=None)
     print "Finished"
     print
 
@@ -37,6 +37,7 @@ def main():
     pls_rf = replicate_filter(pls, ppm=2.0, replicates=3, min_peaks=2, rsd_thres=20.0)
     print "Finished"
     print
+
     print "Align Samples...."
     pm = align_samples(pls_rf, ppm=2.0)
     print "Finished", pm.shape
@@ -53,7 +54,7 @@ def main():
     print "Process Scans....."
     pls = process_scans(source, nscans=1, function_noise="noise_packets",
         snr_thres=3.0, ppm=2.0, min_fraction=None, rsd_thres=None,
-        filelist=fn_filelist, mzrs_to_remove=[], scan_events=[], block_size=2000, ncpus=None)
+        filelist=fn_filelist, remove_mz_range=[], filter_scan_events={}, block_size=2000, ncpus=None)
     print
     print "Finished"
 
@@ -81,7 +82,7 @@ def main():
     print
     print "Process Scans....."
     pls = process_scans(source, nscans=3, function_noise="noise_packets",
-        snr_thres=3.0, ppm=2.0, filelist=fn_filelist, scan_events=[[70.0, 170.0, "sim"]])
+        snr_thres=3.0, ppm=2.0, filelist=fn_filelist, filter_scan_events={"include": [[70.0, 170.0, "sim"]]})
     print
     print
 
