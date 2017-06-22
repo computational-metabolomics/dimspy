@@ -227,6 +227,8 @@ def update_metadata(peaklists, fl):
             index = fl[fl.keys()[0]].index(pl.ID)
             pl.metadata[k] = fl[k][index]
             if "class" in fl.keys():
+                if pl.tags.has_tag_type("class_label"):
+                    pl.tags.drop_tag_types("class_label")
                 pl.tags.add_tags(class_label=fl["class"][index])
     return peaklists
 
