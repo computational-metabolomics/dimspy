@@ -207,7 +207,7 @@ class PeakMatrix(object):
         self._attr_dict = {k: np.delete(v, ids, axis = 1) for k, v in self._attr_dict.items()}
         if remove_empty_samples:
             with unmask_all_peakmatrix(self) as pm:
-                rmsids = np.where(np.sum(pm.intensity_matrix, axis = 1) == 0)
+                rmsids = np.where(np.sum(pm.intensity_matrix, axis = 1) == 0)[0]
             if len(rmsids) > 0:
                 logging.warning('empty peaklists [%s] automatically removed' % join([str(self.peaklist_ids[i]) for i in rmsids[0]], ', '))
                 self.remove_samples(rmsids, False, False)
