@@ -47,9 +47,8 @@ def remove_edges(pls_sd):
             pls_sd[h][i].remove_peak(remove)
     return pls_sd
 
-from dimspy.portals.paths import check_paths
 
-def read_scans(fn, source, function_noise, nscans, stitch=True, filter_scan_events={}):
+def read_scans(fn, source, function_noise, nscans, skip_stitching=True, filter_scan_events={}):
 
     fn = fn.encode('string-escape')
     source = source.encode('string-escape')
@@ -94,15 +93,15 @@ def read_scans(fn, source, function_noise, nscans, stitch=True, filter_scan_even
             mzr = mz_range_from_header(h)
             if filter_scan_events.keys()[0] == "include":
                 if [mzr[0], mzr[1], scan_type_from_header(h).lower()] not in filter_scan_events["include"]:
-                   del h_sids[h]
+                    del h_sids[h], mzrs[h]
             elif filter_scan_events.keys()[0] == "exclude":
                 if [mzr[0], mzr[1], scan_type_from_header(h).lower()] in filter_scan_events["exclude"]:
-                    del h_sids[h]
+                    del h_sids[h], mzrs[h]
 
     if len(h_sids) == 0:
         raise Exception("No scan data to process. Check filter_scan_events")
 
-    if stitch:
+    if not skip_stitching:
         h_rm = interpret_experiment_from_headers(mzrs)
         h_sids = collections.OrderedDict((key, value) for key, value in h_sids.items() if key in h_rm)
 

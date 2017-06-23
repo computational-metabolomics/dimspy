@@ -52,7 +52,7 @@ def process_scans(source, function_noise, snr_thres, nscans, ppm, min_fraction=N
         if type(source) is not str:
             source = ""
 
-        pls_scans = read_scans(filenames[i], source, function_noise, nscans, stitch, filter_scan_events)
+        pls_scans = read_scans(filenames[i], source, function_noise, nscans, skip_stitching, filter_scan_events)
 
         if not skip_stitching:
             pls_scans = remove_edges(pls_scans)
@@ -66,15 +66,15 @@ def process_scans(source, function_noise, snr_thres, nscans, ppm, min_fraction=N
             pl = join_peaklists(os.path.basename(filenames[i]), pls_avg)
             if "class" in fl:
                 pl.tags.add_tags(class_label=fl["class"][i])
+            for k in fl.keys():
+                pl.metadata[k] = fl[k][i]
             pls.append(pl)
         else:
             for pl in pls_avg:
                 pl = join_peaklists(os.path.basename(filenames[i]), [pl])  # copy
+                for k in fl.keys():
+                    pl.metadata[k] = fl[k][i]
                 pls.append(pl)
-
-        for k in fl.keys():
-            pl.metadata[k] = fl[k][i]
-
     return pls
 
 
@@ -149,7 +149,11 @@ def replicate_filter(source, ppm, replicates, min_peaks, rsd_thres=None, filelis
                 pl.add_attribute("rsd_flag", rsd_flag, flagged_only=False, is_flag=True)
 
             for k in pls_comb[0].metadata:
-                pl.metadata[k] = [plc.metadata[k] for plc in pls_comb]
+                if k not in pl.metadata:
+                    pl.metadata[k] = [plc.metadata[k] for plc in pls_comb]
+                else:
+                    pl.metadata[k] = list(pl.metadata[k])
+                    pl.metadata[k].extend(plc.metadata[k] for plc in pls_comb)
 
             pl_filt = filter_attr(pl.copy(), attr_name="present", min_threshold=replicates, flag_name="pres_rsd")
             temp.append([pl, pl_filt.shape[0], np.median(pl_filt.rsd)])

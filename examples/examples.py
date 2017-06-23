@@ -20,8 +20,8 @@ def main():
     print
     print "Process Scans....."
     pls = process_scans(source, nscans=1, function_noise="median",
-        snr_thres=3.0, ppm=2.0, min_fraction=None, rsd_thres=None,
-        filelist=fn_filelist, remove_mz_range=[], filter_scan_events={}, stitch=True, block_size=2000, ncpus=None)
+                        snr_thres=3.0, ppm=2.0, min_fraction=None, rsd_thres=None,
+                        filelist=fn_filelist, remove_mz_range=[], filter_scan_events={}, block_size=2000, ncpus=None)
     print "Finished"
     print
 
@@ -53,11 +53,10 @@ def main():
     print
     print "Process Scans....."
     pls = process_scans(source, nscans=1, function_noise="noise_packets",
-        snr_thres=3.0, ppm=2.0, min_fraction=None, rsd_thres=None,
-        filelist=fn_filelist, remove_mz_range=[], filter_scan_events={}, block_size=2000, ncpus=None)
+                        snr_thres=3.0, ppm=2.0, min_fraction=None, rsd_thres=None,
+                        filelist=fn_filelist, remove_mz_range=[], filter_scan_events={}, block_size=2000, ncpus=None)
     print
     print "Finished"
-
     save_peaklists_as_hdf5(pls, os.path.join(output, "MTBLS79_raw_triplicates_single_scan.hdf5"))
     pls = load_peaklists_from_hdf5(os.path.join(output, "MTBLS79_raw_triplicates_single_scan.hdf5"))
 
@@ -82,7 +81,7 @@ def main():
     print
     print "Process Scans....."
     pls = process_scans(source, nscans=3, function_noise="noise_packets",
-        snr_thres=3.0, ppm=2.0, filelist=fn_filelist, filter_scan_events={"include": [[70.0, 170.0, "sim"]]})
+                        snr_thres=3.0, ppm=2.0, filelist=fn_filelist, filter_scan_events={"include": [[70.0, 170.0, "sim"]]})
     print
     print
 

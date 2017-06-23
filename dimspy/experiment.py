@@ -140,9 +140,9 @@ def interpret_experiment_from_headers(mz_ranges):
         if len(pow2) == len(mzrs):
             print "Reading scans (SIM-Stitch experiment - Overlapping m/z ranges)....."
         else:
-            raise IOError("Describe DIMS experiment - Overlapping and/or non-overlapping m/z ranges")
+            raise IOError("SIM-Stitch cannot be applied; 'filter_scan_events' required or set 'skip_stitching' to False")
     else:
-        print IOError("describe DIMS experiment - Overlapping and/or non-overlapping m/z ranges")
+        print IOError("SIM-Stitch cannot be applied; 'filter_scan_events' required or set 'skip_stitching' to False")
 
     return mzrs.keys()
 
