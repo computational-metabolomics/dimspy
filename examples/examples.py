@@ -17,10 +17,9 @@ def main():
     fn_filelist = os.path.join("..", "tests", "data", "MTBLS79_subset", "filelist_mzml_triplicates.txt")
     output = os.path.join("..", "tests", "test_results")
 
-    print
     print "Process Scans....."
-    pls = process_scans(source, nscans=1, function_noise="median",
-                        snr_thres=3.0, ppm=2.0, min_fraction=None, rsd_thres=None,
+    pls = process_scans(source, min_scans=1, function_noise="median",
+                        snr_thres=1.0, ppm=2.0, min_fraction=None, rsd_thres=None,
                         filelist=fn_filelist, remove_mz_range=[], filter_scan_events={}, block_size=2000, ncpus=None)
     print "Finished"
     print
@@ -43,7 +42,7 @@ def main():
     print "Finished", pm.shape
     print
     print "Blank Filter"
-    pm_bf = blank_filter(pm, "blank", min_fraction=1.0, min_fold_change=10.0, function="mean", rm_samples=True)
+    pm_bf = blank_filter(pm, "blank", min_fraction=1.0, min_fold_change=10.0, function="mean", rm_samples=False)
     print "Finished", pm_bf.shape
     print
 
@@ -52,7 +51,7 @@ def main():
     fn_filelist = os.path.join("..", "tests", "data", "MTBLS79_subset", "filelist_raw_triplicates.txt")
     print
     print "Process Scans....."
-    pls = process_scans(source, nscans=1, function_noise="noise_packets",
+    pls = process_scans(source, min_scans=1, function_noise="noise_packets",
                         snr_thres=3.0, ppm=2.0, min_fraction=None, rsd_thres=None,
                         filelist=fn_filelist, remove_mz_range=[], filter_scan_events={}, block_size=2000, ncpus=None)
     print
@@ -80,7 +79,7 @@ def main():
 
     print
     print "Process Scans....."
-    pls = process_scans(source, nscans=3, function_noise="noise_packets",
+    pls = process_scans(source, min_scans=1, function_noise="noise_packets",
                         snr_thres=3.0, ppm=2.0, filelist=fn_filelist, filter_scan_events={"include": [[70.0, 170.0, "sim"]]})
     print
     print

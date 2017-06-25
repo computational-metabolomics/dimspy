@@ -7,7 +7,7 @@ python -m dimspy process-scans \
 --function-noise median \
 --snr-threshold 3.0 \
 --ppm 2.0 \
---nscans 3 \
+--min_scans 3 \
 --min-fraction 1 \
 --rsd-threshold 30.0 \
 --block-size 2000 \

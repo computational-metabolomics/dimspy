@@ -6,7 +6,7 @@ python -m dimspy process-scans^
  --function-noise median^
  --snr-threshold 3.0^
  --ppm 2.0^
- --nscans 3^
+ --min_scans 1^
  --min-fraction 1^
  --block-size 2000^
  --ncpus 2

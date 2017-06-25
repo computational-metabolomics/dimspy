@@ -12,7 +12,7 @@ from dimspy.portals import thermo_raw_portal
 from dimspy.process.peak_alignment import align_peaks
 from dimspy.process.peak_filters import filter_attr
 from dimspy.experiment import scan_type_from_header
-from dimspy.experiment import interpret_experiment_from_headers
+from dimspy.experiment import interpret_experiment
 from dimspy.experiment import mz_range_from_header
 from string import join
 
@@ -48,7 +48,7 @@ def remove_edges(pls_sd):
     return pls_sd
 
 
-def read_scans(fn, source, function_noise, nscans, skip_stitching=True, filter_scan_events={}):
+def read_scans(fn, source, function_noise, min_scans=1, skip_stitching=True, filter_scan_events={}):
 
     fn = fn.encode('string-escape')
     source = source.encode('string-escape')
@@ -57,8 +57,8 @@ def read_scans(fn, source, function_noise, nscans, skip_stitching=True, filter_s
     if not fn.lower().endswith(".mzml") and not fn.lower().endswith(".raw"):
         raise IOError("Check format raw data (.RAW or .mzML)")
 
-    if nscans is not None and type(nscans) is not int:
-        raise ValueError("Integer (>= 0) or None required for nscans")
+    if min_scans is not None and type(min_scans) is not int:
+        raise ValueError("Integer (>= 1) or None required for min_scans")
 
     if zipfile.is_zipfile(source):
         if fn.lower().endswith(".mzml"):
@@ -76,7 +76,6 @@ def read_scans(fn, source, function_noise, nscans, skip_stitching=True, filter_s
             raise IOError("Incorrect format: {}".format(os.path.basename(fn)))
 
     h_sids = run.headers_scan_ids()
-    mzrs = collections.OrderedDict(zip(h_sids.keys(), [mz_range_from_header(h) for h in h_sids]))
 
     if type(filter_scan_events) is dict and len(filter_scan_events) > 0:
 
@@ -93,30 +92,20 @@ def read_scans(fn, source, function_noise, nscans, skip_stitching=True, filter_s
             mzr = mz_range_from_header(h)
             if filter_scan_events.keys()[0] == "include":
                 if [mzr[0], mzr[1], scan_type_from_header(h).lower()] not in filter_scan_events["include"]:
-                    del h_sids[h], mzrs[h]
+                    del h_sids[h]
             elif filter_scan_events.keys()[0] == "exclude":
                 if [mzr[0], mzr[1], scan_type_from_header(h).lower()] in filter_scan_events["exclude"]:
-                    del h_sids[h], mzrs[h]
+                    del h_sids[h]
 
     if len(h_sids) == 0:
         raise Exception("No scan data to process. Check filter_scan_events")
 
-    if not skip_stitching:
-        h_rm = interpret_experiment_from_headers(mzrs)
-        h_sids = collections.OrderedDict((key, value) for key, value in h_sids.items() if key in h_rm)
-
-    # Validate that there are enough scans for each window
-    if nscans is not None:
-        if min([len(scans) for h, scans in h_sids.items()]) < nscans:
-            raise IOError("not enough scans for each window, nscans = {}".format(nscans))
-    #retireve scan data / create a peaklist class for each scan
-
     scans = collections.OrderedDict()
     for h, sids in h_sids.iteritems():
-        if nscans is not None:
-            if nscans > 0:
-                sids = sids[0:nscans]
-        scans[h] = run.peaklists(sids, function_noise)
+        if len(sids) >= min_scans:
+            scans[h] = run.peaklists(sids, function_noise)
+        else:
+            logging.warning('Not enough scans for [{}] [{} < {}]. Event {} has been removed.'.format(h, len(scans), min_scans, h))
     return scans
 
 

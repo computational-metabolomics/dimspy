@@ -20,6 +20,7 @@ from experiment import update_class_labels
 from experiment import update_metadata
 from experiment import idxs_reps_from_filelist
 from experiment import mz_range_from_header
+from experiment import interpret_experiment
 from process.peak_alignment import align_peaks
 from process.peak_filters import filter_fraction
 from process.peak_filters import filter_blank_peaks
@@ -32,7 +33,7 @@ from process.scan_processing import read_scans
 from process.scan_processing import remove_edges
 
 
-def process_scans(source, function_noise, snr_thres, nscans, ppm, min_fraction=None, rsd_thres=None, filelist=None, skip_stitching=False, remove_mz_range=[], filter_scan_events={}, block_size=2000, ncpus=None):
+def process_scans(source, function_noise, snr_thres, min_scans, ppm, min_fraction=None, rsd_thres=None, filelist=None, skip_stitching=False, remove_mz_range=[], filter_scan_events={}, block_size=2000, ncpus=None):
 
     filenames = check_paths(filelist, source)
     if len([fn for fn in filenames if not fn.lower().endswith(".mzml") or not fn.lower().endswith(".raw")]) == 0:
@@ -52,16 +53,19 @@ def process_scans(source, function_noise, snr_thres, nscans, ppm, min_fraction=N
         if type(source) is not str:
             source = ""
 
-        pls_scans = read_scans(filenames[i], source, function_noise, nscans, skip_stitching, filter_scan_events)
+        pls_scans = read_scans(filenames[i], source, function_noise, min_scans, skip_stitching, filter_scan_events)
 
         if not skip_stitching:
-            pls_scans = remove_edges(pls_scans)
+            mz_ranges = [mz_range_from_header(h) for h in pls_scans]
+            exp = interpret_experiment(mz_ranges)
+            if exp == "overlapping":
+                pls_scans = remove_edges(pls_scans)
 
         pls_avg = average_replicate_scans(pls_scans, snr_thres, ppm, min_fraction, rsd_thres, block_size, ncpus)
 
         if type(remove_mz_range) == list and len(remove_mz_range) > 0:
             pls_avg = [filter_mz_ranges(pl, remove_mz_range) for pl in pls_avg]
-             
+
         if not skip_stitching:
             pl = join_peaklists(os.path.basename(filenames[i]), pls_avg)
             if "class" in fl:
@@ -79,8 +83,8 @@ def process_scans(source, function_noise, snr_thres, nscans, ppm, min_fraction=N
 
 
 # placeholder (synonym)
-def stitch(source, function_noise, snr_thres, nscans, ppm, min_fraction=None, rsd_thres=None, filelist=None, stitch=True, remove_mz_range=[], filter_scan_events={}, block_size=2000, ncpus=None):
-    return process_scans(source, function_noise, snr_thres, nscans, ppm, min_fraction, rsd_thres, filelist, stitch, remove_mz_range, filter_scan_events, block_size, ncpus)
+def stitch(source, function_noise, snr_thres, min_scans, ppm, min_fraction=None, rsd_thres=None, filelist=None, stitch=True, remove_mz_range=[], filter_scan_events={}, block_size=2000, ncpus=None):
+    return process_scans(source, function_noise, snr_thres, min_scans, ppm, min_fraction, rsd_thres, filelist, stitch, remove_mz_range, filter_scan_events, block_size, ncpus)
 
 
 def replicate_filter(source, ppm, replicates, min_peaks, rsd_thres=None, filelist=None, block_size=2000, ncpus=None):
@@ -148,12 +152,12 @@ def replicate_filter(source, ppm, replicates, min_peaks, rsd_thres=None, filelis
                 rsd_flag = map(lambda x: not np.isnan(x) and x < rsd_thres, pm.rsd)
                 pl.add_attribute("rsd_flag", rsd_flag, flagged_only=False, is_flag=True)
 
-            for k in pls_comb[0].metadata:
-                if k not in pl.metadata:
-                    pl.metadata[k] = [plc.metadata[k] for plc in pls_comb]
-                else:
-                    pl.metadata[k] = list(pl.metadata[k])
-                    pl.metadata[k].extend(plc.metadata[k] for plc in pls_comb)
+            #for k in pls_comb[0].metadata:
+            #    if k not in pl.metadata:
+            #        pl.metadata[k] = [plc.metadata[k] for plc in pls_comb]
+            #    else:
+            #        pl.metadata[k] = list(pl.metadata[k])
+            #        pl.metadata[k].extend(plc.metadata[k] for plc in pls_comb)
 
             pl_filt = filter_attr(pl.copy(), attr_name="present", min_threshold=replicates, flag_name="pres_rsd")
             temp.append([pl, pl_filt.shape[0], np.median(pl_filt.rsd)])
