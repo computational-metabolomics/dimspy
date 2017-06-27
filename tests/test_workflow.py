@@ -46,8 +46,7 @@ class WorkflowTestCase(unittest.TestCase):
         #                     filelist=os.path.join(self.path_test_data, "filelist_mzml_triplicates.txt"),
         #                     filter_scan_events=None, block_size=2000, ncpus=None)
         # save_peaklists_as_hdf5(pls, os.path.join(self.path_test_data, "MTBLS79_mzml_triplicates.hdf5"))
-        pls = load_peaklists_from_hdf5(os.path.join(self.path_test_data, "MTBLS79_raw_triplicates.hdf5"))
-
+        pls = load_peaklists_from_hdf5(os.path.join(self.path_test_data, "MTBLS79_mzml_triplicates.hdf5"))
         pls_rf = replicate_filter(pls, ppm=2.0, replicates=3, min_peaks=2, rsd_thres=None,
                                   filelist=None,
                                   block_size=2000, ncpus=None)

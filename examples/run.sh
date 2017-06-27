@@ -7,9 +7,8 @@ python -m dimspy process-scans \
 --function-noise median \
 --snr-threshold 3.0 \
 --ppm 2.0 \
---min_scans 3 \
---min-fraction 1 \
---rsd-threshold 30.0 \
+--min_scans 1 \
+--min-fraction 0.5 \
 --block-size 2000 \
 --ncpus 2
 
@@ -18,8 +17,7 @@ python -m dimspy replicate-filter \
 --output tests/test_results/peaklists_rf.hdf5 \
 --ppm 2.0 \
 --replicates 3 \
---min-peak-present 2 \
---rsd-threshold 30.0
+--min-peak-present 2
 
 python -m dimspy align-samples \
 --input tests/test_results/peaklists.hdf5 \
@@ -35,8 +33,7 @@ python -m dimspy blank-filter \
 python -m dimspy sample-filter \
 --input tests/test_results/pm_a_bf.hdf5 \
 --output tests/test_results/pm_a_bf_sf.hdf5 \
---min-fraction 0.8 \
---rsd-threshold 30.00
+--min-fraction 0.8
 
 python -m dimspy hdf5-to-txt \
 --input tests/test_results/peaklists_rf.hdf5 \
