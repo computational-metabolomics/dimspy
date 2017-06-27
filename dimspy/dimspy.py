@@ -7,11 +7,6 @@ from portals import hdf5_portal
 from . import __version__
 from collections import defaultdict
 
-def split_values(values):
-    if values is None:
-        return []
-    return [float(x) for x in values.split(' ')]
-
 
 def main():
 
@@ -83,9 +78,9 @@ def main():
                            default=2.0, type=float, required=False,
                            help="Mass tolerance in Parts per million to group peaks across scans / mass spectra.")
 
-    parser_ps.add_argument('-n', '--nscans',
-                           default=0, type=int, required=False,
-                           help="Maximum number of scans to select for each scan event. Use zero for all scans.")
+    parser_ps.add_argument('-n', '--min_scans',
+                           default=1, type=int, required=False,
+                           help="Minimum number of scans required for each m/z range or event (header).")
 
     parser_ps.add_argument('-a', '--min-fraction',
                            default=1, type=float, required=False,
@@ -95,7 +90,6 @@ def main():
                            default=None, type=float, required=False,
                            help="Maximum threshold - relative standard deviation (Calculated for peaks that have been measured across a minimum of two scans).")
 
-    #type=split_values, 
     parser_ps.add_argument('-k', '--skip-stitching',
                            action='store_true', required=False,
                            help="Skip the step where (SIM) windows are 'stitched' or 'joined' together. Individual peaklists are generated for each window.")
@@ -325,13 +319,13 @@ def main():
 
         remove_mz_range = [[float(mzr[0]), float(mzr[1])] for mzr in args.remove_mz_range]
 
-	if len(args.input) == 1: # Directory / zipfile / single filename
+        if len(args.input) == 1: # Directory / zipfile / single filename
             args.input = args.input[0]
 
         peaklists = workflow.process_scans(source=args.input,
             function_noise=args.function_noise,
             snr_thres=args.snr_threshold,
-            nscans=args.nscans,
+            min_scans=args.min_scans,
             ppm=args.ppm,
             min_fraction=args.min_fraction,
             rsd_thres=args.rsd_threshold,

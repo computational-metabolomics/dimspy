@@ -43,24 +43,19 @@ def count_ms_types(hs):
     return len(set([ms_type_from_header(h) for h in hs]))
 
 
-def sort_mz_ranges(mz_ranges):
-    return collections.OrderedDict(sorted(mz_ranges.iteritems(), key=lambda y: y[1][0]))
-
-
 def _partially_overlapping_windows(mzrs):
     """
     Select adjecent windows that partially overlap
     For example: [100-200] and [185-285] (Valid for SIM-stitch)
     """
-    assert type(mzrs) == collections.OrderedDict, "OrderedDict requried"
+    assert type(mzrs) == list, "List required"
     temp = []
-    mzrs_val = mzrs.values()
-    for i in range(0, len(mzrs_val) - 1):
-        if mzrs_val[i][0] < mzrs_val[i + 1][0] and mzrs_val[i][1] > mzrs_val[i + 1][0] and mzrs_val[i][1] < mzrs_val[i + 1][1]:
-            if mzrs.keys()[i] not in temp:
-                temp.append(mzrs.keys()[i])
-            if mzrs.keys()[i + 1] not in temp:
-                temp.append(mzrs.keys()[i+1])
+    for i in range(0, len(mzrs) - 1):
+        if mzrs[i][0] < mzrs[i + 1][0] and mzrs[i][1] > mzrs[i + 1][0] and mzrs[i][1] < mzrs[i + 1][1]:
+            if mzrs[i] not in temp:
+                temp.append(mzrs[i])
+            if mzrs[i + 1] not in temp:
+                temp.append(mzrs[i+1])
     return temp
 
 
@@ -69,11 +64,11 @@ def _first_fully_overlapping_windows(mzrs):
     Select windows that fall within another window but do not have identical mass ranges
     For example: [100-200] and [125-175] (Invalid)
     """
-    assert type(mzrs) == collections.OrderedDict, "OrderedDict requried"
-    mzrs_val= mzrs.values()
-    for i in range(0, len(mzrs_val) - 1):
-        if mzrs_val[i][0] <= mzrs_val[i + 1][0] and mzrs_val[i][1] >= mzrs_val[i + 1][1]:
-            return mzrs.keys()[i], mzrs.keys()[i + 1] # Temporary print
+    assert type(mzrs) == list, "List required"
+
+    for i in range(0, len(mzrs) - 1):
+        if mzrs[i][0] <= mzrs[i + 1][0] and mzrs[i][1] >= mzrs[i + 1][1]:
+            return mzrs[i], mzrs[i + 1] # Temporary print
     return []
 
 
@@ -82,69 +77,41 @@ def _non_overlapping_windows(mzrs):
     Select windows that do not overlap with other windows.
     For example: [100-200] and [200-400] (Valid for merging)
     """
-    assert type(mzrs) == collections.OrderedDict, "OrderedDict requried"
+    assert type(mzrs) == list, "List required"
     temp = []
-    mzrs_val= mzrs.values()
-    for i in range(0, len(mzrs_val)):
+
+    for i in range(0, len(mzrs)):
         c = 0
-        for j in range(0, len(mzrs_val)):
-            if mzrs_val[i][0] <= mzrs_val[j][0] and mzrs_val[i][1] <= mzrs_val[j][0]:
+        for j in range(0, len(mzrs)):
+            if mzrs[i][0] <= mzrs[j][0] and mzrs[i][1] <= mzrs[j][0]:
                 c += 1
-            elif mzrs_val[i][0] >= mzrs_val[j][1] and mzrs_val[i][1] >= mzrs_val[j][1]:
+            elif mzrs[i][0] >= mzrs[j][1] and mzrs[i][1] >= mzrs[j][1]:
                 c += 1
-        if c == len(mzrs_val)-1:
-            temp.append(mzrs.keys()[i])
+        if c == len(mzrs)-1:
+            temp.append(mzrs[i])
     return temp
 
 
-def _match_header_description(h, v, e):
+def interpret_experiment(mzrs):
 
-    if v == [e["start"], e["end"]]:
-        if "ms_type" in e:
-            if e["ms_type"].lower() != ms_type_from_header(h).lower():
-                return False
-        if "scan_type" in e:
-            if e["scan_type"].lower() != scan_type_from_header(h).lower():
-                return False
-        if "mode" in e:
-            if e["mode"].lower() != mode_type_from_header(h).lower():
-                return False
-        return True
-    return False
-
-
-def define_mz_ranges(subset_mzrs):
-    assert len(subset_mzrs[0]) > 1 and len(subset_mzrs[0]) <= 3, "Incorect number value in subset_mzrs"
-    return [dict(zip(["start", "end", "scan_type"], [float(mzr[0]), float(mzr[1]), str(mzr[2])])) for mzr in subset_mzrs]
-
-
-def interpret_experiment_from_headers(mz_ranges):
-
-    mzrs = sort_mz_ranges(mz_ranges)
+    mzrs.sort(key=lambda x: x[1])
 
     now = _non_overlapping_windows(mzrs)
     pow = _partially_overlapping_windows(mzrs)
-    ffow = _first_fully_overlapping_windows(mzrs)
 
-    #print len(mzrs), len(now), len(pow), len(ffow)
-
-    if len(mz_ranges) == 1:
+    if len(mzrs) == 1:
         print "Reading scans (Single m/z range)....."
+        experiment = "single"
     elif len(now) == len(mzrs):
         print "Reading scans (Adjacent m/z ranges)....."
+        experiment = "adjacent"
     elif len(pow) == len(mzrs):
         print "Reading scans (SIM-Stitch experiment - Overlapping m/z ranges)....."
-    elif len(ffow) > 0:
-        del mzrs[ffow[0]]
-        pow2 = _partially_overlapping_windows(mzrs)
-        if len(pow2) == len(mzrs):
-            print "Reading scans (SIM-Stitch experiment - Overlapping m/z ranges)....."
-        else:
-            raise IOError("SIM-Stitch cannot be applied; 'filter_scan_events' required or set 'skip_stitching' to False")
+        experiment = "overlapping"
     else:
-        print IOError("SIM-Stitch cannot be applied; 'filter_scan_events' required or set 'skip_stitching' to False")
+        raise IOError("SIM-Stitch cannot be applied; 'filter_scan_events' required or set 'skip_stitching' to False")
 
-    return mzrs.keys()
+    return experiment
 
 
 def check_metadata(fn_tsv):

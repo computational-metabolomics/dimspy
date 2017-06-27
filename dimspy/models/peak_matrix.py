@@ -239,7 +239,7 @@ class PeakMatrix(object):
             with unmask_all_peakmatrix(self) as pm:
                 rmsids = np.where(np.sum(pm.intensity_matrix, axis = 1) == 0)[0]
             if len(rmsids) > 0:
-                logging.warning('empty peaklists [%s] automatically removed' % join([str(self.peaklist_ids[i]) for i in rmsids[0]], ', '))
+                logging.warning('empty peaklists [%s] automatically removed' % join([str(self.peaklist_ids[i]) for i in rmsids], ', '))
                 self.remove_samples(rmsids, False, False)
         if self.is_empty(): logging.warning('matrix is empty after removal')
         return self
