@@ -10,33 +10,6 @@ Overview
 Install
 --------
 
-pip_
-~~~~~
-
-1. Set up a virtualenv for ``dimspy`` (this example creates a new environment in ``.venv``)
-2. Install dimspy with ``pip``.
-
-::
-
-    $ pip install virtualenv
-    $ virtualenv .venv; . .venv/bin/activate
-    $ pip install --upgrade pip
-    $ pip install dimspy
-
-2a. To upgrade dimspy when already installed use:
-
-::
-
-    $ . .venv/bin/activate
-    $ pip install -U dimspy
-
-To install or update to the latest development branch of DIMSpy with ``pip``,
-use:
-
-::
-
-    $ pip install -U git+github.com/computational-metabolomics/dimspy.git
-
 
 Conda_
 ~~~~~~~
@@ -49,7 +22,8 @@ Linux-64
 ::
 
     $ conda create -n dimspy python=2.7 --file conda-requirements.txt -c conda-forge -c bioconda
-    $ python setup.py install
+    $ source activate dimspy
+    $ pip install git+https://github.com/computational-metabolomics/dimspy.git
 
 
 Windows-64
@@ -57,12 +31,34 @@ Windows-64
 ::
 
     $ conda create -n dimspy python=2.7
+    $ activate dimspy
     $ conda config --add channels conda-forge
-    $ conda config --add channels bgruening
+    $ conda config --add channels bioconda
     $ conda install numpy=1.11.3 scipy=0.18.1
     $ pip install pythonnet pymzml h5py
-    $ python setup.py install
+    $ pip install git+https://github.com/computational-metabolomics/dimspy.git
 
+
+pip_
+~~~~~
+
+1. Set up a virtualenv for ``dimspy`` (this example creates a new environment in ``.venv``)
+2. Install dimspy with ``pip``.
+
+::
+
+    $ pip install virtualenv
+    $ virtualenv .venv 
+    $ . .venv/bin/activate
+    $ pip install --upgrade pip
+    $ pip install git+https://github.com/computational-metabolomics/dimspy.git
+
+2a. To upgrade dimspy when already installed use:
+
+::
+
+    $ . .venv/bin/activate
+    $ pip install -U dimspy
 
 Usage
 ------
