@@ -14,51 +14,33 @@ Install
 Conda_
 ~~~~~~~
 
-Another approach for installing DIMSpy is to use Conda_ (For example: `Miniconda Python distribution <http://conda.pydata.org/miniconda.html>`__).
-Run the following commands to install DIMSpy.
+1. Install Conda_ (For example: `Miniconda Python distribution <http://conda.pydata.org/miniconda.html>`__).
+2. Run the following commands to install DIMSpy.
 
 Linux-64
 
 ::
 
-    $ conda create -n dimspy python=2.7 --file conda-requirements.txt -c conda-forge -c bioconda
-    $ source activate dimspy
+    $ conda create -n dimspy python=2.7 numpy=1.11.3 scipy=0.18.1 pymzml=0.7.7 pythonnet=2.3.0 h5py=2.6.0 fastcluster=1.1.21 -c conda-forge -c bioconda
+    $ source activate dimspy  
     $ pip install git+https://github.com/computational-metabolomics/dimspy.git
 
+
+OSx (TO WRITE & TEST)
+
+::
+
+    $ 
 
 Windows-64
 
 ::
 
-    $ conda create -n dimspy python=2.7
+    $ conda create -n dimspy python=2.7 numpy=1.11.3 scipy=0.18.1 fastcluster=1.1.21 h5py==2.6.0 -c conda-forge -c bioconda
     $ activate dimspy
-    $ conda config --add channels conda-forge
-    $ conda config --add channels bioconda
-    $ conda install numpy=1.11.3 scipy=0.18.1
-    $ pip install pythonnet pymzml h5py
+    $ pip install pythonnet==2.3.0 pymzml==0.7.7
     $ pip install git+https://github.com/computational-metabolomics/dimspy.git
 
-
-pip_
-~~~~~
-
-1. Set up a virtualenv for ``dimspy`` (this example creates a new environment in ``.venv``)
-2. Install dimspy with ``pip``.
-
-::
-
-    $ pip install virtualenv
-    $ virtualenv .venv 
-    $ . .venv/bin/activate
-    $ pip install --upgrade pip
-    $ pip install git+https://github.com/computational-metabolomics/dimspy.git
-
-2a. To upgrade dimspy when already installed use:
-
-::
-
-    $ . .venv/bin/activate
-    $ pip install -U dimspy
 
 Usage
 ------
