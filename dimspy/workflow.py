@@ -33,7 +33,9 @@ from process.scan_processing import read_scans
 from process.scan_processing import remove_edges
 
 
-def process_scans(source, function_noise, snr_thres, min_scans, ppm, min_fraction=None, rsd_thres=None, filelist=None, skip_stitching=False, remove_mz_range=[], filter_scan_events={}, block_size=2000, ncpus=None):
+
+
+def process_scans(source, function_noise, snr_thres, ppm, min_fraction=None, rsd_thres=None, min_scans=1, filelist=None, skip_stitching=False, remove_mz_range=[], filter_scan_events={}, block_size=2000, ncpus=None):
 
     filenames = check_paths(filelist, source)
     if len([fn for fn in filenames if not fn.lower().endswith(".mzml") or not fn.lower().endswith(".raw")]) == 0:
@@ -53,7 +55,7 @@ def process_scans(source, function_noise, snr_thres, min_scans, ppm, min_fractio
         if type(source) is not str:
             source = ""
 
-        pls_scans = read_scans(filenames[i], source, function_noise, min_scans, skip_stitching, filter_scan_events)
+        pls_scans = read_scans(filenames[i], source, function_noise, min_scans, filter_scan_events)
 
         if not skip_stitching:
             mz_ranges = [mz_range_from_header(h) for h in pls_scans]
@@ -61,6 +63,11 @@ def process_scans(source, function_noise, snr_thres, min_scans, ppm, min_fractio
             if exp == "overlapping":
                 pls_scans = remove_edges(pls_scans)
 
+        print "Removing noise....."
+        for h in pls_scans:
+            pls_scans[h] = [filter_attr(pl, "snr", min_threshold=snr_thres) for pl in pls_scans[h] if len(pl.mz) > 0]
+
+        print "Aligning, averaging and filtering peaks....."
         pls_avg = average_replicate_scans(pls_scans, snr_thres, ppm, min_fraction, rsd_thres, block_size, ncpus)
 
         if type(remove_mz_range) == list and len(remove_mz_range) > 0:

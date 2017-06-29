@@ -12,7 +12,6 @@ from dimspy.models.peaklist import PeakList
 def check_paths(tsv, source):
     if tsv is None:
         if type(source) == str:
-            source = source.encode('string-escape')
             if os.path.isdir(source):
                 filenames = [os.path.join(source, fn) for fn in os.listdir(source) if fn.lower().endswith(".mzml") or fn.lower().endswith(".raw")]
             elif zipfile.is_zipfile(source):
@@ -47,8 +46,7 @@ def check_paths(tsv, source):
         else:
             raise IOError("[Errno 2] No such file or directory: {}".format(source))
 
-    elif os.path.isfile(tsv.encode('string-escape')):
-        tsv = tsv.encode('string-escape')
+    elif os.path.isfile(tsv):
         fm = np.genfromtxt(tsv, dtype=None, delimiter="\t", names=True)
         if len(fm.shape) == 0:
             fm = np.array([fm])
@@ -73,17 +71,16 @@ def check_paths(tsv, source):
                     else:
                         raise IOError("[Errno 2] No such file or directory: {}".format(fn))
   
-        elif type(source.encode('string-escape')) == str:
-            source = source.encode('string-escape')
+        elif type(source) == str:
             if os.path.isdir(source):
                 l = os.listdir(source)
                 for fn in fm[fm.dtype.names[0]]:
                     if os.path.basename(fn) not in l:
                         raise IOError("{} does not exist in directory provided".format(os.path.basename(fn)))
-                    filenames.append(os.path.join(source, fn).replace('\\', r'\\'))
+                    filenames.append(os.path.join(source, fn))
 
-            elif zipfile.is_zipfile(source.encode('string-escape')):
-                with zipfile.ZipFile(source.encode('string-escape')) as zf:
+            elif zipfile.is_zipfile(source):
+                with zipfile.ZipFile(source) as zf:
                     if len([fn for fn in zf.namelist() if fn.lower().endswith(".raw")]) > 0:
                         raise IOError("Archive with *.raw files not yet supported. Convert to mzML")
                     for fn in fm[fm.dtype.names[0]]:
