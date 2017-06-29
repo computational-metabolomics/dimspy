@@ -100,13 +100,13 @@ def interpret_experiment(mzrs):
     pow = _partially_overlapping_windows(mzrs)
 
     if len(mzrs) == 1:
-        print "Reading scans (Single m/z range)....."
+        print "Single m/z window....."
         experiment = "single"
     elif len(now) == len(mzrs):
-        print "Reading scans (Adjacent m/z ranges)....."
+        print "Adjacent m/z windows....."
         experiment = "adjacent"
     elif len(pow) == len(mzrs):
-        print "Reading scans (SIM-Stitch experiment - Overlapping m/z ranges)....."
+        print "SIM-Stitch experiment - Overlapping m/z windows....."
         experiment = "overlapping"
     else:
         raise IOError("SIM-Stitch cannot be applied; 'filter_scan_events' required or set 'skip_stitching' to False")

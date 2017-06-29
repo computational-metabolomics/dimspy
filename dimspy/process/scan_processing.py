@@ -50,9 +50,6 @@ def remove_edges(pls_sd):
 
 def read_scans(fn, source, function_noise, min_scans=1, filter_scan_events={}):
 
-    fn = fn.encode('string-escape')
-    source = source.encode('string-escape')
-
     # assert os.path.isfile(fn), "File does not exist"
     if not fn.lower().endswith(".mzml") and not fn.lower().endswith(".raw"):
         raise IOError("Check format raw data (.RAW or .mzML)")
