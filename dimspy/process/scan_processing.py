@@ -48,7 +48,7 @@ def remove_edges(pls_sd):
     return pls_sd
 
 
-def read_scans(fn, source, function_noise, min_scans=1, skip_stitching=True, filter_scan_events={}):
+def read_scans(fn, source, function_noise, min_scans=1, filter_scan_events={}):
 
     fn = fn.encode('string-escape')
     source = source.encode('string-escape')
@@ -88,14 +88,23 @@ def read_scans(fn, source, function_noise, min_scans=1, skip_stitching=True, fil
 
         filter_scan_events = {filter_scan_events.keys()[0]:
                                   [[float(fse[0]), float(fse[1]), str(fse[2])] for fse in filter_scan_events.values()[0]]}
+
+        h_descs = {}
         for h in h_sids.copy():
             mzr = mz_range_from_header(h)
+            h_descs[h] = [mzr[0], mzr[1], scan_type_from_header(h).lower()]
+
+        for hd in filter_scan_events["include"]:
+            if hd not in h_descs.values():
+                raise IOError("Event {} doest not exist".format(str(hd)))
+
+        for hd in h_descs:
             if filter_scan_events.keys()[0] == "include":
-                if [mzr[0], mzr[1], scan_type_from_header(h).lower()] not in filter_scan_events["include"]:
-                    del h_sids[h]
+                if h_descs[hd] not in filter_scan_events["include"]:
+                    del h_sids[hd]
             elif filter_scan_events.keys()[0] == "exclude":
-                if [mzr[0], mzr[1], scan_type_from_header(h).lower()] in filter_scan_events["exclude"]:
-                    del h_sids[h]
+                if h_descs[hd] in filter_scan_events["exclude"]:
+                    del h_sids[hd]
 
     if len(h_sids) == 0:
         raise Exception("No scan data to process. Check filter_scan_events")
@@ -110,30 +119,23 @@ def read_scans(fn, source, function_noise, min_scans=1, skip_stitching=True, fil
 
 
 def average_replicate_scans(pls, snr_thres=3.0, ppm=2.0, min_fraction=0.8, rsd_thres=30.0, block_size=2000, ncpus=None):
-
-    print "Removing noise....."
-    pls_c = collections.OrderedDict()
     pls_out = []
     for h in pls:
-        pls_c[h] = [filter_attr(pl.copy(), "snr", min_threshold=snr_thres) for pl in pls[h] if len(pl.mz) > 0]
-
-    print "Aligning, averaging and filtering peaks....."
-    for h in pls_c:
         print h
-        emlst = np.array(map(lambda x: x.size == 0, pls_c[h]))
+        emlst = np.array(map(lambda x: x.size == 0, pls[h]))
         if np.sum(emlst) > 0:
-            logging.warning('droping empty peaklist(s) [%s]' % join(map(str, [p.ID for e, p in zip(emlst,  pls_c[h]) if e]), ','))
-            pls_c[h] = [p for e, p in zip(emlst,  pls_c[h]) if not e]
+            logging.warning('droping empty peaklist(s) [%s]' % join(map(str, [p.ID for e, p in zip(emlst,  pls[h]) if e]), ','))
+            pls[h] = [p for e, p in zip(emlst,  pls[h]) if not e]
 
-        if len(pls_c[h]) >= 1:
-            pm = align_peaks(pls_c[h], ppm=ppm, block_size=block_size, ncpus=ncpus)
+        if len(pls[h]) >= 1:
+            pm = align_peaks(pls[h], ppm=ppm, block_size=block_size, ncpus=ncpus)
             # TODO: remove clusters that have a higher number of peaks than samples
             # OR we can take the most accurate group of peaks and remove remaining peaks
             # Better to first remove clusters of higher number of peaks and log it
 
             pl_avg = pm.to_peaklist(ID=h)
             # meta data
-            for pl in pls_c[h]:
+            for pl in pls[h]:
                 for k, v in pl.metadata.items():
                     if k not in pl_avg.metadata:
                         pl_avg.metadata[k] = []
@@ -153,7 +155,6 @@ def average_replicate_scans(pls, snr_thres=3.0, ppm=2.0, min_fraction=0.8, rsd_t
             pls_out.append(pl_avg)
         else:
             logging.warning("No scan data available for {}".format(h))
-
     return pls_out
 
 

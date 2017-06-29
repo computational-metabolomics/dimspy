@@ -130,11 +130,11 @@ class PeakMatrix(object):
         return np.sum(self.attr_matrix('intra_count'), axis = 0)
 
     @property
-    def impure(self):
+    def purity(self):
         if not self._attr_dict.has_key('intra_count'):
             logging.warning("attribute matrix ['intra_count'] not available")
             return np.zeros(self.shape[1])
-        return np.sum(self.attr_matrix('intra_count') > 1, axis = 0) / self.shape[0]
+        return 1 - (np.sum(self.attr_matrix('intra_count') > 1, axis = 0) / self.shape[0])
 
     @property
     def mz_matrix(self):
@@ -190,7 +190,7 @@ class PeakMatrix(object):
         pl.add_attribute("fraction", self.fraction)
         pl.add_attribute("rsd", self.rsd)
         pl.add_attribute("occurrence", self.occurrence)
-        pl.add_attribute("impure", self.impure)
+        pl.add_attribute("purity", self.purity)
         return pl
 
     def get_peaklist(self, peaklist_id, all_attr):
@@ -214,7 +214,7 @@ class PeakMatrix(object):
         # Add any remaining attributes
         for k, v in self._attr_dict.iteritems():
             if k not in ["intensity", "mz", "intra_count"]:
-                if all_attr or k in ["present", "fraction", "rsd", "occurrence", "impure"]:
+                if all_attr or k in ["present", "fraction", "rsd", "occurrence", "purity"]:
                     pl.add_attribute(k, v[idx][nzero_idx])
         return pl
 
@@ -264,8 +264,8 @@ class PeakMatrix(object):
             prelst = ['present'] + ([''] * (tnum + 2)) + map(str, self.present)
             rsdlst = ['rsd'] + ([''] * (tnum + 2)) + map(str, self.rsd)
             ocrlst = ['occurrence'] + ([''] * (tnum + 2)) + map(str, self.occurrence)
-            implst = ['impure'] + ([''] * (tnum + 2)) + map(str, self.impure)
-            dm = zip(*([prelst, rsdlst, ocrlst, implst] + zip(*dm)))
+            puplst = ['purity'] + ([''] * (tnum + 2)) + map(str, self.purity)
+            dm = zip(*([prelst, rsdlst, ocrlst, puplst] + zip(*dm)))
 
         lm = [hd] + zip(*dm)
         return join(map(lambda x: join(x, delimiter), zip(*lm) if transpose else lm), '\n')
