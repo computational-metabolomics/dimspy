@@ -18,6 +18,13 @@ from dimspy.models.peak_matrix import mask_peakmatrix, unmask_peakmatrix
 
 
 # peaklist filters
+def filter_ringing(peaks, threshold, flag_name, flag_index, bin_size = 1):
+    inds = np.digitize(peaks, np.arange(np.min(peaks.mz), np.max(peaks.mz), bin_size))
+    blks = [(inds == i) for i in np.unique(inds)]
+    mask = np.array(reduce(lambda x,y: x+y, [[np.max(peaks.intensity[c])] * np.sum(c)  for c in blks]))
+    return peaks.add_attribute(flag_name, peaks.intensity < mask * threshold, is_flag = True, on_index = flag_index)
+
+
 def filter_attr(peaks, attr_name, max_threshold = None, min_threshold = None, flag_name = None, flag_index = None):
     if min_threshold is None and max_threshold is None:
         raise ValueError('must specify minimum or maximum threshold value')
@@ -108,4 +115,5 @@ def filter_sparsity(pm, ppm_threshold):
     mmzs = pm.mz_mean_vector
     rmids = np.where(np.abs((mmzs[1:] - mmzs[:-1]) / mmzs[1:]) * 1e+6 < ppm_threshold)
     return pm.remove_peaks(rmids)
+
 
