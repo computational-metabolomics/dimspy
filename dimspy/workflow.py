@@ -55,12 +55,19 @@ def process_scans(source, function_noise, snr_thres, ppm, min_fraction=None, rsd
         if type(source) is not str:
             source = ""
 
+        print "Reading scans...."
         pls_scans = read_scans(filenames[i], source, function_noise, min_scans, filter_scan_events)
+
+        if type(remove_mz_range) == list and len(remove_mz_range) > 0:
+            print "Removing m/z ranges....."
+            for h in pls_scans:
+                pls_scans[h] = [filter_mz_ranges(pl, remove_mz_range) for pl in pls_scans[h] if len(pl.mz) > 0]
 
         if not skip_stitching:
             mz_ranges = [mz_range_from_header(h) for h in pls_scans]
             exp = interpret_experiment(mz_ranges)
             if exp == "overlapping":
+                print "Removing 'edges' from SIM windows....."
                 pls_scans = remove_edges(pls_scans)
 
         print "Removing noise....."
@@ -69,9 +76,6 @@ def process_scans(source, function_noise, snr_thres, ppm, min_fraction=None, rsd
 
         print "Aligning, averaging and filtering peaks....."
         pls_avg = average_replicate_scans(pls_scans, snr_thres, ppm, min_fraction, rsd_thres, block_size, ncpus)
-
-        if type(remove_mz_range) == list and len(remove_mz_range) > 0:
-            pls_avg = [filter_mz_ranges(pl, remove_mz_range) for pl in pls_avg]
 
         if not skip_stitching:
             pl = join_peaklists(os.path.basename(filenames[i]), pls_avg)
