@@ -18,13 +18,6 @@ from dimspy.models.peak_matrix import mask_peakmatrix, unmask_peakmatrix
 
 
 # peaklist filters
-def filter_ringing(peaks, threshold, flag_name, flag_index, bin_size = 1):
-    inds = np.digitize(peaks, np.arange(np.min(peaks.mz), np.max(peaks.mz), bin_size))
-    blks = [(inds == i) for i in np.unique(inds)]
-    mask = np.array(reduce(lambda x,y: x+y, [[np.max(peaks.intensity[c])] * np.sum(c)  for c in blks]))
-    return peaks.add_attribute(flag_name, peaks.intensity < mask * threshold, is_flag = True, on_index = flag_index)
-
-
 def filter_attr(peaks, attr_name, max_threshold = None, min_threshold = None, flag_name = None, flag_index = None):
     if min_threshold is None and max_threshold is None:
         raise ValueError('must specify minimum or maximum threshold value')
@@ -34,7 +27,17 @@ def filter_attr(peaks, attr_name, max_threshold = None, min_threshold = None, fl
     return peaks.add_attribute(flag_name, flt(peaks[attr_name]), is_flag = True, on_index = flag_index)
 
 
-def filter_mz_ranges(pl, mzrs):
+def filter_ringing(pl, threshold, bin_size=1.0, flag_name="ringing_flag", flag_index=None):
+    if threshold > 1.0 or threshold < 0:
+        raise ValueError(
+            "mzr_remove: Provide a value in the range 0.0 - 1.0.")
+    inds = np.digitize(pl.mz, np.arange(np.floor(np.min(pl.mz)), np.ceil(np.max(pl.mz))+bin_size, bin_size) - 0.5)
+    blks = [(inds == i) for i in np.unique(inds)]
+    mask = np.array(reduce(lambda x, y: x+y, [[np.max(pl.intensity[c])] * np.sum(c) for c in blks]))
+    return pl.add_attribute(flag_name, pl.intensity > (mask * threshold), is_flag=True, on_index=flag_index)
+
+
+def filter_mz_ranges(pl, mzrs, flag_name="mzrs_remove_flag", flag_index=None):
     mzrs_removed_flags = np.ones(pl.shape[0], dtype=bool)
     for mzr in mzrs:
         if len(mzr) != 2:
@@ -47,12 +50,9 @@ def filter_mz_ranges(pl, mzrs):
         elif mzr[0] >= mzr[1]:
             raise ValueError(
                 "mzr_remove: Start value cannot be larger then end value.")
-
-        for mz in pl.mz:
-            if mz >= mzr[0] and mz <= mzr[1]:
-                mzrs_removed_flags[pl.mz == mz] = False
-
-    return pl.add_attribute("mzrs_remove_flag", mzrs_removed_flags, flagged_only=False, is_flag=True)
+        mzrs_removed_flags[np.where(np.logical_and(pl.mz >= mzr[0], pl.mz <= mzr[1]))] = False
+    pl.add_attribute(flag_name, mzrs_removed_flags, is_flag=True, on_index=flag_index)
+    return pl
 
 
 # PeakMatrix filters
