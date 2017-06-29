@@ -24,6 +24,7 @@ class WorkflowTestCase(unittest.TestCase):
                             snr_thres=0.5, min_scans=1, ppm=2.0, min_fraction=None, rsd_thres=None,
                             filelist=os.path.join(self.path_test_data, "filelist_mzml_single.txt"),
                             filter_scan_events=None, block_size=2000, ncpus=None)
+
         # save_peaklists_as_hdf5(pls, os.path.join(self.path_test_data, "MTBLS79_mzml_single.hdf5"))
         pls_comp = load_peaklists_from_hdf5(os.path.join(self.path_test_data, "MTBLS79_mzml_single.hdf5"))
         self.assertEqual([pl.to_str()[0:1000] for pl in pls], [pl.to_str()[0:1000] for pl in pls_comp])

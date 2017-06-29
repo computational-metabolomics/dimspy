@@ -59,9 +59,9 @@ class PeakListTestCase(unittest.TestCase):
         self.assertTrue(np.allclose(pm.fraction, [0.83333333] * 6 + [1] * 4))
         self.assertTrue(np.all(pm.missing_values == [1] * 6))
         self.assertTrue(np.allclose(pm.rsd, [47.14045208, 59.32638115, 66.24013211, 68.69347034, 66.17173282,
-                                             56.56854249, 55.09113315, 53.36953524, 51.7522766 , 50.23015081,]))
+                                             56.56854249, 55.09113315, 53.36953524, 51.7522766, 50.23015081,]))
         self.assertTrue(np.all(pm.occurrence == [0, 10] * 3 + [0, 12] * 2))
-        self.assertTrue(np.allclose(pm.impure, [0, 0.83333333] * 3 + [0, 1] * 2))
+        self.assertTrue(np.allclose(pm.purity, [1.0, 0.16666667] * 3 + [1.0, 0.0] * 2))
 
         self.assertTrue(np.allclose(pm.mz_mean_vector, np.arange(0, 1000, step = 100)+1))
         self.assertTrue(np.allclose(pm.ints_mean_vector * 20, [30, 29, 28, 27, 26, 25, 31, 32, 33, 34]))
