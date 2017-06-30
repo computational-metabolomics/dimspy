@@ -27,6 +27,7 @@ from process.peak_filters import filter_blank_peaks
 from process.peak_filters import filter_rsd
 from process.peak_filters import filter_mz_ranges
 from process.peak_filters import filter_attr
+from process.peak_filters import filter_ringing
 from process.scan_processing import average_replicate_scans
 from process.scan_processing import join_peaklists
 from process.scan_processing import read_scans
@@ -35,7 +36,7 @@ from process.scan_processing import remove_edges
 
 
 
-def process_scans(source, function_noise, snr_thres, ppm, min_fraction=None, rsd_thres=None, min_scans=1, filelist=None, skip_stitching=False, remove_mz_range=[], filter_scan_events={}, block_size=2000, ncpus=None):
+def process_scans(source, function_noise, snr_thres, ppm, min_fraction=None, rsd_thres=None, min_scans=1, filelist=None, skip_stitching=False, remove_mz_range=[], ringing_thres=None, filter_scan_events={}, block_size=2000, ncpus=None):
 
     filenames = check_paths(filelist, source)
     if len([fn for fn in filenames if not fn.lower().endswith(".mzml") or not fn.lower().endswith(".raw")]) == 0:
@@ -69,6 +70,10 @@ def process_scans(source, function_noise, snr_thres, ppm, min_fraction=None, rsd
             if exp == "overlapping":
                 print "Removing 'edges' from SIM windows....."
                 pls_scans = remove_edges(pls_scans)
+
+        if ringing_thres is not None and float(ringing_thres) > 0.0:
+            print "Removing ringing artifacts....."
+            pls_scans[h] = [filter_ringing(pl, threshold=ringing_thres, bin_size=1.0) for pl in pls_scans[h] if len(pl.mz) > 0]
 
         print "Removing noise....."
         for h in pls_scans:

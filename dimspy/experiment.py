@@ -156,7 +156,7 @@ def check_metadata(fn_tsv):
             else:
                 counts[len(idxs)] += 1
         for k, v in counts.items():
-            print "{} sample(s) with {} replicates".format(v, k)
+            print "{} sample(s) with {} replicate(s)".format(v, k)
     else:
         print "Column for replicate numbers missing. Only required for replicate filter."
 

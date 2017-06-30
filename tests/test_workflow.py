@@ -28,17 +28,19 @@ class WorkflowTestCase(unittest.TestCase):
         # save_peaklists_as_hdf5(pls, os.path.join(self.path_test_data, "MTBLS79_mzml_single.hdf5"))
         pls_comp = load_peaklists_from_hdf5(os.path.join(self.path_test_data, "MTBLS79_mzml_single.hdf5"))
         self.assertEqual([pl.to_str()[0:1000] for pl in pls], [pl.to_str()[0:1000] for pl in pls_comp])
+        #with open(os.path.join("test_pm_comp.txt"), "w") as out: out.write(pls[0].to_str("\t"))
+        #with open(os.path.join("test_pm.txt.txt"), "w") as out: out.write(pls_comp[0].to_str("\t"))
         self.assertEqual([pl.to_str() for pl in pls], [pl.to_str() for pl in pls_comp])
 
     def test_process_scans_raw_path(self):
         pls = process_scans(os.path.join(self.path_test_data, "raw", "batch04_QC17_rep01_262.RAW"), function_noise="noise_packets",
-                            snr_thres=3.0,
-                            min_scans=1, ppm=2.0, min_fraction=None, rsd_thres=None,
-                            filelist=None,
+                            snr_thres=3.0, min_scans=1, ppm=2.0, min_fraction=None, rsd_thres=None, filelist=None,
                             filter_scan_events=None, block_size=2000, ncpus=None)
         # save_peaklists_as_hdf5(pls, os.path.join(self.path_test_data, "MTBLS79_raw_batch04_QC17_rep01_262.hdf5"))
         pls_comp = load_peaklists_from_hdf5(os.path.join(self.path_test_data, "MTBLS79_raw_batch04_QC17_rep01_262.hdf5"))
         self.assertEqual([pl.to_str()[0:1000] for pl in pls], [pl.to_str()[0:1000] for pl in pls_comp])
+        #with open(os.path.join("test_pm_comp.txt"), "w") as out: out.write(pls[0].to_str("\t"))
+        #with open(os.path.join("test_pm.txt.txt"), "w") as out: out.write(pls_comp[0].to_str("\t"))
         self.assertEqual([pl.to_str() for pl in pls], [pl.to_str() for pl in pls_comp])
 
     def test_replicate_filter(self):
