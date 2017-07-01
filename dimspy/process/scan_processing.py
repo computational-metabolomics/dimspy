@@ -115,44 +115,41 @@ def read_scans(fn, source, function_noise, min_scans=1, filter_scan_events={}):
     return scans
 
 
-def average_replicate_scans(pls, snr_thres=3.0, ppm=2.0, min_fraction=0.8, rsd_thres=30.0, block_size=2000, ncpus=None):
-    pls_out = []
-    for h in pls:
-        print h
-        emlst = np.array(map(lambda x: x.size == 0, pls[h]))
-        if np.sum(emlst) > 0:
-            logging.warning('droping empty peaklist(s) [%s]' % join(map(str, [p.ID for e, p in zip(emlst,  pls[h]) if e]), ','))
-            pls[h] = [p for e, p in zip(emlst,  pls[h]) if not e]
+def average_replicate_scans(ID, pls, ppm=2.0, min_fraction=0.8, rsd_thres=30.0, block_size=2000, ncpus=None):
 
-        if len(pls[h]) >= 1:
-            pm = align_peaks(pls[h], ppm=ppm, block_size=block_size, ncpus=ncpus)
-            # TODO: remove clusters that have a higher number of peaks than samples
-            # OR we can take the most accurate group of peaks and remove remaining peaks
-            # Better to first remove clusters of higher number of peaks and log it
+    emlst = np.array(map(lambda x: x.size == 0, pls))
+    if np.sum(emlst) > 0:
+        logging.warning('droping empty peaklist(s) [%s]' % join(map(str, [p.ID for e, p in zip(emlst,  pls) if e]), ','))
+        pls = [p for e, p in zip(emlst,  pls) if not e]
 
-            pl_avg = pm.to_peaklist(ID=h)
-            # meta data
-            for pl in pls[h]:
-                for k, v in pl.metadata.items():
-                    if k not in pl_avg.metadata:
-                        pl_avg.metadata[k] = []
-                    if v is not None:
-                        pl_avg.metadata[k].append(v)
+    if len(pls) >= 1:
+        pm = align_peaks(pls, ppm=ppm, block_size=block_size, ncpus=ncpus)
+        # TODO: remove clusters that have a higher number of peaks than samples
+        # OR we can take the most accurate group of peaks and remove remaining peaks
+        # Better to first remove clusters of higher number of peaks and log it
 
-            pl_avg.add_attribute("snr", pm.attr_mean_vector('snr'), on_index=2)
-            pl_avg.add_attribute("snr_flag", np.ones(pl_avg.full_size), flagged_only=False, is_flag=True)
+        pl_avg = pm.to_peaklist(ID=ID)
+        # meta data
+        for pl in pls:
+            for k, v in pl.metadata.items():
+                if k not in pl_avg.metadata:
+                    pl_avg.metadata[k] = []
+                if v is not None:
+                    pl_avg.metadata[k].append(v)
 
-            if min_fraction is not None:
-                pl_avg.add_attribute("fraction_flag", (pm.present / float(pm.shape[0])) >= min_fraction, flagged_only=False, is_flag=True)
-            if rsd_thres is not None:
-                if pm.shape[0] == 1:
-                    logging.warning('applying RSD filter on single scan, all peaks removed')
-                rsd_flag = map(lambda x: not np.isnan(x) and x < snr_thres, pm.rsd)
-                pl_avg.add_attribute("rsd_flag", rsd_flag, flagged_only=False, is_flag=True)
-            pls_out.append(pl_avg)
-        else:
-            logging.warning("No scan data available for {}".format(h))
-    return pls_out
+        pl_avg.add_attribute("snr", pm.attr_mean_vector('snr'), on_index=2)
+        pl_avg.add_attribute("snr_flag", np.ones(pl_avg.full_size), flagged_only=False, is_flag=True)
+
+        if min_fraction is not None:
+            pl_avg.add_attribute("fraction_flag", (pm.present / float(pm.shape[0])) >= min_fraction, flagged_only=False, is_flag=True)
+        if rsd_thres is not None:
+            if pm.shape[0] == 1:
+                logging.warning('applying RSD filter on single scan, all peaks removed')
+            rsd_flag = map(lambda x: not np.isnan(x) and x < rsd_thres, pm.rsd)
+            pl_avg.add_attribute("rsd_flag", rsd_flag, flagged_only=False, is_flag=True)
+    else:
+        logging.warning("No scan data available for {}".format(h))
+    return pl_avg
 
 
 def join_peaklists(ID, pls):

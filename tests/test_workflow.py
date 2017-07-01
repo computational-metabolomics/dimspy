@@ -21,15 +21,27 @@ class WorkflowTestCase(unittest.TestCase):
 
     def test_process_scans_mzml_zip(self):
         pls = process_scans(os.path.join(self.path_test_data, "MTBLS79_mzml_single.zip"), function_noise="median",
-                            snr_thres=0.5, min_scans=1, ppm=2.0, min_fraction=None, rsd_thres=None,
+                            snr_thres=3.0, min_scans=1, ppm=2.0, min_fraction=None, rsd_thres=None,
                             filelist=os.path.join(self.path_test_data, "filelist_mzml_single.txt"),
                             filter_scan_events=None, block_size=2000, ncpus=None)
 
         # save_peaklists_as_hdf5(pls, os.path.join(self.path_test_data, "MTBLS79_mzml_single.hdf5"))
         pls_comp = load_peaklists_from_hdf5(os.path.join(self.path_test_data, "MTBLS79_mzml_single.hdf5"))
         self.assertEqual([pl.to_str()[0:1000] for pl in pls], [pl.to_str()[0:1000] for pl in pls_comp])
-        #with open(os.path.join("test_pm_comp.txt"), "w") as out: out.write(pls[0].to_str("\t"))
-        #with open(os.path.join("test_pm.txt.txt"), "w") as out: out.write(pls_comp[0].to_str("\t"))
+        # with open(os.path.join("test_pm_comp.txt"), "w") as out: out.write(pls[0].to_str("\t"))
+        # with open(os.path.join("test_pm.txt.txt"), "w") as out: out.write(pls_comp[0].to_str("\t"))
+        self.assertEqual([pl.to_str() for pl in pls], [pl.to_str() for pl in pls_comp])
+
+        pls = process_scans(os.path.join(self.path_test_data, "MTBLS79_mzml_single.zip"), function_noise="median",
+                            snr_thres=3.0, min_scans=1, ppm=2.0, min_fraction=0.5, rsd_thres=30.0,
+                            filelist=os.path.join(self.path_test_data, "filelist_mzml_single.txt"),
+                            filter_scan_events=None, block_size=2000, ncpus=None)
+
+        # save_peaklists_as_hdf5(pls, os.path.join(self.path_test_data, "MTBLS79_mzml_frac_rsd.hdf5"))
+        pls_comp = load_peaklists_from_hdf5(os.path.join(self.path_test_data, "MTBLS79_mzml_frac_rsd.hdf5"))
+        self.assertEqual([pl.to_str()[0:1000] for pl in pls], [pl.to_str()[0:1000] for pl in pls_comp])
+        # with open(os.path.join("test_pm_comp_frac_rsd.txt"), "w") as out: out.write(pls[0].to_str("\t"))
+        # with open(os.path.join("test_pm_frac_rsd.txt.txt"), "w") as out: out.write(pls_comp[0].to_str("\t"))
         self.assertEqual([pl.to_str() for pl in pls], [pl.to_str() for pl in pls_comp])
 
     def test_process_scans_raw_path(self):

@@ -34,9 +34,8 @@ from process.scan_processing import read_scans
 from process.scan_processing import remove_edges
 
 
-
-
-def process_scans(source, function_noise, snr_thres, ppm, min_fraction=None, rsd_thres=None, min_scans=1, filelist=None, skip_stitching=False, remove_mz_range=[], ringing_thres=None, filter_scan_events={}, block_size=2000, ncpus=None):
+def process_scans(source, function_noise, snr_thres, ppm, min_fraction=None, rsd_thres=None, min_scans=1, filelist=None,
+                  skip_stitching=False, remove_mz_range=[], ringing_thres=None, filter_scan_events={}, block_size=2000, ncpus=None):
 
     filenames = check_paths(filelist, source)
     if len([fn for fn in filenames if not fn.lower().endswith(".mzml") or not fn.lower().endswith(".raw")]) == 0:
@@ -73,16 +72,25 @@ def process_scans(source, function_noise, snr_thres, ppm, min_fraction=None, rsd
 
         if ringing_thres is not None and float(ringing_thres) > 0.0:
             print "Removing ringing artifacts....."
-            pls_scans[h] = [filter_ringing(pl, threshold=ringing_thres, bin_size=1.0) for pl in pls_scans[h] if len(pl.mz) > 0]
+            pls_scans[h] = [filter_ringing(pl, threshold=ringing_thres, bin_size=1.0)
+                            for pl in pls_scans[h] if len(pl.mz) > 0]
 
         print "Removing noise....."
         for h in pls_scans:
             pls_scans[h] = [filter_attr(pl, "snr", min_threshold=snr_thres) for pl in pls_scans[h] if len(pl.mz) > 0]
 
         print "Aligning, averaging and filtering peaks....."
-        pls_avg = average_replicate_scans(pls_scans, snr_thres, ppm, min_fraction, rsd_thres, block_size, ncpus)
+        pls_avg = []
+        print "--------------------------------------------"
+        print "event\tpeaks\tmedian_rsd"
+        for h in pls_scans:
+            pl_avg = average_replicate_scans(h, pls_scans[h], ppm, min_fraction, rsd_thres, block_size, ncpus)
+            pls_avg.append(pl_avg)
+            print "{}\t{}\t{}".format(h, pl_avg.shape[0], np.nanmedian(pl_avg.rsd))
+        print "--------------------------------------------"
+        print
 
-        if not skip_stitching:
+        if skip_stitching:
             pl = join_peaklists(os.path.basename(filenames[i]), pls_avg)
             if "class" in fl:
                 pl.tags.add_tags(class_label=fl["class"][i])
@@ -91,7 +99,7 @@ def process_scans(source, function_noise, snr_thres, ppm, min_fraction=None, rsd
             pls.append(pl)
         else:
             for pl in pls_avg:
-                pl = join_peaklists(os.path.basename(filenames[i]), [pl])  # copy
+                pl = join_peaklists("{}#{}".format(os.path.basename(filenames[i]), pl.metadata["header"][0]), [pl])
                 for k in fl.keys():
                     pl.metadata[k] = fl[k][i]
                 pls.append(pl)
@@ -99,8 +107,10 @@ def process_scans(source, function_noise, snr_thres, ppm, min_fraction=None, rsd
 
 
 # placeholder (synonym)
-def stitch(source, function_noise, snr_thres, min_scans, ppm, min_fraction=None, rsd_thres=None, filelist=None, stitch=True, remove_mz_range=[], filter_scan_events={}, block_size=2000, ncpus=None):
-    return process_scans(source, function_noise, snr_thres, min_scans, ppm, min_fraction, rsd_thres, filelist, stitch, remove_mz_range, filter_scan_events, block_size, ncpus)
+def stitch(source, function_noise, snr_thres, ppm, min_fraction=None, rsd_thres=None, min_scans=1, filelist=None,
+           skip_stitching=False, remove_mz_range=[], ringing_thres=None, filter_scan_events={}, block_size=2000, ncpus=None):
+    return process_scans(source, function_noise, snr_thres, min_scans, ppm, min_fraction, rsd_thres, filelist,
+                         skip_stitching, remove_mz_range, filter_scan_events, block_size, ncpus)
 
 
 def replicate_filter(source, ppm, replicates, min_peaks, rsd_thres=None, filelist=None, block_size=2000, ncpus=None):
@@ -131,12 +141,12 @@ def replicate_filter(source, ppm, replicates, min_peaks, rsd_thres=None, filelis
     if sum(counts) != len(peaklists):
         raise ValueError("Replicates incorrectly labeled")
 
-
     if len([True for idxs_pls in idxs_peaklists if len(idxs_pls) >= replicates]) == len(idxs_peaklists):
         print
-        print "All combinations (n={}) for each each set of replicates will be processed to calculate the most reproducible set".format(replicates)
+        print "All combinations (n={}) for each each set of replicates will be " \
+              "processed to calculate the most reproducible set".format(replicates)
         print
-        print "rank\tID\tpeaks\tmedian_RSD({}/{})".format(replicates, replicates)
+        print "rank\tID\tpeaks\tmedian_rsd({}/{})".format(replicates, replicates)
     else:
         raise ValueError("Not enough (technical) replicates available for each sample {}.")
 
@@ -150,12 +160,8 @@ def replicate_filter(source, ppm, replicates, min_peaks, rsd_thres=None, filelis
 
             pm = align_peaks(pls_comb, ppm, block_size, ncpus=ncpus)
 
-            #############################################################
-            # TODO: Write some sort of merging function for multiple replicate file names
-            #############################################################
             prefix = os.path.commonprefix([p.ID for p in pls_comb])
             merged_id = "{}{}".format(prefix, "_".join(map(str, [p.ID.replace(prefix, "").split(".")[0] for p in pls_comb])))
-            #############################################################
 
             pl = pm.to_peaklist(ID=merged_id)
             if "snr" in pm.attributes:
@@ -167,13 +173,6 @@ def replicate_filter(source, ppm, replicates, min_peaks, rsd_thres=None, filelis
             if rsd_thres is not None:
                 rsd_flag = map(lambda x: not np.isnan(x) and x < rsd_thres, pm.rsd)
                 pl.add_attribute("rsd_flag", rsd_flag, flagged_only=False, is_flag=True)
-
-            #for k in pls_comb[0].metadata:
-            #    if k not in pl.metadata:
-            #        pl.metadata[k] = [plc.metadata[k] for plc in pls_comb]
-            #    else:
-            #        pl.metadata[k] = list(pl.metadata[k])
-            #        pl.metadata[k].extend(plc.metadata[k] for plc in pls_comb)
 
             pl_filt = filter_attr(pl.copy(), attr_name="present", min_threshold=replicates, flag_name="pres_rsd")
             temp.append([pl, pl_filt.shape[0], np.median(pl_filt.rsd)])
