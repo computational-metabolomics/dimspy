@@ -85,11 +85,19 @@ def process_scans(source, function_noise, snr_thres, ppm, min_fraction=None, rsd
         print "--------------------------------------------"
         print "event\tpeaks\tmedian_rsd"
         for h in pls_scans:
-            pl_avg = average_replicate_scans(h, pls_scans[h], ppm, min_fraction, rsd_thres, block_size, ncpus)
-            pls_avg.append(pl_avg)
-            print "{}\t{}\t{}".format(h, pl_avg.shape[0], np.nanmedian(pl_avg.rsd))
-        print "--------------------------------------------"
-        print
+            if len(pls_scans[h]) >= 1:
+                if sum(pl.shape[0] for pl in pls_scans[h]) == 0:
+                    logging.warning("No scan data available for {}".format(h))
+                else:
+            	    pl_avg = average_replicate_scans(h, pls_scans[h], ppm, min_fraction, rsd_thres, block_size, ncpus)
+            	    pls_avg.append(pl_avg)
+                    print "{}\t{}\t{}".format(h, pl_avg.shape[0], np.nanmedian(pl_avg.rsd))
+            else:
+		logging.warning("No scan data available for {}".format(h))
+                print "{}\t{}\t{}".format(h, 0, "na")
+        
+        if len(pls_avg) == 0:
+            raise IOError("No peaks remaining after filtering. Remove MS data file / sample.")
 
         if not skip_stitching:
             pl = join_peaklists(os.path.basename(filenames[i]), pls_avg)
@@ -273,9 +281,9 @@ def hdf5_to_txt(fname, path_out, attr_name="intensity", separator="\t", transpos
                 with open(os.path.join(path_out, os.path.splitext(fn)[0] + ".txt"), "w") as pk_out:
                     for i, pl in enumerate(obj):
                         if fn in pl.ID:
-                            pl.add_attribute("subset", pl.full_shape[0] * [sub_ids[i]], on_index=3)
+                            pl.add_attribute("window", pl.full_shape[0] * [sub_ids[i]], flagged_only=False, on_index=3)
                             pk_out.write(pl.to_str(delimiter=separator))
-                            pl.drop_attribute("subset")
+                            pl.drop_attribute("window")
         else:
             for pl in obj:
                 with open(os.path.join(path_out, os.path.splitext(pl.ID)[0] + ".txt"), "w") as pk_out:

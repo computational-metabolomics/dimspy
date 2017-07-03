@@ -309,7 +309,9 @@ def main():
 
     if args.step == "process-scans":
         filter_scan_events = {}
-        if args.exclude_scan_events != []:
+        if args.exclude_scan_events != [] and args.include_scan_events != []:
+            raise argparse.ArgumentTypeError("-u/--include-scan-events and -x/--exclude-scan-events can not be used together.")
+        elif args.exclude_scan_events != []:
             for se in args.exclude_scan_events: 
                 if "exclude" not in filter_scan_events:
                     filter_scan_events["exclude"] = []
@@ -319,8 +321,6 @@ def main():
                 if "exclude" not in filter_scan_events:
                     filter_scan_events["include"] = []
                 filter_scan_events["include"].append([se[0], se[1], se[2]])
-        elif args.exclude_scan_events != [] and args.include_scan_events != []:
-            raise argparse.ArgumentTypeError("-u/--include-scan-events and -x/--exclude-scan-events can not be used together.")
 
         remove_mz_range = [[float(mzr[0]), float(mzr[1])] for mzr in args.remove_mz_range]
 
