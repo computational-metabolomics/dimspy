@@ -72,8 +72,9 @@ def process_scans(source, function_noise, snr_thres, ppm, min_fraction=None, rsd
 
         if ringing_thres is not None and float(ringing_thres) > 0.0:
             print "Removing ringing artifacts....."
-            pls_scans[h] = [filter_ringing(pl, threshold=ringing_thres, bin_size=1.0)
-                            for pl in pls_scans[h] if len(pl.mz) > 0]
+            for h in pls_scans:
+                pls_scans[h] = [filter_ringing(pl, threshold=ringing_thres, bin_size=1.0)
+                                for pl in pls_scans[h] if len(pl.mz) > 0]
 
         print "Removing noise....."
         for h in pls_scans:
@@ -90,7 +91,7 @@ def process_scans(source, function_noise, snr_thres, ppm, min_fraction=None, rsd
         print "--------------------------------------------"
         print
 
-        if skip_stitching:
+        if not skip_stitching:
             pl = join_peaklists(os.path.basename(filenames[i]), pls_avg)
             if "class" in fl:
                 pl.tags.add_tags(class_label=fl["class"][i])
@@ -259,16 +260,26 @@ def hdf5_to_txt(fname, path_out, attr_name="intensity", separator="\t", transpos
     if "mz" in f:
         obj = hdf5_portal.load_peak_matrix_from_hdf5(fname)
         assert isinstance(obj, PeakMatrix)
-        obj = hdf5_portal.load_peak_matrix_from_hdf5(fname)
         with open(os.path.join(path_out), "w") as pk_out:
             pk_out.write(obj.to_str(attr_name=attr_name, delimiter=separator, transpose=transpose, comprehensive=comprehensive))
     else:
         assert os.path.isdir(path_out), "File or Directory does not exist:".format(path_out)
         obj = hdf5_portal.load_peaklists_from_hdf5(fname)
         assert isinstance(obj[0], PeakList), "Incorrect Objects in list. Peaklist Object required."
-        for pl in obj:
-            with open(os.path.join(path_out, os.path.splitext(pl.ID)[0] + ".txt"), "w") as pk_out:
-                pk_out.write(pl.to_str(delimiter=separator))
+        if "#" in obj[0].ID:
+            fns = set([pl.ID.split("#")[0] for pl in obj])
+            sub_ids = [pl.ID.split("#")[1] for pl in obj]
+            for fn in fns:
+                with open(os.path.join(path_out, os.path.splitext(fn)[0] + ".txt"), "w") as pk_out:
+                    for i, pl in enumerate(obj):
+                        if fn in pl.ID:
+                            pl.add_attribute("subset", pl.full_shape[0] * [sub_ids[i]], on_index=3)
+                            pk_out.write(pl.to_str(delimiter=separator))
+                            pl.drop_attribute("subset")
+        else:
+            for pl in obj:
+                with open(os.path.join(path_out, os.path.splitext(pl.ID)[0] + ".txt"), "w") as pk_out:
+                    pk_out.write(pl.to_str(delimiter=separator))
     return
 
 

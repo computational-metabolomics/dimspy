@@ -1,11 +1,12 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-import argparse
 
+import argparse
 import workflow
 from portals import hdf5_portal
 from . import __version__
-from collections import defaultdict
+from experiment import check_metadata
+from experiment import update_metadata
 
 
 def main():
@@ -93,6 +94,10 @@ def main():
     parser_ps.add_argument('-k', '--skip-stitching',
                            action='store_true', required=False,
                            help="Skip the step where (SIM) windows are 'stitched' or 'joined' together. Individual peaklists are generated for each window.")
+
+    parser_ps.add_argument('-r', '--ringing-threshold',
+                           default=None, type=float, required=False,
+                           help="Ringing")
 
     parser_ps.add_argument('-u', '--include-scan-events',
                            action='append', nargs=3, required=False, 
@@ -323,18 +328,19 @@ def main():
             args.input = args.input[0]
 
         peaklists = workflow.process_scans(source=args.input,
-            function_noise=args.function_noise,
-            snr_thres=args.snr_threshold,
-            ppm=args.ppm,
-            min_fraction=args.min_fraction,
-            rsd_thres=args.rsd_threshold,
-            min_scans=args.min_scans,
-            filelist=args.filelist,
-            skip_stitching=args.skip_stitching,
-            filter_scan_events=filter_scan_events,
-            remove_mz_range=remove_mz_range,
-            block_size=args.block_size,
-            ncpus=args.ncpus)
+                                           function_noise=args.function_noise,
+                                           snr_thres=args.snr_threshold,
+                                           ppm=args.ppm,
+                                           min_fraction=args.min_fraction,
+                                           rsd_thres=args.rsd_threshold,
+                                           min_scans=args.min_scans,
+                                           filelist=args.filelist,
+                                           skip_stitching=args.skip_stitching,
+                                           ringing_thres=args.ringing_threshold,
+                                           filter_scan_events=filter_scan_events,
+                                           remove_mz_range=remove_mz_range,
+                                           block_size=args.block_size,
+                                           ncpus=args.ncpus)
         hdf5_portal.save_peaklists_as_hdf5(peaklists, args.output)
 
     elif args.step == "mass-calibrate":
@@ -344,39 +350,39 @@ def main():
 
     elif args.step == "replicate-filter":
         peaklists_rf = workflow.replicate_filter(source=args.input,
-            ppm=args.ppm,
-            replicates=args.replicates,
-            min_peaks=args.min_peak_present,
-            rsd_thres=args.rsd_threshold,
-            filelist=args.filelist,
-            block_size=args.block_size,
-            ncpus=args.ncpus)
+                                                 ppm=args.ppm,
+                                                 replicates=args.replicates,
+                                                 min_peaks=args.min_peak_present,
+                                                 rsd_thres=args.rsd_threshold,
+                                                 filelist=args.filelist,
+                                                 block_size=args.block_size,
+                                                 ncpus=args.ncpus)
         hdf5_portal.save_peaklists_as_hdf5(peaklists_rf, args.output)
 
     elif args.step == "align-samples":
         pm = workflow.align_samples(source=args.input,
-            ppm=args.ppm,
-            filelist=args.filelist,
-            block_size=args.block_size,
-            ncpus=args.ncpus)
+                                    ppm=args.ppm,
+                                    filelist=args.filelist,
+                                    block_size=args.block_size,
+                                    ncpus=args.ncpus)
         hdf5_portal.save_peak_matrix_as_hdf5(pm, args.output)
     elif args.step == "blank-filter":
         pm_bf = workflow.blank_filter(peak_matrix=args.input,
-            blank_label=args.blank_label,
-            min_fraction=args.min_fraction,
-            min_fold_change=args.min_fold_change,
-            function=args.function,
-            rm_samples=args.remove_blank_samples,
-            class_labels=args.class_labels)
+                                      blank_label=args.blank_label,
+                                      min_fraction=args.min_fraction,
+                                      min_fold_change=args.min_fold_change,
+                                      function=args.function,
+                                      rm_samples=args.remove_blank_samples,
+                                      class_labels=args.class_labels)
         hdf5_portal.save_peak_matrix_as_hdf5(pm_bf, args.output)
 
     elif args.step == "sample-filter":
         pm_sf = workflow.sample_filter(peak_matrix=args.input,
-            min_fraction=args.min_fraction,
-            within=args.within,
-            rsd=args.rsd_threshold,
-            qc_label=args.qc_label,
-            class_labels=args.class_labels)
+                                       min_fraction=args.min_fraction,
+                                       within=args.within,
+                                       rsd=args.rsd_threshold,
+                                       qc_label=args.qc_label,
+                                       class_labels=args.class_labels)
         hdf5_portal.save_peak_matrix_as_hdf5(pm_sf, args.output)
 
     elif args.step == "merge-peaklists":
@@ -391,8 +397,8 @@ def main():
 
     elif args.step == "hdf5-to-txt":
         workflow.hdf5_to_txt(args.input,
-            path_out=args.output,
-            attr_name=args.attribute_name,
-            separator=args.separator,
-            transpose=args.transpose,
-            comprehensive=args.comprehensive)
+                             path_out=args.output,
+                             attr_name=args.attribute_name,
+                             separator=args.separator,
+                             transpose=args.transpose,
+                             comprehensive=args.comprehensive)
