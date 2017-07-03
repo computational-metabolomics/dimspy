@@ -21,7 +21,7 @@ Linux-64
 
 ::
 
-    $ conda create -n dimspy python=2.7 numpy=1.11.3 scipy=0.18.1 pymzml=0.7.7 pythonnet=2.3.0 h5py=2.6.0 fastcluster=1.1.21 -c conda-forge -c bioconda
+    $ conda create -n dimspy python=2.7 numpy=1.13.0 scipy=0.19.1 pymzml=0.7.8 pythonnet=2.3.0 h5py=2.7.0 fastcluster=1.1.23 -c conda-forge -c bioconda
     $ source activate dimspy  
     $ pip install git+https://github.com/computational-metabolomics/dimspy.git
 
@@ -36,9 +36,9 @@ Windows-64
 
 ::
 
-    $ conda create -n dimspy python=2.7 numpy=1.11.3 scipy=0.18.1 fastcluster=1.1.21 h5py==2.6.0 -c conda-forge -c bioconda
+    $ conda create -n dimspy python=2.7 numpy=1.13.0 scipy=0.19.1 fastcluster=1.1.23 h5py==2.7.0 -c conda-forge -c bioconda
     $ activate dimspy
-    $ pip install pythonnet==2.3.0 pymzml==0.7.7
+    $ pip install pythonnet==2.3.0 pymzml==0.7.8
     $ pip install git+https://github.com/computational-metabolomics/dimspy.git
 
 
