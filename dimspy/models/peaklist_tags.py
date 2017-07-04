@@ -2,19 +2,39 @@
 #  -*- coding: utf-8 -*-
 
 """
-peaklist_tags: PeakList tags class, for internal use only
+The PeakList tags class.
 
-author(s): Albert
-origin: Sep. 27, 2016
+.. moduleauthor:: Albert Zhou, Ralf Weber
 
+.. versionadded:: 0.1
+
+.. warning::
+    This class is designed for PeakList and PeakMatrix internal use only.
+   
 """
 
 
 from string import join
 
 
-# For internal use only.
 class PeakList_Tags(object):
+    """
+    The PeakList_Tags class.
+
+    Container for both typed and untyped tags. This class is mainly used in PeakList and PeakMatrix classes for sample filtering.
+
+    Args:
+        list of untyped tags, e.g.
+
+    >>> PeakList_Tags('untyped_tag1', 'untyped_tag2')
+
+    Kwargs:
+        list of typed tags. Only one tag value can be assigned to a specific tag type, e.g.
+
+    >>> PeakList_Tags(tag_type1 = 'tag_value1', tag_type2 = 'tag_value2')
+
+    """
+
     def __init__(self, *args, **kwargs):
         self._untyped_tags = []
         self._typed_tags = {}
@@ -27,35 +47,130 @@ class PeakList_Tags(object):
     # properties
     @property
     def tag_types(self):
+        """
+        Property of included tag types.
+
+        :getter: returns a tuple containing all the tag types of the typed tags.
+
+        :type: tuple
+
+        """
         return tuple(self._typed_tags.keys())
 
     @property
     def tag_values(self):
+        """
+        Property of included tag values.
+
+        :getter: returns a tuple containing all the tag values, both typed and untyped tags.
+
+        :type: tuple
+
+        """
         return tuple(self._untyped_tags + self._typed_tags.values())
 
     @property
     def typed_tags(self):
+        """
+        Property of included typed tags.
+
+        :getter: returns a tuple containing all the typed tags, each in the format of (tag_type, tag_value).
+
+        :type: tuple
+
+        """
         return tuple(self._typed_tags.items())
 
     @property
     def untyped_tags(self):
+        """
+        Property of included untyped tags.
+
+        :getter: returns a tuple containing all the untyped tags.
+
+        :type: tuple
+
+        """
         return tuple(self._untyped_tags)
 
     # methods
     def has_tag_type(self, tag_type):
+        """
+        Checks whether there exists a specific tag type.
+
+        Args:
+            tag_type (hashable): the tag type for checking.
+
+        Returns:
+            bool
+
+        """
         return tag_type in self.tag_types
 
     def has_tag(self, *args, **kwargs):
+        """
+        Checks whether there exists a specific tag.
+
+        Args:
+            **one** tag value, either typed or untyped.
+
+        Kwargs:
+            **one** tag_type = tag_value.
+
+        Returns:
+            bool
+
+        Raises:
+            ValueError
+
+        >>> tags = PeakList_Tags('untyped_tag1', tag_type1 = 'tag_value1')
+        >>> tags.has_tag('untyped_tag1')
+        True
+        >>> tags.has_tag(tag_type1 = 'untyped_tag1')
+        False
+        >>> tags.has_tag('untyped_tag1', 'tag_value1')
+        ...
+        ValueError: searching multiple tags is not allowded
+
+        """
         if len(args) + len(kwargs) > 1:
             raise ValueError('searching multiple tags is not allowded')
         return (args[0] in self.tag_values) if len(args) > 0 else (kwargs.items()[0] in self.typed_tags)
 
     def tag_of(self, tag_type = None):
+        """
+        Returns tag value of the given tag type, or tuple of untyped tags if tag_type is None.
+
+        Args:
+            tag_type (hashable, None): valid tag type, or None for untyped tags.
+
+        Returns:
+            Any (tag_type is not None), or tupe (tag_type is None)
+
+        Raises:
+            KeyError
+
+        """
         if not (tag_type is None or self.has_tag_type(tag_type)):
             raise KeyError('unknown tag type [%s]' % tag_type)
         return self.untyped_tags if tag_type is None else self._typed_tags[tag_type]
 
     def add_tags(self, *args, **kwargs):
+        """
+        Adds multiple typed and untyped tags.
+
+        Args:
+            list of untyped tags.
+
+        Kwargs:
+            list of typed tags. Only one tag value can be assigned to a specific tag type.
+
+        Raises:
+            KeyError, ValueError
+
+        >>> PeakList_Tags('untyped_tag1', tag_type1 = 'tag_value1')
+
+        """
         if kwargs.has_key('None'):
             raise KeyError('["None"] is not an acceptable tag type') # reserve for hdf5 protal
         if None in args or None in kwargs.values():
@@ -69,19 +184,54 @@ class PeakList_Tags(object):
         self._typed_tags.update(kwargs)
 
     def drop_tags(self, *args):
+        """
+        Drops multiple typed and untyped tags.
+
+        Args:
+            list of tag values, both typed and untyped.
+
+        >>> tags = PeakList_Tags('untyped_tag1', tag_type1 = 'tag_value1')
+        >>> tags.drop_tags('tag_value1')
+        >>> print tags
+        untyped_tag1
+
+        """
         self._untyped_tags = filter(lambda x: x not in args, self._untyped_tags)
         self._typed_tags = dict(filter(lambda x: x[1] not in args, self._typed_tags.items()))
 
     def drop_tag_types(self, *args):
+        """
+        Drops multiple tag types and their tag values.
+
+        Args:
+            list of tag type.
+
+        """
         self._typed_tags = dict(filter(lambda x: x[0] not in args, self._typed_tags.items()))
 
     def drop_all_tags(self):
+        """
+        Drops all tags, both typed and untyped.
+
+        """
         self._untyped_tags = []
         self._typed_tags = {}
 
     # portals
     def to_list(self):
+        """
+        Exports tags to a list.
+
+        """
         return list(self.untyped_tags + self.typed_tags)
 
     def to_str(self):
+        """
+        Exports tags to a string. It can also be used inexplicitly as
+
+        >>> tags = PeakList_Tags('untyped_tag1', tag_type1 = 'tag_value1')
+        >>> print tags
+        untyped_tag1, tag_type1:tag_value1
+
+        """
         return join(map(str, self.untyped_tags) + map(lambda x: join(map(str, x), ':'), self.typed_tags), ', ')

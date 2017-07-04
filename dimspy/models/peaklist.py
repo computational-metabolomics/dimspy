@@ -2,10 +2,11 @@
 # -*- coding: utf-8 -*-
 
 """
-peakList: the PeakList data object class.
+The PeakList data object class.
 
-author(s): Albert Zhou
-origin: Sep. 27, 2016
+.. moduleauthor:: Albert Zhou, Ralf Weber
+
+.. versionadded:: 0.1
 
 """
 
@@ -21,6 +22,45 @@ from peaklist_tags import PeakList_Tags
 
 
 class PeakList(object):
+    """
+    The PeakList class.
+
+    Stores mass spectrometry peaks list data. It requires an ID, mz values, and intensities. It can store extra peak
+    properties e.g. SNRs, and peaklist tags and metadata. It utilises the automatically managed flags to "remove" or
+    "retain" peaks without actually delete them. Therefore the filterings on the peaks are traceable.
+
+    Args:
+        ID (any): the ID of the peaklist data, unique string or integer value is recommended.
+
+        mz (float iterable): mz values of all the peaks. Must in the ascending order.
+
+        intensity (float iterable): intensities of all the peaks. Must have the same size as mz.
+
+    Kwargs:
+        metadata: key-value pairs of the peaklist metadata.
+
+    >>> mz_values = np.random.uniform(100, 1200, size = 100)
+    >>> int_values = np.random.normal(60, 10, size = 100)
+    >>> peaks = PeakList('dummy', mz_values, int_values, description = 'a dummy peaklist')
+
+    Internally the peaklist data is stored by using numpy structured array (this may change in the future):
+
+    +-------+-----------+------+----------+-----+---------+
+    | mz    | intensity | snr  | snr_flag | ... | *flag** |
+    +=======+===========+======+==========+=====+=========+
+    | 102.5 | 21.7      | 10.5 | True     |     | True    |
+    +-------+-----------+------+----------+     +---------+
+    | 111.7 | 12.3      | 5.1  | False    | ... | False   |
+    +-------+-----------+------+----------+     +---------+
+    | 126.3 | 98.1      | 31.7 | True     |     | True    |
+    +-------+-----------+------+----------+     +---------+
+    | 133.1 | 68.9      | 12.6 | True     |     | True    |
+    +-------+-----------+------+----------+     +---------+
+    | ...   |           |      |          |     |         |
+    +-------+-----------+------+----------+-----+---------+
+
+    """
+
     _is_ordered = staticmethod(lambda vals: all(map(lambda x: x[0] - x[1] >= 0, zip(vals[1:], vals[:-1]))))
 
     def __init__(self, ID, mz, intensity, **metadata):
@@ -89,14 +129,36 @@ class PeakList(object):
     # properties
     @property
     def ID(self):
+        """
+        Property of the peaklist ID.
+
+        :getter: returns the peaklist ID.
+
+        :type: any
+
+        """
         return self._id
 
     @property
     def size(self):
+        """
+        Property of the peaklist size.
+
+        :getter: returns the flagged peaklist size.
+
+        :type: int
+        """
         return np.sum(self._flags)
 
     @property
     def full_size(self):
+        """
+        Property of the peaklist full size.
+
+        :getter: returns the full peaklist size, i.e., including the "unflagged" peaks.
+
+        :type: int
+        """
         return len(self._flags)
 
     @property

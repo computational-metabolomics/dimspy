@@ -2,18 +2,57 @@
 #  -*- coding: utf-8 -*-
 
 """
-peaklist_metadata: PeakList metadata class, for internal use only
+The PeakList metadata class.
 
-author(s): Albert
-origin: Sep. 27, 2016
+.. moduleauthor:: Albert Zhou, Ralf Weber
+
+.. versionadded:: 0.1
+
+.. warning::
+    This class is designed for PeakList internal use only.
 
 """
 
 
-# For internal use only.
 # DO NOT try metadata.metadata.attr.
 # All attribute methods overrided
 class PeakList_Metadata(dict):
+    """
+    The PeakList_Metadata class.
+
+    Dictionary-like container for PeakList metadata storage.
+
+    Args:
+        iterable object of key-value pairs.
+
+    >>> PeakList_Metadata([('name', 'sample_1'), ('qc', False)])
+
+    Kwargs:
+        metadata key-value pairs.
+
+    >>> PeakList_Metadata(name = 'sample_1', qc = False)
+
+    Attributes:
+        metadata attributes can be accessed in both dictionary-like and property-like manners.
+
+    >>> meta = PeakList_Metadata(name = 'sample_1', qc = False)
+    >>> meta['name']
+    sample_1
+    >>> meta.qc
+    False
+    >>> del meta.qc
+    >>> meta.has_key('qc')
+    False
+
+    .. warning::
+        The *__getattr__*, *__setattr__*, and *__delattr__* methods are overrided. **DO NOT** assign a metadata object
+        to another metadata object, e.g., metadata.metadata.attr = value.
+
+    Raises:
+        ValueError
+
+    """
+
     def __init__(self, *args, **kwargs):
         super(PeakList_Metadata, self).__init__(*args, **kwargs)
 
