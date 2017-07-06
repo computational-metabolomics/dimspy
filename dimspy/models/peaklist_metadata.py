@@ -22,18 +22,13 @@ class PeakList_Metadata(dict):
 
     Dictionary-like container for PeakList metadata storage.
 
-    Args:
-        iterable object of key-value pairs.
+    :param args: iterable object of key-value pairs
+    :param kwargs: metadata key-value pairs
 
     >>> PeakList_Metadata([('name', 'sample_1'), ('qc', False)])
-
-    Kwargs:
-        metadata key-value pairs.
-
     >>> PeakList_Metadata(name = 'sample_1', qc = False)
 
-    Attributes:
-        metadata attributes can be accessed in both dictionary-like and property-like manners.
+    metadata attributes can be accessed in both dictionary-like and property-like manners.
 
     >>> meta = PeakList_Metadata(name = 'sample_1', qc = False)
     >>> meta['name']
@@ -47,9 +42,6 @@ class PeakList_Metadata(dict):
     .. warning::
         The *__getattr__*, *__setattr__*, and *__delattr__* methods are overrided. **DO NOT** assign a metadata object
         to another metadata object, e.g., metadata.metadata.attr = value.
-
-    Raises:
-        ValueError
 
     """
 

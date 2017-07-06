@@ -26,38 +26,46 @@ class PeakList(object):
     The PeakList class.
 
     Stores mass spectrometry peaks list data. It requires an ID, mz values, and intensities. It can store extra peak
-    properties e.g. SNRs, and peaklist tags and metadata. It utilises the automatically managed flags to "remove" or
+    attributes e.g. SNRs, and peaklist tags and metadata. It utilises the automatically managed flags to "remove" or
     "retain" peaks without actually delete them. Therefore the filterings on the peaks are traceable.
 
-    Args:
-        ID (any): the ID of the peaklist data, unique string or integer value is recommended.
-
-        mz (float iterable): mz values of all the peaks. Must in the ascending order.
-
-        intensity (float iterable): intensities of all the peaks. Must have the same size as mz.
-
-    Kwargs:
-        metadata: key-value pairs of the peaklist metadata.
+    :param ID: the ID of the peaklist data, unique string or integer value is recommended
+    :param mz: mz values of all the peaks. Must in the ascending order
+    :param intensity: intensities of all the peaks. Must have the same size as mz
+    :param kwargs: key-value pairs of the peaklist metadata
 
     >>> mz_values = np.random.uniform(100, 1200, size = 100)
     >>> int_values = np.random.normal(60, 10, size = 100)
     >>> peaks = PeakList('dummy', mz_values, int_values, description = 'a dummy peaklist')
 
-    Internally the peaklist data is stored by using numpy structured array (this may change in the future):
+    Internally the peaklist data is stored by using numpy structured array namely the attribute talbe (this may change in the future):
 
-    +-------+-----------+------+----------+-----+---------+
-    | mz    | intensity | snr  | snr_flag | ... | *flag** |
-    +=======+===========+======+==========+=====+=========+
-    | 102.5 | 21.7      | 10.5 | True     |     | True    |
-    +-------+-----------+------+----------+     +---------+
-    | 111.7 | 12.3      | 5.1  | False    | ... | False   |
-    +-------+-----------+------+----------+     +---------+
-    | 126.3 | 98.1      | 31.7 | True     |     | True    |
-    +-------+-----------+------+----------+     +---------+
-    | 133.1 | 68.9      | 12.6 | True     |     | True    |
-    +-------+-----------+------+----------+     +---------+
-    | ...   |           |      |          |     |         |
-    +-------+-----------+------+----------+-----+---------+
+    +-------+-----------+------+----------+-----+----------+
+    | mz    | intensity | snr  | snr_flag | ... | *flags** |
+    +=======+===========+======+==========+=====+==========+
+    | 102.5 | 21.7      | 10.5 | True     |     | True     |
+    +-------+-----------+------+----------+     +----------+
+    | 111.7 | 12.3      | 5.1  | False    | ... | False    |
+    +-------+-----------+------+----------+     +----------+
+    | 126.3 | 98.1      | 31.7 | True     |     | True     |
+    +-------+-----------+------+----------+     +----------+
+    | 133.1 | 68.9      | 12.6 | True     |     | True     |
+    +-------+-----------+------+----------+     +----------+
+    | ...   |           |      |          |     |          |
+    +-------+-----------+------+----------+-----+----------+
+
+    Each column is called an attribute. The first two attributes are fixed as "mz" and "intensity". They cannot be added or
+    removed as the others. The last "attribute" is the "flags", which is fact stored separately. The "flags" column is
+    calculated automatically according to all the manually set flag attributes, e.g., the "snr_flag". It can only be changed
+    by the class itself. The unflagged peaks are considered as "removed". They are kept internally mainly for visualization
+    and tracing purposes.
+
+    .. warning::
+        Removing a flag attribute may change the "flags" column, and cause the unflagged peaks to be flagged again. As
+        most the processes are applied only on the flagged peaks, these peaks, if the others have gone through such process,
+        may have incorrect values.
+
+        In principle, setting a flag attribute should be considered as an irreversible process.
 
     """
 
@@ -132,9 +140,8 @@ class PeakList(object):
         """
         Property of the peaklist ID.
 
-        :getter: returns the peaklist ID.
-
-        :type: any
+        :getter: returns the peaklist ID
+        :type: same as input ID
 
         """
         return self._id
@@ -144,9 +151,9 @@ class PeakList(object):
         """
         Property of the peaklist size.
 
-        :getter: returns the flagged peaklist size.
-
+        :getter: returns the flagged peaklist size
         :type: int
+
         """
         return np.sum(self._flags)
 
@@ -155,57 +162,140 @@ class PeakList(object):
         """
         Property of the peaklist full size.
 
-        :getter: returns the full peaklist size, i.e., including the "unflagged" peaks.
-
+        :getter: returns the full peaklist size, i.e., including the unflagged peaks
         :type: int
+
         """
         return len(self._flags)
 
     @property
     def shape(self):
+        """
+        Property of the peaklist attributes table shape.
+
+        :getter: returns the attibutes table shape, i.e., peaks number x attributes number. The "flags" column does not count
+        :type: tuple
+
+        """
         return self.size, len(self.attributes)
 
     @property
     def full_shape(self):
+        """
+        Property of the peaklist full attributes table shape.
+
+        :getter: returns the full attibutes table shape, including the unflagged peaks
+        :type: tuple
+
+        """
         return self.full_size, len(self.attributes)
 
     @property
     def metadata(self):
+        """
+        Property of the peaklist metadata.
+
+        :getter: returns an access interface to the peaklist metadata object
+        :type: PeakList_Metadata object
+
+        """
         return self._metadata
 
     @property
     def tags(self):
+        """
+        Property of the peaklist tags.
+
+        :getter: returns an access interface to the peaklist tags object
+        :type: PeakList_Tags object
+
+        """
         return self._tags
 
     @property
     def attributes(self):
+        """
+        Property of the attribute names.
+
+        :getter: returns a tuple of the attribute names
+        :type: tuple
+
+        """
         return self._dtable.dtype.names
 
     @property
     def flag_attributes(self):
+        """
+        Property of the flag attribute names.
+
+        :getter: returns a tuple of the flag attribute names
+        :type: tuple
+
+        """
         return tuple(self._flag_attrs[:])
 
     @property
     def peaks(self):
+        """
+        Property of the attribute table.
+
+        :getter: returns a deep copy of the flagged attribute table
+        :type: numpy structured array
+
+        """
         return self._dtable[self._flags].copy()
 
     @property
     def flags(self):
+        """
+        Property of the flags.
+
+        :getter: returns a deep copy of the flags array
+        :type: numpy array
+
+        """
         return self._flags.copy()
 
     @property
     def dtable(self):
+        """
+        Property of the overall attribute table.
+
+        :getter: returns the original attribute table
+        :type: numpy structured array
+
+        .. warning::
+            This property directly accesses the internal attribute table. Be careful when manipulating the data,
+            particularly pay attention to the potential side-effects.
+
+        """
         return self._dtable # ref for faster access, using carefully
 
     # publics
     # manual maintainance
     # these functions are aotumatically called internally, think twice before you manually call them
     def sort_peaks_order(self):
+        """
+        Sorts peaklist mz values into ascending order.
+
+        .. note::
+            This method will be called automatically every time the mz values are changed.
+
+        """
         sids = np.argsort(self._dtable['mz'])  # do not use self.mz, recursive calling
         self._dtable = self._dtable[sids]
         self._flags = self._flags[sids]
 
     def calculate_flags(self):
+        """
+        Re-calculates the flags according to the flag attributes.
+
+        .. note::
+            This method will be called automatically every time a flag attribute is added, removed, or changed.
+
+        :rtype: numpy array
+
+        """
         self._flags = np.ones_like(self._flags) if len(self._flag_attrs) == 0 else \
                       np.sum(self._dtable[self._flag_attrs].tolist(), axis = 1) == len(self._flag_attrs)
         if self.size == 0: logging.warning('all peaks are removed for peaklist [%s]' % str(self.ID))
@@ -213,10 +303,35 @@ class PeakList(object):
 
     # attribute operations
     def has_attribute(self, attr_name):
+        """
+        Checks whether there exists an attribute in the table.
+
+        :param attr_name: the attribute name for checking
+        :rtype: bool
+
+        """
         return attr_name in self.attributes
 
     def add_attribute(self, attr_name, attr_value, attr_dtype = None, is_flag = False,
                       on_index = None, flagged_only = True, invalid_value = np.nan):
+        """
+        Adds an new attribute to the PeakList attribute table.
+
+        :param attr_name: the name of the new attribute
+        :param attr_value: the values of the new attribute. It's size must equals to PeakList.size
+            (if flagged_only == True), or PeakList.full_size (if flagged_only == False)
+        :param attr_dtype: the data type of the new attribute. If it is set to None, the PeakList will
+            try to detect the data type based on attr_value. If the detection failed it will take the "object" type. Default = None
+        :param is_flag: whether the new attribute is a flag attribute, i.e., will be used in flags calculation. Default = False
+        :param on_index: insert the new attribute on a specific column. It can't be 0 or 1, as the first two
+            attributes are fixed as mz and intensity. Setting to None means to put it to the last column. Default = None
+        :param flagged_only: whether the attr_value is set to the flagged peaks or all peaks. Default = True
+        :param invalid_value: if flagged_only is set to True, this value will be assigned to the unflagged peaks.
+            The actual value depends on the attribute data type. For instance, on a boolean attribute invalid_value = 0 will
+            be converted to False. Default = numpy.nan
+        :rtype: PeakList object (self)
+
+        """
         if self.__dict__.has_key(attr_name):
             raise AttributeError('attribute name already been used by property')
         if attr_name in ('mz', 'intensity', 'flags'):
@@ -261,6 +376,13 @@ class PeakList(object):
         return self
 
     def drop_attribute(self, attr_name):
+        """
+        Drops an existing attribute.
+
+        :param attr_name: the attribute name to drop. It cannot be mz, intensity, or flags
+        :rtype: PeakList object (self)
+
+        """
         if attr_name in ('mz', 'intensity', 'flags'):
             raise AttributeError('cannot drop reserved attribute [%s]' % attr_name)
         if not self.has_attribute(attr_name):
@@ -276,6 +398,18 @@ class PeakList(object):
         return self
 
     def set_attribute(self, attr_name, attr_value, flagged_only = True, unsorted_mz = False):
+        """
+        Sets values to an existing attribute.
+
+        :param attr_name: the attribute to set values
+        :param attr_value: the new attribute values, It's size must equals to PeakList.size
+            (if flagged_only == True), or PeakList.full_size (if flagged_only == False)
+        :param flagged_only: whether the attr_value is set to the flagged peaks or all peaks. Default = True
+        :param unsorted_mz: whether the attr_value contains unsorted mz values. This parameter is valid only when
+            attr_name == "mz". Default = False
+        :rtype: PeakList object (self)
+
+        """
         if attr_name == 'flags':
             raise AttributeError('cannot assign read-only attribute [flag]')
         if not self.has_attribute(attr_name):
@@ -294,21 +428,73 @@ class PeakList(object):
         return self
 
     def get_attribute(self, attr_name, flagged_only = True):
+        """
+        Gets values of an existing attribute.
+
+        :param attr_name: the attribute to get values
+        :param flagged_only: whether to return the values of flagged peaks or all peaks. Default = True
+        :rtype: numpy array
+
+        """
         if not self.has_attribute(attr_name):
             raise AttributeError("cannot find attribute '%s'" % attr_name)
         return self._dtable[attr_name][self._flags if flagged_only else slice(None)] # slice to create data copy
 
     # peaks operations
     def set_peak(self, peak_index, peak_value, flagged_only = True):
+        """
+        Sets values to a peak.
+
+        :param peak_index: the index of the peak to set values
+        :param peak_value: the new peak values. Must contain values for all the attributes (not including flags)
+        :param flagged_only: whether the peak_value is set to the index of flagged peaks or all peaks. Default = True
+        :rtype: PeakList object (self)
+
+        >>> print peaks
+        mz, intensity, snr, flags
+        10, 10, 10, True
+        20, 20, 20, True
+        30, 30, 30, False
+        40, 40, 40, True
+        >>> print peaks.set_peak(2, [50, 50, 50], flagged_only = True)
+        mz, intensity, snr, flags
+        10, 10, 10, True
+        20, 20, 20, True
+        30, 30, 30, False
+        50, 50, 50, True
+        >>> print peaks.set_peak(2, [40, 40, 40], flagged_only = False)
+        mz, intensity, snr, flags
+        10, 10, 10, True
+        20, 20, 20, True
+        40, 40, 40, False
+        50, 50, 50, True
+
+        """
         self._dtable[np.where(self._flags)[0][peak_index] if flagged_only else peak_index] = peak_value
         self.sort_peaks_order()
         self.calculate_flags()
         return self
 
     def get_peak(self, peak_index, flagged_only = True):
+        """
+        Gets values of a peak.
+
+        :param peak_index: the index of the peak to get values
+        :param flagged_only: whether the values are taken from the index of flagged peaks or all peaks. Default = True
+        :rtype: numpy array
+
+        """
         return self._dtable[self._flags][peak_index] if flagged_only else self._dtable[peak_index]
 
     def insert_peak(self, peak_value):
+        """
+        Insert a new peak.
+
+        :param peak_value: the values of the new peak. Must contain values for all the attributes. It's position depends
+            on the mz value, i.e., the 1st value of the input
+        :rtype: PeakList object (self)
+
+        """
         pid = np.where(peak_value[0] < self.mz_all)[0][0]
         self._dtable = np.insert(self._dtable, pid, peak_value)
         self._flags = np.insert(self._flags, pid, False)
@@ -316,6 +502,14 @@ class PeakList(object):
         return self
 
     def remove_peak(self, peak_index, flagged_only = True):
+        """
+        Remove an existing peak.
+
+        :param peak_index: the index of the peak to remove
+        :param flagged_only: whether the index is for flagged peaks or all peaks. Default = True
+        :rtype: PeakList object (self)
+
+        """
         if isinstance(peak_index, Iterable): peak_index = list(peak_index)
         rmid = np.where(self._flags)[0][peak_index] if flagged_only else peak_index
         self._dtable = np.delete(self._dtable, rmid)
@@ -324,6 +518,29 @@ class PeakList(object):
         return self
 
     def cleanup_unflagged_peaks(self, flag_name = None):
+        """
+        Remove unflagged peaks.
+
+        :param flag_name: remove peaks unflagged by this flag attribute. Setting None means to remove peaks unflagged by
+            the overall flags. Default = None
+        :rtype: PeakList object (self)
+
+        >>> print peaks
+        mz, intensity, intensity_flag, snr, snr_flag, flags
+        10, 70, True, 10, False, False
+        20, 60, True, 20, True, True
+        30, 50, False, 30, True, False
+        40, 40, False, 40, True, False
+        >>> print peaks.cleanup_unflagged_peaks('snr_flag')
+        mz, intensity, intensity_flag, snr, snr_flag, flags
+        20, 60, True, 20, True, True
+        30, 50, False, 30, True, False
+        40, 40, False, 40, True, False
+        >>> print peaks.cleanup_unflagged_peaks()
+        mz, intensity, intensity_flag, snr, snr_flag, flags
+        20, 60, True, 20, True, True
+
+        """
         if not (flag_name is None or flag_name == 'flags' or flag_name in self._flag_attrs):
             raise AttributeError('[%s] is not a flag attribution name')
         rmids = np.where((self._flags if flag_name is None else self._dtable[flag_name]) == 0)
@@ -334,18 +551,43 @@ class PeakList(object):
 
     # exports
     def to_list(self):
+        """
+        Exports peaklist attribute table to a list, including the flags.
+
+        :rtype: list
+
+        """
         return zip(*self._dtable.tolist()) + [self._flags.tolist()]
 
     def to_dict(self, dict_type = OrderedDict):
+        """
+        Exports peaklist attribute table to a dictionary (mappable object), including the flags.
+
+        :param dict_type: result dictionary type, Default = OrderedDict
+        :rtype: list
+
+        """
         _conv = lambda x: (x.astype(int) if x.dtype == np.bool else x).tolist()
         return dict_type([(n, _conv(self._dtable[n])) for n in self.attributes] + [('flags', _conv(self._flags))])
 
     def to_str(self, delimiter = ','):
+        """
+        Exports peaklist attribute table to a string, including the flags. It can also be used inexplicitly.
+
+        :rtype: str
+
+        """
         title, data = zip(*self.to_dict().items())
         return join(map(lambda x: join(map(str, x), delimiter), [title] + zip(*data)), '\n')
 
     # utils
     def copy(self):
+        """
+        Returns a deep copy of the peaklist.
+
+        :rtype: PeakList object
+
+        """
         return deepcopy(self)
 
 

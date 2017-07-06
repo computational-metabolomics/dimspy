@@ -23,14 +23,10 @@ class PeakList_Tags(object):
 
     Container for both typed and untyped tags. This class is mainly used in PeakList and PeakMatrix classes for sample filtering.
 
-    Args:
-        list of untyped tags, e.g.
+    :param args: list of untyped tags
+    :param kwargs: list of typed tags. Only one tag value can be assigned to a specific tag type
 
     >>> PeakList_Tags('untyped_tag1', 'untyped_tag2')
-
-    Kwargs:
-        list of typed tags. Only one tag value can be assigned to a specific tag type, e.g.
-
     >>> PeakList_Tags(tag_type1 = 'tag_value1', tag_type2 = 'tag_value2')
 
     """
@@ -50,8 +46,7 @@ class PeakList_Tags(object):
         """
         Property of included tag types.
 
-        :getter: returns a tuple containing all the tag types of the typed tags.
-
+        :getter: returns a tuple containing all the tag types of the typed tags
         :type: tuple
 
         """
@@ -62,8 +57,7 @@ class PeakList_Tags(object):
         """
         Property of included tag values.
 
-        :getter: returns a tuple containing all the tag values, both typed and untyped tags.
-
+        :getter: returns a tuple containing all the tag values, both typed and untyped tags
         :type: tuple
 
         """
@@ -74,8 +68,7 @@ class PeakList_Tags(object):
         """
         Property of included typed tags.
 
-        :getter: returns a tuple containing all the typed tags, each in the format of (tag_type, tag_value).
-
+        :getter: returns a tuple containing all the typed tags, each in the format of (tag_type, tag_value)
         :type: tuple
 
         """
@@ -86,8 +79,7 @@ class PeakList_Tags(object):
         """
         Property of included untyped tags.
 
-        :getter: returns a tuple containing all the untyped tags.
-
+        :getter: returns a tuple containing all the untyped tags
         :type: tuple
 
         """
@@ -98,11 +90,8 @@ class PeakList_Tags(object):
         """
         Checks whether there exists a specific tag type.
 
-        Args:
-            tag_type (hashable): the tag type for checking.
-
-        Returns:
-            bool
+        :param tag_type: the tag type for checking
+        :rtype: bool
 
         """
         return tag_type in self.tag_types
@@ -111,17 +100,9 @@ class PeakList_Tags(object):
         """
         Checks whether there exists a specific tag.
 
-        Args:
-            **one** tag value, either typed or untyped.
-
-        Kwargs:
-            **one** tag_type = tag_value.
-
-        Returns:
-            bool
-
-        Raises:
-            ValueError
+        :param args: **one** tag value, either typed or untyped
+        :param kwargs: **one** tag_type = tag_value
+        :rtype: bool
 
         >>> tags = PeakList_Tags('untyped_tag1', tag_type1 = 'tag_value1')
         >>> tags.has_tag('untyped_tag1')
@@ -141,14 +122,8 @@ class PeakList_Tags(object):
         """
         Returns tag value of the given tag type, or tuple of untyped tags if tag_type is None.
 
-        Args:
-            tag_type (hashable, None): valid tag type, or None for untyped tags.
-
-        Returns:
-            Any (tag_type is not None), or tupe (tag_type is None)
-
-        Raises:
-            KeyError
+        :param tag_type: valid tag type, or None for untyped tags
+        :rtype: same as tag_value (tag_type is not None), or tupe (tag_type is None)
 
         """
         if not (tag_type is None or self.has_tag_type(tag_type)):
@@ -159,14 +134,8 @@ class PeakList_Tags(object):
         """
         Adds multiple typed and untyped tags.
 
-        Args:
-            list of untyped tags.
-
-        Kwargs:
-            list of typed tags. Only one tag value can be assigned to a specific tag type.
-
-        Raises:
-            KeyError, ValueError
+        :param args: list of untyped tags
+        :param kwargs: list of typed tags. Only one tag value can be assigned to a specific tag type
 
         >>> PeakList_Tags('untyped_tag1', tag_type1 = 'tag_value1')
 
@@ -187,8 +156,7 @@ class PeakList_Tags(object):
         """
         Drops multiple typed and untyped tags.
 
-        Args:
-            list of tag values, both typed and untyped.
+        :param args: list of tag values, both typed and untyped
 
         >>> tags = PeakList_Tags('untyped_tag1', tag_type1 = 'tag_value1')
         >>> tags.drop_tags('tag_value1')
@@ -203,8 +171,7 @@ class PeakList_Tags(object):
         """
         Drops multiple tag types and their tag values.
 
-        Args:
-            list of tag type.
+        :param args: list of tag types
 
         """
         self._typed_tags = dict(filter(lambda x: x[0] not in args, self._typed_tags.items()))
@@ -222,6 +189,8 @@ class PeakList_Tags(object):
         """
         Exports tags to a list.
 
+        :rtype: list
+
         """
         return list(self.untyped_tags + self.typed_tags)
 
@@ -232,6 +201,8 @@ class PeakList_Tags(object):
         >>> tags = PeakList_Tags('untyped_tag1', tag_type1 = 'tag_value1')
         >>> print tags
         untyped_tag1, tag_type1:tag_value1
+
+        :rtype: str
 
         """
         return join(map(str, self.untyped_tags) + map(lambda x: join(map(str, x), ':'), self.typed_tags), ', ')
