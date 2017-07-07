@@ -10,16 +10,15 @@ from dimspy.models.peaklist import PeakList
 from dimspy.portals import mzml_portal
 from dimspy.portals import thermo_raw_portal
 from dimspy.process.peak_alignment import align_peaks
-from dimspy.process.peak_filters import filter_attr
 from dimspy.experiment import scan_type_from_header
-from dimspy.experiment import interpret_experiment
 from dimspy.experiment import mz_range_from_header
 from string import join
 
 
 def _calculate_edges(mz_ranges):
     s_mz_ranges = map(sorted, mz_ranges)
-    if len(s_mz_ranges) == 1: return s_mz_ranges
+    if len(s_mz_ranges) == 1:
+        return s_mz_ranges
     
     s_min, s_max = zip(*s_mz_ranges)
     assert all(map(lambda x: x[0] < x[1], zip(s_min[:-1], s_min[1:]))), 'start values not in order'
@@ -48,9 +47,11 @@ def remove_edges(pls_sd):
     return pls_sd
 
 
-def read_scans(fn, source, function_noise, min_scans=1, filter_scan_events={}):
+def read_scans(fn, source, function_noise, min_scans=1, filter_scan_events=None):
 
     # assert os.path.isfile(fn), "File does not exist"
+    if filter_scan_events is None:
+        filter_scan_events = {}
     if not fn.lower().endswith(".mzml") and not fn.lower().endswith(".raw"):
         raise IOError("Check format raw data (.RAW or .mzML)")
 
@@ -84,14 +85,14 @@ def read_scans(fn, source, function_noise, min_scans=1, filter_scan_events={}):
             raise ValueError("Provide a start, end and scan type (sim or full) for filter_scan_events.")
 
         filter_scan_events = {filter_scan_events.keys()[0]:
-                                  [[float(fse[0]), float(fse[1]), str(fse[2])] for fse in filter_scan_events.values()[0]]}
+                              [[float(fse[0]), float(fse[1]), str(fse[2])] for fse in filter_scan_events.values()[0]]}
 
         h_descs = {}
         for h in h_sids.copy():
             mzr = mz_range_from_header(h)
             h_descs[h] = [mzr[0], mzr[1], scan_type_from_header(h).lower()]
 
-	incl_excl = filter_scan_events.keys()[0]
+        incl_excl = filter_scan_events.keys()[0]
         for hd in filter_scan_events[incl_excl]:
             if hd not in h_descs.values():
                 raise IOError("Event {} doest not exist".format(str(hd)))

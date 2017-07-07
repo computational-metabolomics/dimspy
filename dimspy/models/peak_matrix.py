@@ -9,7 +9,6 @@ origin: Nov. 10, 2016
 
 """
 
-
 from __future__ import division
 
 import logging
@@ -20,7 +19,8 @@ from peaklist import PeakList
 
 class PeakMatrix(object):
     def __init__(self, peaklist_ids, peaklist_tags, **peaklist_attributes):
-        if len(peaklist_attributes) < 2 or not (peaklist_attributes.has_key('mz') and peaklist_attributes.has_key('intensity')):
+        if len(peaklist_attributes) < 2 or not (
+            peaklist_attributes.has_key('mz') and peaklist_attributes.has_key('intensity')):
             raise ValueError('required attribute fields "mz" and "intensity" not available')
 
         pnum, psize = peaklist_attributes.values()[0].shape
@@ -31,26 +31,27 @@ class PeakMatrix(object):
 
         self._pids = np.array(peaklist_ids)
         self._tags = np.array(peaklist_tags)
-        self._attr_dict = {k: np.array(v) for k,v in peaklist_attributes.items()}
-        self._mask = np.ones(pnum, dtype = bool)
+        self._attr_dict = {k: np.array(v) for k, v in peaklist_attributes.items()}
+        self._mask = np.ones(pnum, dtype=bool)
 
     # privates
     # np.average accepts weights, set to 0 to exclude value
     @staticmethod
     def _masknan(x, axis, _func):
         bwt = x.astype(bool)
-        nid = (np.sum(~np.isclose(bwt, 0), axis = axis) == 0)
+        nid = (np.sum(~np.isclose(bwt, 0), axis=axis) == 0)
         bwt[:, nid] = 1
         val = _func(bwt)
         val[nid] = np.nan  # all values = 0 -> nanzero average / std = nan
         return val
 
     def _nzmean(self, x, axis):
-        _func = lambda b: np.average(x, axis = axis, weights = b)
+        _func = lambda b: np.average(x, axis=axis, weights=b)
         return self._masknan(x, axis, _func)
 
     def _nzstd(self, x, axis):
-        _func = lambda b: np.sqrt(np.average(np.power(x - np.average(x, axis = axis, weights = b), 2), axis = axis, weights = b))
+        _func = lambda b: np.sqrt(
+            np.average(np.power(x - np.average(x, axis=axis, weights=b), 2), axis=axis, weights=b))
         return self._masknan(x, axis, _func)
 
     # built-ins
@@ -58,7 +59,7 @@ class PeakMatrix(object):
         return self.shape[0]
 
     def __str__(self):
-        return self.to_str(attr_name = 'intensity', delimiter = ', ', transpose = True, comprehensive = False)
+        return self.to_str(attr_name='intensity', delimiter=', ', transpose=True, comprehensive=False)
 
     # properties
     @property
@@ -68,9 +69,9 @@ class PeakMatrix(object):
     @mask.setter
     def mask(self, value):
         if value is None:
-            self._mask = np.ones(self.full_shape[0], dtype = bool)
+            self._mask = np.ones(self.full_shape[0], dtype=bool)
         else:
-            self._mask = np.zeros(self.full_shape[0], dtype = bool)
+            self._mask = np.zeros(self.full_shape[0], dtype=bool)
             self._mask[value] = True
 
     @property
@@ -103,7 +104,7 @@ class PeakMatrix(object):
 
     @property
     def present(self):
-        return np.sum(self.intensity_matrix > 0, axis = 0)
+        return np.sum(self.intensity_matrix > 0, axis=0)
 
     @property
     def fraction(self):
@@ -111,12 +112,12 @@ class PeakMatrix(object):
 
     @property
     def missing_values(self):
-        return np.sum(self.intensity_matrix == 0, axis = 1)
+        return np.sum(self.intensity_matrix == 0, axis=1)
 
     @property
     def rsd(self):
         if self.shape[0] < 2:
-            #logging.warning('calculating RSD on less than 2 samples')
+            # logging.warning('calculating RSD on less than 2 samples')
             return np.ones(self.shape[1]) * np.nan
         rsd = (lambda m: self._nzstd(m, 0) / self._nzmean(m, 0) * 100)(self.intensity_matrix)
         rsd[np.where(map(lambda x: len(set(x[np.nonzero(x)])) == 1, self.intensity_matrix.T))] = np.nan
@@ -127,14 +128,14 @@ class PeakMatrix(object):
         if not self._attr_dict.has_key('intra_count'):
             logging.warning("attribute matrix ['intra_count'] not available")
             return np.ones(self.shape[1])
-        return np.sum(self.attr_matrix('intra_count'), axis = 0)
+        return np.sum(self.attr_matrix('intra_count'), axis=0)
 
     @property
     def purity(self):
         if not self._attr_dict.has_key('intra_count'):
             logging.warning("attribute matrix ['intra_count'] not available")
             return np.zeros(self.shape[1])
-        return 1 - (np.sum(self.attr_matrix('intra_count') > 1, axis = 0) / self.shape[0])
+        return 1 - (np.sum(self.attr_matrix('intra_count') > 1, axis=0) / self.shape[0])
 
     @property
     def mz_matrix(self):
@@ -154,7 +155,7 @@ class PeakMatrix(object):
 
     # publics
     # tags and mask
-    def tags_of(self, tag_type = None):
+    def tags_of(self, tag_type=None):
         if tag_type is not None and not all(map(lambda x: x.has_tag_type(tag_type), self.peaklist_tags)):
             raise ValueError('not all samples has tag type [%s]' % tag_type)
         tlst = [t.tag_of(tag_type) for t in self.peaklist_tags]
@@ -185,7 +186,7 @@ class PeakMatrix(object):
         return self._nzmean(self.attr_matrix(attr_name), 0)
 
     def to_peaklist(self, ID):
-        pl = PeakList(ID, self.mz_mean_vector, self.ints_mean_vector, aligned_ids = self.peaklist_ids)
+        pl = PeakList(ID, self.mz_mean_vector, self.ints_mean_vector, aligned_ids=self.peaklist_ids)
         pl.add_attribute("present", self.present)
         pl.add_attribute("fraction", self.fraction)
         pl.add_attribute("rsd", self.rsd)
@@ -222,24 +223,25 @@ class PeakMatrix(object):
         # Recreate all peaklists used for the peak matrix
         return [self.get_peaklist(pid, all_attr) for pid in self.peaklist_ids]
 
-
-    def remove_samples(self, ids, remove_empty_peaks = True, masked_only = True):
+    def remove_samples(self, ids, remove_empty_peaks=True, masked_only=True):
         rmids = np.arange(self.full_shape[0])[self.mask][list(ids)] if masked_only else ids
-        self._pids = np.delete(self._pids, rmids, axis = 0)
-        self._tags = np.delete(self._tags, rmids, axis = 0)
-        self._attr_dict = {k: np.delete(v, rmids, axis = 0) for k, v in self._attr_dict.items()}
-        self._mask = np.delete(self._mask, rmids, axis = 0)
-        if remove_empty_peaks: self.remove_peaks(np.where(np.sum(self.intensity_matrix, axis = 0) == 0), False)
+        self._pids = np.delete(self._pids, rmids, axis=0)
+        self._tags = np.delete(self._tags, rmids, axis=0)
+        self._attr_dict = {k: np.delete(v, rmids, axis=0) for k, v in self._attr_dict.items()}
+        self._mask = np.delete(self._mask, rmids, axis=0)
+        if remove_empty_peaks: self.remove_peaks(np.where(np.sum(self.intensity_matrix, axis=0) == 0), False)
         if self.is_empty(): logging.warning('matrix is empty after removal')
         return self
 
-    def remove_peaks(self, ids, remove_empty_samples = True):
-        self._attr_dict = {k: np.delete(v, ids, axis = 1) for k, v in self._attr_dict.items()}
+    def remove_peaks(self, ids, remove_empty_samples=True):
+        self._attr_dict = {k: np.delete(v, ids, axis=1) for k, v in self._attr_dict.items()}
         if remove_empty_samples:
             with unmask_all_peakmatrix(self) as pm:
-                rmsids = np.where(np.sum(pm.intensity_matrix, axis = 1) == 0)[0]
+                rmsids = np.where(np.sum(pm.intensity_matrix, axis=1) == 0)[0]
             if len(rmsids) > 0:
-                logging.warning('empty peaklists [%s] automatically removed' % join([str(self.peaklist_ids[i]) for i in rmsids], ', '))
+                logging.warning(
+                    'empty peaklists [%s] automatically removed' % join([str(self.peaklist_ids[i]) for i in rmsids],
+                                                                        ', '))
                 self.remove_samples(rmsids, False, False)
         if self.is_empty(): logging.warning('matrix is empty after removal')
         return self
@@ -248,12 +250,12 @@ class PeakMatrix(object):
         return 0 in self.shape
 
     # exports
-    def to_str(self, attr_name = 'intensity', delimiter = '\t', transpose = False, comprehensive = True):
+    def to_str(self, attr_name='intensity', delimiter='\t', transpose=False, comprehensive=True):
         hd = ['m/z'] + map(str, self.mz_mean_vector)
         dm = [map(str, self.peaklist_ids)] + [map(str, ln) for ln in self.attr_matrix(attr_name).T]
 
         if comprehensive:
-            ttypes = set(reduce(lambda x,y: x+y, map(lambda x: x.tag_types, self.peaklist_tags)))
+            ttypes = set(reduce(lambda x, y: x + y, map(lambda x: x.tag_types, self.peaklist_tags)))
             tnum = len(ttypes)
             hd = [hd[0]] + ['missing values'] + map(lambda x: 'tags_' + x, ttypes) + ['tags_untyped'] + hd[1:]
             dm = [dm[0]] + \
@@ -307,16 +309,17 @@ class unmask_peakmatrix:
             raise ReferenceError('sample number changed within with... statement')
         self._pm.mask = self._oldmask
 
+
 class unmask_all_peakmatrix:
-        def __init__(self, pm):
-            self._pm = pm
-            self._oldmask = pm.mask
+    def __init__(self, pm):
+        self._pm = pm
+        self._oldmask = pm.mask
 
-        def __enter__(self):
-            self._pm.mask  = None
-            return self._pm
+    def __enter__(self):
+        self._pm.mask = None
+        return self._pm
 
-        def __exit__(self, exc_type, exc_val, exc_tb):
-            if len(self._oldmask) != self._pm.full_shape[0]:
-                raise ReferenceError('sample number changed within with... statement')
-            self._pm.mask = self._oldmask
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if len(self._oldmask) != self._pm.full_shape[0]:
+            raise ReferenceError('sample number changed within with... statement')
+        self._pm.mask = self._oldmask

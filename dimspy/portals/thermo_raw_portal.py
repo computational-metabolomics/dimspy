@@ -1,25 +1,24 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-import clr
 import sys
 import os
+import re
+import collections
+import numpy as np
+from dimspy.models.peaklist import PeakList
+import clr
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), "ThermoRawFileReader_3_0_41/Libraries"))
 clr.AddReference('ThermoFisher.CommonCore.RawFileReader')
 clr.AddReference('ThermoFisher.CommonCore.Data')
 import ThermoFisher.CommonCore.Data.Business as Business
 import ThermoFisher.CommonCore.RawFileReader as RawFileReader
-import re
-import collections
-import numpy as np
-from dimspy.models.peaklist import PeakList
 
 
 def mz_range_from_header(h):
     return [float(m) for m in re.findall(r'([\w\.-]+)-([\w\.-]+)', h)[0]]
 
 
-class ThermoRaw():
-
+class ThermoRaw:
     def __init__(self, fname):
         self.run = RawFileReader.RawFileReaderAdapter.FileFactory(fname)
         self.run.SelectInstrument(Business.Device.MS, 1)
@@ -74,19 +73,17 @@ class ThermoRaw():
 
         tic = scan_stats.TIC
         segment = scan_stats.SegmentNumber
-
         header = str(self.run.GetScanEventStringForScanNumber(scan_id))
-        instrument = self.run.GetInstrumentData().Name
 
         pl = PeakList(ID=scan_id, mz=mzs, intensity=ints,
-                           mz_range=mz_range_from_header(header),
-                           header=header,
-                           micro_scans=micro_scans,
-                           ion_injection_time=ion_injection_time,
-                           scan_time=scan_time,
-                           tic=tic,
-                           segment=segment,
-                           mode_noise=mode_noise)
+                      mz_range=mz_range_from_header(header),
+                      header=header,
+                      micro_scans=micro_scans,
+                      ion_injection_time=ion_injection_time,
+                      scan_time=scan_time,
+                      tic=tic,
+                      segment=segment,
+                      mode_noise=mode_noise)
 
         pl.add_attribute('snr', snr)
         pl.add_attribute('noise', noise)

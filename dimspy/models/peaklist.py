@@ -10,7 +10,6 @@ The PeakList data object class.
 
 """
 
-
 import logging
 import numpy as np
 import numpy.lib.recfunctions as rfn
@@ -77,13 +76,13 @@ class PeakList(object):
         if len(intensity) != len(mz):
             raise ValueError('mz values and intensities must have the same size')
 
-        self._dtable = np.array(zip(mz, intensity), dtype = [('mz', 'f8'), ('intensity', 'f8')])
+        self._dtable = np.array(zip(mz, intensity), dtype=[('mz', 'f8'), ('intensity', 'f8')])
 
         self._id = str(ID)
         self._metadata = PeakList_Metadata(**metadata)
 
         self._tags = PeakList_Tags()
-        self._flags = np.ones_like(mz, dtype = np.bool)
+        self._flags = np.ones_like(mz, dtype=np.bool)
         self._flag_attrs = []
 
     # privates
@@ -114,16 +113,16 @@ class PeakList(object):
 
     def __getattr__(self, item):
         if item.endswith('_all'):
-            return self.get_attribute(item[:-4], flagged_only = False)
+            return self.get_attribute(item[:-4], flagged_only=False)
         else:
-            return self.get_attribute(item, flagged_only = True)
+            return self.get_attribute(item, flagged_only=True)
 
     def __setattr__(self, item, value):
         if item != '_dtable' and self.has_attribute(item):
             if item.endswith('_all'):
-                return self.set_attribute(item[:-4], value, flagged_only = False)
+                return self.set_attribute(item[:-4], value, flagged_only=False)
             else:
-                return self.set_attribute(item, value, flagged_only = True)
+                return self.set_attribute(item, value, flagged_only=True)
         else:
             super(PeakList, self).__setattr__(item, value)
 
@@ -269,7 +268,7 @@ class PeakList(object):
             particularly pay attention to the potential side-effects.
 
         """
-        return self._dtable # ref for faster access, using carefully
+        return self._dtable  # ref for faster access, using carefully
 
     # publics
     # manual maintainance
@@ -297,7 +296,7 @@ class PeakList(object):
 
         """
         self._flags = np.ones_like(self._flags) if len(self._flag_attrs) == 0 else \
-                      np.sum(self._dtable[self._flag_attrs].tolist(), axis = 1) == len(self._flag_attrs)
+            np.sum(self._dtable[self._flag_attrs].tolist(), axis=1) == len(self._flag_attrs)
         if self.size == 0: logging.warning('all peaks are removed for peaklist [%s]' % str(self.ID))
         return self.flags
 
@@ -312,8 +311,8 @@ class PeakList(object):
         """
         return attr_name in self.attributes
 
-    def add_attribute(self, attr_name, attr_value, attr_dtype = None, is_flag = False,
-                      on_index = None, flagged_only = True, invalid_value = np.nan):
+    def add_attribute(self, attr_name, attr_value, attr_dtype=None, is_flag=False,
+                      on_index=None, flagged_only=True, invalid_value=np.nan):
         """
         Adds an new attribute to the PeakList attribute table.
 
@@ -340,14 +339,14 @@ class PeakList(object):
             raise AttributeError('attribute [%s] already exists' % attr_name)
         if is_flag and self.size > 0 and not (set(attr_value) in ({0}, {1}, {0, 1})):
             raise ValueError('flag attribute can only contain True / False values')
-        if on_index is not None and not (-self.shape[1]+1 < on_index < 0 or 1 < on_index < self.shape[1]):
+        if on_index is not None and not (-self.shape[1] + 1 < on_index < 0 or 1 < on_index < self.shape[1]):
             raise IndexError('index [%d] out of (insertable) range' % on_index)
 
         adt = bool if is_flag else \
-              attr_dtype if attr_dtype is not None else \
-              attr_value.dtype.str if hasattr(attr_value, 'dtype') else \
-              ('S%d' % max(map(len, attr_value))) if type(attr_value[0]) in (unicode, str) else \
-              type(attr_value[0])
+            attr_dtype if attr_dtype is not None else \
+                attr_value.dtype.str if hasattr(attr_value, 'dtype') else \
+                    ('S%d' % max(map(len, attr_value))) if type(attr_value[0]) in (unicode, str) else \
+                        type(attr_value[0])
         if adt in (bool, 'bool', '|b1'): adt = 'b'  # fix numpy dtype bug
 
         if flagged_only:
@@ -364,10 +363,11 @@ class PeakList(object):
         anames, atypes = map(list, zip(*self._dtable.dtype.descr))
         prevnm, restnm, resttp = anames[:on_index], anames[on_index:], atypes[on_index:]
 
-        prevtb = np.array(nattr, dtype = [(attr_name, adt)]) if len(prevnm) == 0 else \
-            rfn.append_fields(self._fields_view(self._dtable, prevnm), attr_name, nattr, dtypes = adt, usemask = False)
+        prevtb = np.array(nattr, dtype=[(attr_name, adt)]) if len(prevnm) == 0 else \
+            rfn.append_fields(self._fields_view(self._dtable, prevnm), attr_name, nattr, dtypes=adt, usemask=False)
         self._dtable = prevtb if len(restnm) == 0 else \
-            rfn.append_fields(prevtb, restnm, zip(*self._fields_view(self._dtable, restnm)), dtypes = resttp, usemask = False)
+            rfn.append_fields(prevtb, restnm, zip(*self._fields_view(self._dtable, restnm)), dtypes=resttp,
+                              usemask=False)
 
         if is_flag:
             self._flag_attrs += [attr_name]
@@ -397,7 +397,7 @@ class PeakList(object):
 
         return self
 
-    def set_attribute(self, attr_name, attr_value, flagged_only = True, unsorted_mz = False):
+    def set_attribute(self, attr_name, attr_value, flagged_only=True, unsorted_mz=False):
         """
         Sets values to an existing attribute.
 
@@ -427,7 +427,7 @@ class PeakList(object):
 
         return self
 
-    def get_attribute(self, attr_name, flagged_only = True):
+    def get_attribute(self, attr_name, flagged_only=True):
         """
         Gets values of an existing attribute.
 
@@ -438,10 +438,10 @@ class PeakList(object):
         """
         if not self.has_attribute(attr_name):
             raise AttributeError("cannot find attribute '%s'" % attr_name)
-        return self._dtable[attr_name][self._flags if flagged_only else slice(None)] # slice to create data copy
+        return self._dtable[attr_name][self._flags if flagged_only else slice(None)]  # slice to create data copy
 
     # peaks operations
-    def set_peak(self, peak_index, peak_value, flagged_only = True):
+    def set_peak(self, peak_index, peak_value, flagged_only=True):
         """
         Sets values to a peak.
 
@@ -475,7 +475,7 @@ class PeakList(object):
         self.calculate_flags()
         return self
 
-    def get_peak(self, peak_index, flagged_only = True):
+    def get_peak(self, peak_index, flagged_only=True):
         """
         Gets values of a peak.
 
@@ -501,7 +501,7 @@ class PeakList(object):
         self.calculate_flags()
         return self
 
-    def remove_peak(self, peak_index, flagged_only = True):
+    def remove_peak(self, peak_index, flagged_only=True):
         """
         Remove an existing peak.
 
@@ -517,7 +517,7 @@ class PeakList(object):
         if self.size == 0: logging.warning('all peaks are removed for peaklist [%s]' % str(self.ID))
         return self
 
-    def cleanup_unflagged_peaks(self, flag_name = None):
+    def cleanup_unflagged_peaks(self, flag_name=None):
         """
         Remove unflagged peaks.
 
@@ -559,7 +559,7 @@ class PeakList(object):
         """
         return zip(*self._dtable.tolist()) + [self._flags.tolist()]
 
-    def to_dict(self, dict_type = OrderedDict):
+    def to_dict(self, dict_type=OrderedDict):
         """
         Exports peaklist attribute table to a dictionary (mappable object), including the flags.
 
@@ -570,7 +570,7 @@ class PeakList(object):
         _conv = lambda x: (x.astype(int) if x.dtype == np.bool else x).tolist()
         return dict_type([(n, _conv(self._dtable[n])) for n in self.attributes] + [('flags', _conv(self._flags))])
 
-    def to_str(self, delimiter = ','):
+    def to_str(self, delimiter=','):
         """
         Exports peaklist attribute table to a string, including the flags. It can also be used inexplicitly.
 
@@ -589,5 +589,3 @@ class PeakList(object):
 
         """
         return deepcopy(self)
-
-

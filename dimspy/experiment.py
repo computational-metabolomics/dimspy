@@ -4,7 +4,6 @@ import os
 import warnings
 import collections
 import re
-import copy
 import numpy as np
 from models.peaklist import PeakList
 
@@ -25,6 +24,7 @@ def scan_type_from_header(h):
     else:
         # Need to check if there are any other scan types (e.g. Thermo and Waters)
         return None
+
 
 def mode_type_from_header(h):
     if " p " in h.lower():
@@ -130,19 +130,6 @@ def check_metadata(fn_tsv):
     if len(unique) != sum(counts):
         raise ValueError("Duplicate filenames in filelist")
 
-    #if "blank" not in fm.dtype.names and "Blank" not in fm.dtype.names:
-    #    warnings.warn("No samples marked as blank. Column missing.")
-    #else:
-    #    unique, counts = np.unique(fm["blank"], return_counts=True)
-    #    print "Blank samples:", counts
-
-    #if "qc" not in fm.dtype.names and "QC" not in fm.dtype.names:
-    #    warnings.warn("No samples marked as QC. Column missing.")
-    #else:
-    #    unique, counts = np.unique(fm["qc"], return_counts=True)
-    #    print "QC samples:", counts
-
-    unique_reps = [1]
     if "replicate" in fm.dtype.names:
 
         if 0 in fm["replicate"]:
@@ -162,7 +149,6 @@ def check_metadata(fn_tsv):
 
     if "batch" in fm.dtype.names:
         unique_batches, counts = np.unique(fm["batch"], return_counts=True)
-        #assert np.array_equal(fm["batch"], sorted(fm["batch"])), "mixed order of batches"
         print "Batch numbers:", unique_batches
         print "Number of samples in each Batch:", dict(zip(unique_batches, counts))
     else:

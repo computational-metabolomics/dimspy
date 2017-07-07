@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import os
-import re
 import collections
 import pymzml
 import numpy as np
@@ -11,7 +10,7 @@ from dimspy.models.peaklist import PeakList
 from dimspy.experiment import mz_range_from_header
 
 
-class Mzml():
+class Mzml:
     def __init__(self, fname="", archive=None):
         self.fname = fname
         self.archive = archive

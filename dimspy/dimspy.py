@@ -55,7 +55,7 @@ def main():
     #################################
 
     parser_ps.add_argument('-i', '--input',
-                           type=str, action='append', required=True, metavar=('source'),
+                           type=str, action='append', required=True, metavar='source',
                            help="Directory (*.raw, *.mzml or tab-delimited peaklist files), single *.mzml/*.raw file or zip archive (*.mzml only)")
 
     parser_ps.add_argument('-o', '--output',
@@ -110,7 +110,7 @@ def main():
                            help="Scan events to select. E.g. 100.0 200.0 sim  or  50.0 1000.0 full")
 
     parser_ps.add_argument('-z', '--remove-mz-range',
-                           action='append', nargs=2, required=False, metavar=('start','end'), default=[],
+                           action='append', nargs=2, required=False, metavar=('start', 'end'), default=[],
                            help="M/z range(s) to remove. E.g. 100.0 102.0  or  140.0 145.0.")
 
     parser_ps.add_argument('-b', '--block-size',
@@ -303,7 +303,6 @@ def main():
                            action='store_true', required=False,
                            help="Comprehensive output of the peak matrix")
 
-
     args = parser.parse_args()
     print args
 
@@ -324,7 +323,7 @@ def main():
 
         remove_mz_range = [[float(mzr[0]), float(mzr[1])] for mzr in args.remove_mz_range]
 
-        if len(args.input) == 1: # Directory / zipfile / single filename
+        if len(args.input) == 1:  # Directory / zipfile / single filename
             args.input = args.input[0]
 
         peaklists = workflow.process_scans(source=args.input,

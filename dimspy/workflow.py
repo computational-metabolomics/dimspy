@@ -35,8 +35,12 @@ from process.scan_processing import remove_edges
 
 
 def process_scans(source, function_noise, snr_thres, ppm, min_fraction=None, rsd_thres=None, min_scans=1, filelist=None,
-                  skip_stitching=False, remove_mz_range=[], ringing_thres=None, filter_scan_events={}, block_size=2000, ncpus=None):
+                  skip_stitching=False, remove_mz_range=None, ringing_thres=None, filter_scan_events=None, block_size=2000, ncpus=None):
 
+    if filter_scan_events is None:
+        filter_scan_events = {}
+    if remove_mz_range is None:
+        remove_mz_range = []
     filenames = check_paths(filelist, source)
     if len([fn for fn in filenames if not fn.lower().endswith(".mzml") or not fn.lower().endswith(".raw")]) == 0:
         raise IOError("Incorrect file format. Provide .mzML and .raw files")
@@ -89,11 +93,11 @@ def process_scans(source, function_noise, snr_thres, ppm, min_fraction=None, rsd
                 if sum(pl.shape[0] for pl in pls_scans[h]) == 0:
                     logging.warning("No scan data available for {}".format(h))
                 else:
-            	    pl_avg = average_replicate_scans(h, pls_scans[h], ppm, min_fraction, rsd_thres, block_size, ncpus)
-            	    pls_avg.append(pl_avg)
+                    pl_avg = average_replicate_scans(h, pls_scans[h], ppm, min_fraction, rsd_thres, block_size, ncpus)
+                    pls_avg.append(pl_avg)
                     print "{}\t{}\t{}".format(h, pl_avg.shape[0], np.nanmedian(pl_avg.rsd))
             else:
-		logging.warning("No scan data available for {}".format(h))
+                logging.warning("No scan data available for {}".format(h))
                 print "{}\t{}\t{}".format(h, 0, "na")
         
         if len(pls_avg) == 0:
@@ -117,9 +121,15 @@ def process_scans(source, function_noise, snr_thres, ppm, min_fraction=None, rsd
 
 # placeholder (synonym)
 def stitch(source, function_noise, snr_thres, ppm, min_fraction=None, rsd_thres=None, min_scans=1, filelist=None,
-           skip_stitching=False, remove_mz_range=[], ringing_thres=None, filter_scan_events={}, block_size=2000, ncpus=None):
+           skip_stitching=False, remove_mz_range=None, ringing_thres=None, filter_scan_events=None, block_size=2000, ncpus=None):
+
+    if filter_scan_events is None:
+        filter_scan_events = {}
+    if remove_mz_range is None:
+        remove_mz_range = []
+
     return process_scans(source, function_noise, snr_thres, min_scans, ppm, min_fraction, rsd_thres, filelist,
-                         skip_stitching, remove_mz_range, filter_scan_events, block_size, ncpus)
+                         skip_stitching, remove_mz_range, ringing_thres, filter_scan_events, block_size, ncpus)
 
 
 def replicate_filter(source, ppm, replicates, min_peaks, rsd_thres=None, filelist=None, block_size=2000, ncpus=None):
@@ -187,7 +197,7 @@ def replicate_filter(source, ppm, replicates, min_peaks, rsd_thres=None, filelis
             temp.append([pl, pl_filt.shape[0], np.median(pl_filt.rsd)])
 
         temp.sort(key=operator.itemgetter(2, 1))
-        pls_rep_filt.append(temp[0][0]) # Most reproducible set of replicates
+        pls_rep_filt.append(temp[0][0])  # Most reproducible set of replicates
 
         for p in range(0, len(temp)):
             print "{}\t{}\t{}\t{}\t".format(p+1, temp[p][0].ID, temp[p][1], temp[p][2])
@@ -261,7 +271,8 @@ def hdf5_to_txt(fname, path_out, attr_name="intensity", separator="\t", transpos
     assert os.path.isfile(fname), 'HDF5 database [%s] not exists' % fname
     assert h5py.is_hdf5(fname), 'input file [%s] is not a valid HDF5 database' % fname
     seps = {"comma": ",", "tab": "\t"}
-    if separator in seps: separator = seps[separator]
+    if separator in seps:
+        separator = seps[separator]
     assert separator in [",", "\t"], "Incorrect separator ('tab', 'comma', ',', '\t')"
     f = h5py.File(fname, 'r')
 
@@ -307,7 +318,7 @@ def load_peaklists(source):
             filenames = os.listdir(source)
             assert len([fn for fn in filenames if fn.lower().endswith(".mzml") or fn.lower().endswith(".raw")]) == 0,\
                 "Incorrect format. Process .mzML and .raw files first using the \'process scans\' function"
-            peaklists = [txt_portal.load_peaklist_from_txt(os.path.join(source, fn), ID=os.path.basename(fn), delimiter = "\t", has_flag_col=False) for fn in filenames]
+            peaklists = [txt_portal.load_peaklist_from_txt(os.path.join(source, fn), ID=os.path.basename(fn), delimiter="\t", has_flag_col=False) for fn in filenames]
         else:
             raise TypeError("Incorrect format. Process .mzML and .raw files first using the 'process scans' function")
     elif type(source) == list or type(source) == tuple:
