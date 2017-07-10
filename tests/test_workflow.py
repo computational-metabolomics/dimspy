@@ -107,3 +107,24 @@ class WorkflowTestCase(unittest.TestCase):
         pm_comp = load_peak_matrix_from_hdf5(os.path.join(self.path_test_data, "MTBLS79_mzml_peak_matrix_sf.hdf5"))
         self.assertEqual(pm_sf.to_str(), pm_comp.to_str())
         self.assertEqual(pm_sf.to_peaklist("pl").to_str(), pm_comp.to_peaklist("pl").to_str())
+
+    def test_merge_peaklists(self):
+        # pls_rep_01 = process_scans(os.path.join(self.path_test_data, "raw", "batch04_QC17_rep01_262.RAW"),
+        #                            function_noise="noise_packets", snr_thres=10.0, min_scans=1, ppm=2.0,
+        #                            min_fraction=None, rsd_thres=None, filelist=None, filter_scan_events=None,
+        #                            block_size=2000, ncpus=None)
+        #
+        # pls_rep_01 = process_scans(os.path.join(self.path_test_data, "raw", "batch04_QC17_rep02_263.RAW"),
+        #                            function_noise="noise_packets", snr_thres=10.0, min_scans=1, ppm=2.0,
+        #                            min_fraction=None, rsd_thres=None, filelist=None, filter_scan_events=None,
+        #                            block_size=2000, ncpus=None)
+        #
+        # save_peaklists_as_hdf5(pls_rep_01, os.path.join(self.path_test_data, "batch04_QC17_rep01_262.hdf5"))
+        # save_peaklists_as_hdf5(pls_rep_02, os.path.join(self.path_test_data, "batch04_QC17_rep02_263.hdf5"))
+        pls_rep_01 = load_peaklists_from_hdf5(os.path.join(self.path_test_data, "batch04_QC17_rep01_262.hdf5"))
+        pls_rep_02 = load_peaklists_from_hdf5(os.path.join(self.path_test_data, "batch04_QC17_rep02_263.hdf5"))
+        pls_merged = merge_peaklists([pls_rep_01, pls_rep_02])
+        # save_peaklists_as_hdf5(pls_merged, os.path.join(self.path_test_data, "MTBLS79__01_262_02_263.hdf5"))
+        pls_comp = load_peaklists_from_hdf5(os.path.join(self.path_test_data, "MTBLS79__01_262_02_263.hdf5"))
+        self.assertEqual([pl.to_str()[0:1000] for pl in pls_merged], [pl.to_str()[0:1000] for pl in pls_comp])
+        self.assertEqual([pl.to_str() for pl in pls_merged], [pl.to_str() for pl in pls_comp])

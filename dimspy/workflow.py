@@ -302,6 +302,40 @@ def hdf5_to_txt(fname, path_out, attr_name="intensity", separator="\t", transpos
     return
 
 
+def merge_peaklists(source, filelist=None):
+
+    if not isinstance(source, list):
+        raise IOError("Incorrect input: list of lists of peaklists, list of peak matrix objects or list of HDF5 files expected.")
+
+    pls_merged = []
+    for s in source:
+        if isinstance(s, list) or isinstance(s, tuple):
+            if isinstance(s[0], PeakList):
+                pls_merged.extend(s)
+            else:
+                raise IOError("Incorrect Object in list. Peaklist Object expected.")
+        elif isinstance(s, PeakMatrix):
+            pls = s.get_peaklists()
+            pls_merged.extend(pls)
+        elif h5py.is_hdf5(s):
+            f = h5py.File(s, 'r')
+            if "mz" in f:
+                pm = txt_portal.load_peak_matrix_from_txt(s)
+                pls = pm.get_peaklists()
+            else:
+                pls = hdf5_portal.load_peaklists_from_hdf5(s)
+            f.close()
+            pls_merged.extend(pls)
+        else:
+            raise IOError("Incorrect input: list of lists of peaklists, list of peak matrix objects or list of HDF5 files expected.")
+
+    if filelist is not None:
+        fl = check_metadata(filelist)
+        pls_merged = update_metadata(pls_merged, fl)
+
+    return pls_merged
+
+
 def load_peaklists(source):
 
     if type(source) == str:

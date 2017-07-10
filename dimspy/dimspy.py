@@ -1,12 +1,12 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+import os
 import argparse
+import h5py
 import workflow
 from portals import hdf5_portal
 from . import __version__
-from experiment import check_metadata
-from experiment import update_metadata
 
 
 def main():
@@ -23,7 +23,9 @@ def main():
     parser_as = subparsers.add_parser('align-samples', help='Align mass spectra across samples.')
     parser_bf = subparsers.add_parser('blank-filter', help='Filter peaks present in the blank samples.')
     parser_sf = subparsers.add_parser('sample-filter', help='Filter peaks based on certain reproducibility and sample class criteria.')
-    parser_mp = subparsers.add_parser('merge-peaklists', help='Merge multiple HDF5 files that contain peaklist objects.')
+    parser_mp = subparsers.add_parser('merge-peaklists', help='Merge peaklists from multiple lists of peaklists or peak matrices.')
+    parser_gp = subparsers.add_parser('get-peaklists', help='Get peklists from a peak matrix object.')
+    parser_gap = subparsers.add_parser('get-average-peaklist', help='Get an average peaklist from a peak matrix object.')
     parser_ht = subparsers.add_parser('hdf5-to-txt', help='Write HDF5 output to text format.')
 
     parser_cf.add_argument('-l', '--filelist',
@@ -267,13 +269,37 @@ def main():
 
     parser_mp.add_argument('-i', '--input',
                            required=True, default=[], action='append',
-                           help="Multiple HDF5 files that contain peaklists from one of the processing steps.")
+                           help="Multiple HDF5 files that contain peaklists or peak matrix from one of the processing steps.")
     parser_mp.add_argument('-o', '--output',
                            required=True, type=str,
                            help="HDF5 file to save the merged peaklist objects.")
     parser_mp.add_argument('-l', '--filelist',
                            type=str, required=False,
                            help="Tab-separated file that list all the data files (*.raw or *.mzml) and meta data (filename, technical replicate, class, batch).")
+
+    #################################
+    # Get peaklists
+    #################################
+
+    parser_gp.add_argument('-i', '--input',
+                           required=True, default=[], action='append',
+                           help="Single or Multiple HDF5 files that contain a peak matrix object from one of the processing steps.")
+
+    parser_gp.add_argument('-o', '--output',
+                           required=True, type=str,
+                           help="HDF5 file to save the peaklist objects.")
+
+    #########################################
+    # Get average peaklist from peak matrix
+    #########################################
+
+    parser_gap.add_argument('-i', '--input',
+                           required=True, default=[], action='append',
+                           help="Single or Multiple HDF5 files that contain a peak matrix object from one of the processing steps.")
+
+    parser_gap.add_argument('-o', '--output',
+                           required=True, type=str,
+                           help="HDF5 file to save the peaklist objects.")
 
     #################################
     # HDF5 to text
@@ -365,6 +391,7 @@ def main():
                                     block_size=args.block_size,
                                     ncpus=args.ncpus)
         hdf5_portal.save_peak_matrix_as_hdf5(pm, args.output)
+
     elif args.step == "blank-filter":
         pm_bf = workflow.blank_filter(peak_matrix=args.input,
                                       blank_label=args.blank_label,
@@ -385,14 +412,26 @@ def main():
         hdf5_portal.save_peak_matrix_as_hdf5(pm_sf, args.output)
 
     elif args.step == "merge-peaklists":
-        pls_merged = []
-        for fn_hdf5 in args.input:
-            pls = hdf5_portal.load_peaklists_from_hdf5(fn_hdf5)
-            if args.filelist is not None:
-                fl = check_metadata(args.filelist)
-                pls = update_metadata(pls, fl)
-            pls_merged.extend(pls)
+        pls_merged = workflow.merge_peaklists(sources=args.input, filelist=args.filelist)
         hdf5_portal.save_peaklists_as_hdf5(pls_merged, args.output)
+
+    elif args.step == "get-peaklists":
+        pls = []
+        for s in args.input:
+            if os.path.isfile(args.input):
+                raise OSError('HDF5 database [%s] not exists'.format(args.input))
+            if h5py.is_hdf5(args.input):
+                raise OSError('input file [%s] is not a valid HDF5 database'.format(args.input))
+            pls.extend(hdf5_portal.load_peak_matrix_from_hdf5(s).get_peaklists())
+        hdf5_portal.save_peaklists_as_hdf5(pls, args.output)
+
+    elif args.step == "get-average-peaklist":
+        if os.path.isfile(args.input):
+            raise OSError('HDF5 database [%s] not exists'.format(args.input))
+        if h5py.is_hdf5(args.input):
+            raise OSError('input file [%s] is not a valid HDF5 database'.format(args.input))
+        pls = [hdf5_portal.load_peak_matrix_from_hdf5(args.input).to_peaklist()]
+        hdf5_portal.save_peaklists_as_hdf5(pls, args.output)
 
     elif args.step == "hdf5-to-txt":
         workflow.hdf5_to_txt(args.input,
