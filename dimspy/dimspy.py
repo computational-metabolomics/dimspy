@@ -294,8 +294,12 @@ def main():
     #########################################
 
     parser_gap.add_argument('-i', '--input',
-                           required=True, default=[], action='append',
+                           type=str, required=True,
                            help="Single or Multiple HDF5 files that contain a peak matrix object from one of the processing steps.")
+
+    parser_gap.add_argument('-n', '--name-peaklist',
+                            required=True, type=str,
+                            help="HDF5 file to save the peaklist objects.")
 
     parser_gap.add_argument('-o', '--output',
                            required=True, type=str,
@@ -412,25 +416,26 @@ def main():
         hdf5_portal.save_peak_matrix_as_hdf5(pm_sf, args.output)
 
     elif args.step == "merge-peaklists":
-        pls_merged = workflow.merge_peaklists(sources=args.input, filelist=args.filelist)
+        pls_merged = workflow.merge_peaklists(source=args.input, filelist=args.filelist)
         hdf5_portal.save_peaklists_as_hdf5(pls_merged, args.output)
 
     elif args.step == "get-peaklists":
         pls = []
         for s in args.input:
-            if os.path.isfile(args.input):
-                raise OSError('HDF5 database [%s] not exists'.format(args.input))
-            if h5py.is_hdf5(args.input):
-                raise OSError('input file [%s] is not a valid HDF5 database'.format(args.input))
-            pls.extend(hdf5_portal.load_peak_matrix_from_hdf5(s).get_peaklists())
+            if not os.path.isfile(s):
+                raise OSError('HDF5 database [{}] not exists'.format(s))
+            if not h5py.is_hdf5(s):
+                raise OSError('input file [{}] is not a valid HDF5 database'.format(s))
+            pm = hdf5_portal.load_peak_matrix_from_hdf5(s)
+            pls.extend(pm.get_peaklists())
         hdf5_portal.save_peaklists_as_hdf5(pls, args.output)
 
     elif args.step == "get-average-peaklist":
-        if os.path.isfile(args.input):
-            raise OSError('HDF5 database [%s] not exists'.format(args.input))
-        if h5py.is_hdf5(args.input):
-            raise OSError('input file [%s] is not a valid HDF5 database'.format(args.input))
-        pls = [hdf5_portal.load_peak_matrix_from_hdf5(args.input).to_peaklist()]
+        if not os.path.isfile(args.input):
+            raise OSError('HDF5 database [{}] not exists'.format(args.input))
+        if not h5py.is_hdf5(args.input):
+            raise OSError('input file [{}] is not a valid HDF5 database'.format(args.input))
+        pls = [hdf5_portal.load_peak_matrix_from_hdf5(args.input).to_peaklist(ID=args.name_peaklist)]
         hdf5_portal.save_peaklists_as_hdf5(pls, args.output)
 
     elif args.step == "hdf5-to-txt":

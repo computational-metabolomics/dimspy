@@ -218,9 +218,9 @@ class PeakMatrix(object):
                 pl.add_attribute(k, v[idx][nzero_idx])
         return pl
 
-    def get_peaklists(self, all_attr=True):
+    def get_peaklists(self):
         # Recreate all peaklists used for the peak matrix
-        return [self.get_peaklist(pid, all_attr) for pid in self.peaklist_ids]
+        return [self.get_peaklist(pid) for pid in self.peaklist_ids]
 
     def remove_samples(self, ids, remove_empty_peaks=True, masked_only=True):
         rmids = np.arange(self.full_shape[0])[self.mask][list(ids)] if masked_only else ids
