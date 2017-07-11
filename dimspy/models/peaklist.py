@@ -342,6 +342,8 @@ class PeakList(object):
         if on_index is not None and not (-self.shape[1] + 1 < on_index < 0 or 1 < on_index < self.shape[1]):
             raise IndexError('index [%d] out of (insertable) range' % on_index)
 
+        attr_name = str(attr_name) # rfn.append_fields doesn't recognises unicode
+
         adt = bool if is_flag else \
             attr_dtype if attr_dtype is not None else \
                 attr_value.dtype.str if hasattr(attr_value, 'dtype') else \

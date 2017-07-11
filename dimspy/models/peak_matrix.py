@@ -194,7 +194,7 @@ class PeakMatrix(object):
         pl.add_attribute("purity", self.purity)
         return pl
 
-    def get_peaklist(self, peaklist_id, all_attr):
+    def get_peaklist(self, peaklist_id):
         # get peaklist by id
         if peaklist_id not in self.peaklist_ids:
             raise ValueError('peaklist id has to match those in the peak matrix')
@@ -214,9 +214,8 @@ class PeakMatrix(object):
 
         # Add any remaining attributes
         for k, v in self._attr_dict.iteritems():
-            if k not in ["intensity", "mz", "intra_count"]:
-                if all_attr or k in ["present", "fraction", "rsd", "occurrence", "purity"]:
-                    pl.add_attribute(k, v[idx][nzero_idx])
+            if k not in ["intensity", "mz"]:
+                pl.add_attribute(k, v[idx][nzero_idx])
         return pl
 
     def get_peaklists(self, all_attr=True):
@@ -323,3 +322,6 @@ class unmask_all_peakmatrix:
         if len(self._oldmask) != self._pm.full_shape[0]:
             raise ReferenceError('sample number changed within with... statement')
         self._pm.mask = self._oldmask
+
+
+
