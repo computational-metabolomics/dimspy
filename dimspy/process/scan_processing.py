@@ -43,6 +43,9 @@ def remove_edges(pls_sd):
         mz_ranges = len(pls_sd[h]) * [new_mzrs[pls_sd.keys().index(h)]]
         for i in range(len(pls_sd[h])):
             remove = [np.where(pls_sd[h][i].mz == mz)[0][0] for mz in pls_sd[h][i].mz if mz < mz_ranges[i][0] or mz >= mz_ranges[i][1]]
+            for mz in pls_sd[h][i].mz:
+                if mz < mz_ranges[i][0] or mz >= mz_ranges[i][1]:
+                    remove.extend(list(np.where(pls_sd[h][i].mz == mz)[0]))
             pls_sd[h][i].remove_peak(remove)
     return pls_sd
 
