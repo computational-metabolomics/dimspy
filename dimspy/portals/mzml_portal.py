@@ -33,7 +33,7 @@ class Mzml:
 
     def peaklist(self, scan_id, mode_noise="median"):
 
-        assert mode_noise in ["mean", "median", "mad"], "select a method that is available [msfilereader, mean, median, mad]"
+        assert mode_noise in ["mean", "median", "mad"], "select a method that is available [mean, median, mad]"
         for scan in self.run():
             if scan["id"] == scan_id:
 

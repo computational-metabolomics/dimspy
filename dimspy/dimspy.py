@@ -70,7 +70,7 @@ def main():
                                 "HIGHLY RECOMMENDED when directory or zip file is provided.")
 
     parser_ps.add_argument('-m', '--function-noise',
-                           choices=["median", "mean", "mad", "msfilereader"], required=True,
+                           choices=["median", "mean", "mad", "noise_packets"], required=True,
                            help="Select function to calculate noise.")
 
     parser_ps.add_argument('-s', '--snr-threshold',
@@ -86,7 +86,7 @@ def main():
                            help="Minimum number of scans required for each m/z range or event (header).")
 
     parser_ps.add_argument('-a', '--min-fraction',
-                           default=1, type=float, required=False,
+                           default=0.5, type=float, required=False,
                            help="Minimum fraction a peak has to be present. Use 0.0 to not apply this filter.")
 
     parser_ps.add_argument('-d', '--rsd-threshold',
