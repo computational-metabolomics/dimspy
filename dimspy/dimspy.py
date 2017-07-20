@@ -347,7 +347,7 @@ def main():
                 filter_scan_events["exclude"].append([se[0], se[1], se[2]])
         elif args.include_scan_events != []:
             for se in args.include_scan_events: 
-                if "exclude" not in filter_scan_events:
+                if "include" not in filter_scan_events:
                     filter_scan_events["include"] = []
                 filter_scan_events["include"].append([se[0], se[1], se[2]])
 
