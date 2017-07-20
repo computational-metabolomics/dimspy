@@ -98,7 +98,7 @@ def read_scans(fn, source, function_noise, min_scans=1, filter_scan_events=None)
         incl_excl = filter_scan_events.keys()[0]
         for hd in filter_scan_events[incl_excl]:
             if hd not in h_descs.values():
-                raise IOError("Event {} doest not exist".format(str(hd)))
+                logging.warning("Event {} doest not exist".format(str(hd)))
 
         for hd in h_descs:
             if filter_scan_events.keys()[0] == "include":
