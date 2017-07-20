@@ -316,7 +316,7 @@ class PeakList(object):
         """
         Adds an new attribute to the PeakList attribute table.
 
-        :param attr_name: the name of the new attribute
+        :param attr_name: the name of the new attribute, must be a string
         :param attr_value: the values of the new attribute. It's size must equals to PeakList.size
             (if flagged_only == True), or PeakList.full_size (if flagged_only == False)
         :param attr_dtype: the data type of the new attribute. If it is set to None, the PeakList will
@@ -337,18 +337,16 @@ class PeakList(object):
             raise AttributeError('cannot add reserved attribute [%s]' % attr_name)
         if self.has_attribute(attr_name):
             raise AttributeError('attribute [%s] already exists' % attr_name)
-        if is_flag and self.size > 0 and not (set(attr_value) in ({0}, {1}, {0, 1})):
-            raise ValueError('flag attribute can only contain True / False values')
         if on_index is not None and not (-self.shape[1] + 1 < on_index < 0 or 1 < on_index < self.shape[1]):
             raise IndexError('index [%d] out of (insertable) range' % on_index)
 
-        attr_name = str(attr_name) # rfn.append_fields doesn't recognises unicode
+        attr_name = str(attr_name) # rfn.append_fields doesn't recognise unicode
 
         adt = bool if is_flag else \
-            attr_dtype if attr_dtype is not None else \
-                attr_value.dtype.str if hasattr(attr_value, 'dtype') else \
-                    ('S%d' % max(map(len, attr_value))) if type(attr_value[0]) in (unicode, str) else \
-                        type(attr_value[0])
+              attr_dtype if attr_dtype is not None else \
+              attr_value.dtype.str if hasattr(attr_value, 'dtype') else \
+              ('S%d' % max(map(len, attr_value))) if type(attr_value[0]) in (unicode, str) else \
+              type(attr_value[0])
         if adt in (bool, 'bool', '|b1'): adt = 'b'  # fix numpy dtype bug
 
         if flagged_only:
@@ -360,6 +358,9 @@ class PeakList(object):
             if len(attr_value) != self.full_size:
                 raise ValueError('input attibute value size not match')
             nattr = np.array(attr_value).astype(adt)
+
+        if is_flag and self.size > 0 and not (set(nattr) in ({0}, {1}, {0, 1})):
+            raise ValueError('flag attribute can only contain True / False values')
 
         if on_index is None: on_index = self.shape[1]
         anames, atypes = map(list, zip(*self._dtable.dtype.descr))
@@ -472,6 +473,7 @@ class PeakList(object):
         50, 50, 50, True
 
         """
+        if isinstance(peak_index, Iterable): peak_index = list(peak_index)
         self._dtable[np.where(self._flags)[0][peak_index] if flagged_only else peak_index] = peak_value
         self.sort_peaks_order()
         self.calculate_flags()
@@ -486,6 +488,7 @@ class PeakList(object):
         :rtype: numpy array
 
         """
+        if isinstance(peak_index, Iterable): peak_index = list(peak_index)
         return self._dtable[self._flags][peak_index] if flagged_only else self._dtable[peak_index]
 
     def insert_peak(self, peak_value):

@@ -427,7 +427,7 @@ def main():
             if not h5py.is_hdf5(s):
                 raise OSError('input file [{}] is not a valid HDF5 database'.format(s))
             pm = hdf5_portal.load_peak_matrix_from_hdf5(s)
-            pls.extend(pm.get_peaklists())
+            pls.extend(pm.extract_peaklists())
         hdf5_portal.save_peaklists_as_hdf5(pls, args.output)
 
     elif args.step == "get-average-peaklist":

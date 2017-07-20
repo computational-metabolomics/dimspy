@@ -13,46 +13,46 @@ from __future__ import division
 
 import logging
 import numpy as np
+from collections import OrderedDict, Iterable
 from string import join
 from peaklist import PeakList
 
 
 class PeakMatrix(object):
-    def __init__(self, peaklist_ids, peaklist_tags, **peaklist_attributes):
-        if len(peaklist_attributes) < 2 or not (
-            peaklist_attributes.has_key('mz') and peaklist_attributes.has_key('intensity')):
-            raise ValueError('required attribute fields "mz" and "intensity" not available')
-
-        pnum, psize = peaklist_attributes.values()[0].shape
-        if not len(peaklist_ids) == len(peaklist_tags) == pnum:
-            raise ValueError('input peaklists number not match')
-        if not all(map(lambda x: x.shape == (pnum, psize), peaklist_attributes.values())):
-            raise ValueError('input attribute matrix shape not match')
-
+    def __init__(self, peaklist_ids, peaklist_tags, peaklist_attributes):
+        if len(set(peaklist_ids)) != len(peaklist_ids):
+            raise ValueError('duplicate peaklist IDs found')
         self._pids = np.array(peaklist_ids)
         self._tags = np.array(peaklist_tags)
-        self._attr_dict = {k: np.array(v) for k, v in peaklist_attributes.items()}
-        self._mask = np.ones(pnum, dtype=bool)
+
+        self._attr_dict = OrderedDict((str(k), np.array(v)) for k,v in peaklist_attributes)
+        if not (self._attr_dict.keys()[0] == 'mz' and self._attr_dict.keys()[1] == 'intensity'):
+            raise ValueError('required attribute fields "mz" and "intensity" not available')
+
+        pnum, psize = self._attr_dict.values()[0].shape
+        if not len(peaklist_ids) == len(peaklist_tags) == pnum:
+            raise ValueError('input peaklists number not match')
+        if not all(map(lambda x: x.shape == (pnum, psize), self._attr_dict.values())):
+            raise ValueError('input attribute matrix shape not match')
+
+        self._mask = np.zeros(pnum, dtype=bool)
+        self._flags_dict = OrderedDict()
 
     # privates
     # np.average accepts weights, set to 0 to exclude value
-    @staticmethod
-    def _masknan(x, axis, _func):
-        bwt = x.astype(bool)
-        nid = (np.sum(~np.isclose(bwt, 0), axis=axis) == 0)
-        bwt[:, nid] = 1
-        val = _func(bwt)
-        val[nid] = np.nan  # all values = 0 -> nanzero average / std = nan
-        return val
+    def _present_mask(self, x, _func, flagged_only):
+        pmx = self.present_matrix if flagged_only else self.full_present_matrix
+        mskx = np.ma.masked_array(x, mask = ~pmx)
+        vals = _func(mskx)
+        rval = np.array(vals)
+        rval[vals.mask] = np.nan
+        return rval
 
-    def _nzmean(self, x, axis):
-        _func = lambda b: np.average(x, axis=axis, weights=b)
-        return self._masknan(x, axis, _func)
+    def _present_mean(self, x, axis, flagged_only):
+        return self._present_mask(x, lambda v: np.mean(v, axis = axis), flagged_only)
 
-    def _nzstd(self, x, axis):
-        _func = lambda b: np.sqrt(
-            np.average(np.power(x - np.average(x, axis=axis, weights=b), 2), axis=axis, weights=b))
-        return self._masknan(x, axis, _func)
+    def _present_std(self, x, axis, flagged_only):
+        return self._present_mask(x, lambda v: np.std(v, axis = axis), flagged_only)
 
     # built-ins
     def __len__(self):
@@ -68,19 +68,36 @@ class PeakMatrix(object):
 
     @mask.setter
     def mask(self, value):
-        if value is None:
-            self._mask = np.ones(self.full_shape[0], dtype=bool)
-        else:
-            self._mask = np.zeros(self.full_shape[0], dtype=bool)
-            self._mask[value] = True
+        self._mask = np.zeros(self.full_shape[0], dtype = bool)
+        if value is not None: self._mask[value] = True
+
+    @property
+    def flag_names(self):
+        return tuple(self._flags_dict.keys())
+
+    @property
+    def flags(self):
+        """
+        Property of the flags.
+
+        :getter: returns a deep copy of the flags array
+        :type: numpy array
+
+        """
+        return np.ones(self.full_shape[1], dtype = bool) if len(self._flags_dict) == 0 else \
+               np.logical_and.reduce(self._flags_dict.values())
+
+    @property
+    def attributes(self):
+        return tuple(self._attr_dict.keys())
 
     @property
     def peaklist_ids(self):
-        return tuple(self._pids[self._mask])
+        return tuple(self._pids[~self._mask])
 
     @property
     def peaklist_tags(self):
-        return tuple(self._tags[self._mask])
+        return tuple(self._tags[~self._mask])
 
     @property
     def peaklist_tag_types(self):
@@ -91,12 +108,8 @@ class PeakMatrix(object):
         return tuple(set(reduce(lambda x, y: x + y, [t.tag_values for t in self.peaklist_tags], ())))
 
     @property
-    def attributes(self):
-        return tuple(self._attr_dict.keys())
-
-    @property
     def shape(self):
-        return np.sum(self._mask), self._attr_dict['mz'].shape[1]
+        return np.sum(~self._mask), np.sum(self.flags)
 
     @property
     def full_shape(self):
@@ -104,7 +117,18 @@ class PeakMatrix(object):
 
     @property
     def present(self):
-        return np.sum(self.intensity_matrix > 0, axis=0)
+        return np.sum(self.present_matrix, axis=0)
+
+    @property
+    def present_matrix(self):
+        pmx = self.attr_matrix('intra_count') if 'intra_count' in self.attributes else self.mz_matrix
+        return pmx > 0
+
+    @property
+    def full_present_matrix(self):
+        pmx = self.attr_matrix('intra_count', flagged_only = False) if 'intra_count' in self.attributes else \
+              self.attr_matrix('mz', flagged_only = False)
+        return pmx > 0
 
     @property
     def fraction(self):
@@ -112,15 +136,16 @@ class PeakMatrix(object):
 
     @property
     def missing_values(self):
-        return np.sum(self.intensity_matrix == 0, axis=1)
+        return np.sum(~self.present_matrix, axis=1)
 
     @property
     def rsd(self):
         if self.shape[0] < 2:
             # logging.warning('calculating RSD on less than 2 samples')
             return np.ones(self.shape[1]) * np.nan
-        rsd = (lambda m: self._nzstd(m, 0) / self._nzmean(m, 0) * 100)(self.intensity_matrix)
-        rsd[np.where(map(lambda x: len(set(x[np.nonzero(x)])) == 1, self.intensity_matrix.T))] = np.nan
+        ints = self.intensity_matrix
+        rsd = self._present_std(ints, 0, True) / self._present_mean(ints, 0, True) * 100
+        rsd[np.where(map(lambda x: len(set(x[np.nonzero(x)])) == 1, ints.T))] = np.nan # only one valid value
         return rsd
 
     @property
@@ -137,6 +162,7 @@ class PeakMatrix(object):
             return np.zeros(self.shape[1])
         return 1 - (np.sum(self.attr_matrix('intra_count') > 1, axis=0) / self.shape[0])
 
+    # attribute matrix
     @property
     def mz_matrix(self):
         return self.attr_matrix('mz')
@@ -150,23 +176,23 @@ class PeakMatrix(object):
         return self.attr_mean_vector('mz')
 
     @property
-    def ints_mean_vector(self):
+    def intensity_mean_vector(self):
         return self.attr_mean_vector('intensity')
 
     # publics
     # tags and mask
     def tags_of(self, tag_type=None):
-        if tag_type is not None and not all(map(lambda x: x.has_tag_type(tag_type), self.peaklist_tags)):
+        if not (tag_type is None or all(map(lambda x: x.has_tag_type(tag_type), self.peaklist_tags))):
             raise ValueError('not all samples has tag type [%s]' % tag_type)
         tlst = [t.tag_of(tag_type) for t in self.peaklist_tags]
         if tag_type is None: tlst = reduce(lambda x, y: x + y, tlst)
         return tuple(set(tlst))
 
-    def mask_tags(self, *args, **kwargs):  # match to any
+    def mask_tags(self, *args, **kwargs):  # match to all
         override = kwargs.pop('override') if kwargs.has_key('override') else False
-        mask = map(lambda x: any(map(lambda t: x.has_tag(t), args)) or
-                             any(map(lambda t: x.has_tag(**dict([t])), kwargs.items())), self._tags)
-        self.mask = np.logical_and(True if override else self._mask, mask)
+        mask = map(lambda x: all(map(lambda t: x.has_tag(t), args)) and
+                             all(map(lambda t: x.has_tag(**dict([t])), kwargs.items())), self._tags)
+        self.mask = np.logical_or(False if override else self._mask, mask)
         return self
 
     def unmask_tags(self, *args, **kwargs):  # match to all
@@ -176,72 +202,64 @@ class PeakMatrix(object):
         self.mask = np.logical_and(True if override else self._mask, mask)
         return self
 
+    # flags
+    def add_flag(self, flag_name, flag_values, flagged_only = True):
+        if flag_name == 'flags':
+            raise KeyError('reserved flag name [flags] cannot be added')
+        if self._flags_dict.has_key(flag_name):
+            raise KeyError('flag name [%s] already exists' % flag_name)
+        if flagged_only:
+            if not len(flag_values) == self.shape[1]: raise ValueError('flag values and peak matrix shape not match')
+            newf = np.zeros(self.full_shape[1], dtype = bool)
+            newf[self.flags] = flag_values
+            self._flags_dict[flag_name] = newf
+        else:
+            if not len(flag_values) == self.full_shape[1]: raise ValueError('flag values and peak matrix shape not match')
+            self._flags_dict[flag_name] = np.array(flag_values, dtype = bool)
+
+    def drop_flag(self, flag_name):
+        if flag_name == 'flags':
+            raise KeyError('reserved flag name [flags] cannot be droppped')
+        if not self._flags_dict.has_key(flag_name):
+            raise KeyError('flag name [%s] not exists' % flag_name)
+        del self._flags_dict[flag_name]
+
+    def flag_values(self, flag_name):
+        if flag_name == 'flags':
+            raise KeyError('use PeakMatrix.flags to access reserved flag name [flags]')
+        if not self._flags_dict.has_key(flag_name):
+            raise KeyError('flag name [%s] not exists' % flag_name)
+        return self._flags_dict[flag_name]
+
     # access
-    def attr_matrix(self, attr_name):
+    def attr_matrix(self, attr_name, flagged_only = True):
         if not self._attr_dict.has_key(attr_name):
             raise KeyError('attribute matrix [%s] not available' % attr_name)
-        return self._attr_dict[attr_name][self._mask]
+        aM = self._attr_dict[attr_name][~self._mask]
+        return aM[:,self.flags] if flagged_only else aM
 
-    def attr_mean_vector(self, attr_name):
-        return self._nzmean(self.attr_matrix(attr_name), 0)
+    def attr_mean_vector(self, attr_name, flagged_only = True):
+        aM = self.attr_matrix(attr_name, flagged_only)
+        aV = self._present_mean(aM, 0, flagged_only) if aM.dtype.kind in ('i', 'u', 'f') else \
+             np.array([join([str(v) for v,p in zip(ln,self.present_matrix[:,j]) if p],';')
+                       for j,ln in enumerate(zip(*aM))]) # for strings
+        return aV
 
-    def to_peaklist(self, ID):
-        pl = PeakList(ID, self.mz_mean_vector, self.ints_mean_vector, aligned_ids=self.peaklist_ids)
-        pl.add_attribute("present", self.present)
-        pl.add_attribute("fraction", self.fraction)
-        pl.add_attribute("rsd", self.rsd)
-        pl.add_attribute("occurrence", self.occurrence)
-        pl.add_attribute("purity", self.purity)
-        return pl
-
-    def get_peaklist(self, peaklist_id):
-        # get peaklist by id
-        if peaklist_id not in self.peaklist_ids:
-            raise ValueError('peaklist id has to match those in the peak matrix')
-
-        # first get the index of the peaklist of interest
-        idx = self.peaklist_ids.index(peaklist_id)
-
-        # Get the MZ matrix first, we only want to include values where the mz > 0
-        mzm = self._attr_dict['mz'][idx]
-
-        # obtain an index for the non_zero values
-        nzero_idx = np.nonzero(mzm)
-
-        # initiate a PeakList using the MZ matrix and intensity (note that both only include values where the mz > 0
-        # i.e. where there was actually a peak)
-        pl = PeakList(peaklist_id, mzm[nzero_idx], self._attr_dict['intensity'][idx][nzero_idx])
-
-        # Add any remaining attributes
-        for k, v in self._attr_dict.iteritems():
-            if k not in ["intensity", "mz"]:
-                pl.add_attribute(k, v[idx][nzero_idx])
-        return pl
-
-    def get_peaklists(self):
-        # Recreate all peaklists used for the peak matrix
-        return [self.get_peaklist(pid) for pid in self.peaklist_ids]
-
-    def remove_samples(self, ids, remove_empty_peaks=True, masked_only=True):
-        rmids = np.arange(self.full_shape[0])[self.mask][list(ids)] if masked_only else ids
+    def remove_samples(self, sample_ids, masked_only=True):
+        if isinstance(sample_ids, Iterable): sample_ids = list(sample_ids)
+        rmids = np.where(~self.mask)[0][sample_ids] if masked_only else sample_ids
         self._pids = np.delete(self._pids, rmids, axis=0)
         self._tags = np.delete(self._tags, rmids, axis=0)
-        self._attr_dict = {k: np.delete(v, rmids, axis=0) for k, v in self._attr_dict.items()}
+        self._attr_dict = OrderedDict((k, np.delete(v, rmids, axis=0)) for k,v in self._attr_dict.items())
         self._mask = np.delete(self._mask, rmids, axis=0)
-        if remove_empty_peaks: self.remove_peaks(np.where(np.sum(self.intensity_matrix, axis=0) == 0), False)
         if self.is_empty(): logging.warning('matrix is empty after removal')
         return self
 
-    def remove_peaks(self, ids, remove_empty_samples=True):
-        self._attr_dict = {k: np.delete(v, ids, axis=1) for k, v in self._attr_dict.items()}
-        if remove_empty_samples:
-            with unmask_all_peakmatrix(self) as pm:
-                rmsids = np.where(np.sum(pm.intensity_matrix, axis=1) == 0)[0]
-            if len(rmsids) > 0:
-                logging.warning(
-                    'empty peaklists [%s] automatically removed' % join([str(self.peaklist_ids[i]) for i in rmsids],
-                                                                        ', '))
-                self.remove_samples(rmsids, False, False)
+    def remove_peaks(self, peak_ids, flagged_only = True):
+        if isinstance(peak_ids, Iterable): peak_ids = list(peak_ids)
+        rmids = np.where(self.flags)[0][peak_ids] if flagged_only else peak_ids
+        self._attr_dict = OrderedDict((k, np.delete(v, rmids, axis=1)) for k,v in self._attr_dict.items())
+        self._flags_dict = OrderedDict((k, np.delete(v, rmids)) for k,v in self._flags_dict.items())
         if self.is_empty(): logging.warning('matrix is empty after removal')
         return self
 
@@ -249,9 +267,36 @@ class PeakMatrix(object):
         return 0 in self.shape
 
     # exports
+    def extract_peaklist(self, peaklist_id):
+        if peaklist_id not in self.peaklist_ids:
+            raise ValueError('peaklist id has to match those in the peak matrix')
+        idx = self.peaklist_ids.index(peaklist_id)
+
+        nzero_idx = self.present_matrix[idx]
+        pl = PeakList(peaklist_id, self.mz_matrix[idx,nzero_idx], self.intensity_matrix[idx,nzero_idx])
+        for attr in self.attributes[2:]: pl.add_attribute(attr, self.attr_matrix(attr)[idx,nzero_idx])
+
+        return pl
+
+    def extract_peaklists(self):
+        return map(self.extract_peaklist, self.peaklist_ids)
+
+    def to_peaklist(self, ID):
+        presids = self.present > 0 # presented peaks only
+        if False in presids:
+            logging.warning('[%d] empty peaks removed when exporting PeakMatrix to PeakList' % np.sum(~presids))
+        pl = PeakList(ID, self.mz_mean_vector[presids], self.intensity_mean_vector[presids], aligned_ids = self.peaklist_ids)
+        pl.add_attribute('present', self.present[presids])
+        pl.add_attribute('fraction', self.fraction[presids])
+        pl.add_attribute('rsd', self.rsd[presids])
+        pl.add_attribute('occurrence', self.occurrence[presids])
+        pl.add_attribute('purity', self.purity[presids])
+        return pl
+
     def to_str(self, attr_name='intensity', delimiter='\t', transpose=False, comprehensive=True):
-        hd = ['m/z'] + map(str, self.mz_mean_vector)
-        dm = [map(str, self.peaklist_ids)] + [map(str, ln) for ln in self.attr_matrix(attr_name).T]
+        hd = ['m/z'] + map(str, self.attr_mean_vector('mz', flagged_only = False))
+        dm = [map(str, self.peaklist_ids)] + \
+             [map(str, ln) for ln in self.attr_matrix(attr_name, flagged_only = False).T]
 
         if comprehensive:
             ttypes = set(reduce(lambda x, y: x + y, map(lambda x: x.tag_types, self.peaklist_tags)))
@@ -262,11 +307,19 @@ class PeakMatrix(object):
                  [map(lambda x: str(x.tag_of(t)) if x.has_tag_type(t) else '', self.peaklist_tags) for t in ttypes] + \
                  [map(lambda x: join(map(str, x.tag_of(None)), ';'), self.peaklist_tags)] + \
                  dm[1:]
-            prelst = ['present'] + ([''] * (tnum + 2)) + map(str, self.present)
-            rsdlst = ['rsd'] + ([''] * (tnum + 2)) + map(str, self.rsd)
-            ocrlst = ['occurrence'] + ([''] * (tnum + 2)) + map(str, self.occurrence)
-            puplst = ['purity'] + ([''] * (tnum + 2)) + map(str, self.purity)
-            dm = zip(*([prelst, rsdlst, ocrlst, puplst] + zip(*dm)))
+
+            def _refill(vals):
+                vect = np.array(['--'] * self.full_shape[1], dtype = vals.dtype)
+                vect[np.where(self.flags)] = vals
+                return list(vect)
+
+            prelst = ['present']    + ([''] * (tnum + 2)) + _refill(self.present.astype(str))
+            rsdlst = ['rsd']        + ([''] * (tnum + 2)) + _refill(self.rsd.astype(str))
+            ocrlst = ['occurrence'] + ([''] * (tnum + 2)) + _refill(self.occurrence.astype(str))
+            puplst = ['purity']     + ([''] * (tnum + 2)) + _refill(self.purity.astype(str))
+            flgmtx = [[fn] + ([''] * (tnum + 2)) + map(str, self.flag_values(fn)) for fn in self.flag_names]
+            flglst = ['flags']      + ([''] * (tnum + 2)) + map(str, self.flags)
+            dm = zip(*([prelst, rsdlst, ocrlst, puplst] + flgmtx + [flglst] + zip(*dm)))
 
         lm = [hd] + zip(*dm)
         return join(map(lambda x: join(x, delimiter), zip(*lm) if transpose else lm), '\n')
@@ -279,16 +332,14 @@ class mask_peakmatrix:
         self._utags = args
         self._ttags = kwargs
         if not self._ttags.has_key('override'): self._ttags['override'] = True  # default for with statement
-        self._oldmask = pm.mask
+        self._oldmask = dict(zip(pm._pids, pm._mask))
 
     def __enter__(self):
         self._pm.mask_tags(*self._utags, **self._ttags)
         return self._pm
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        if len(self._oldmask) != self._pm.full_shape[0]:
-            raise ReferenceError('sample number changed within with... statement')
-        self._pm.mask = self._oldmask
+        self._pm.mask = [self._oldmask[i] for i in self._pm._pids]
 
 
 class unmask_peakmatrix:
@@ -297,31 +348,38 @@ class unmask_peakmatrix:
         self._utags = args
         self._ttags = kwargs
         if not self._ttags.has_key('override'): self._ttags['override'] = True  # default for with statement
-        self._oldmask = pm.mask
+        self._oldmask = dict(zip(pm._pids, pm._mask))
 
     def __enter__(self):
         self._pm.unmask_tags(*self._utags, **self._ttags)
         return self._pm
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        if len(self._oldmask) != self._pm.full_shape[0]:
-            raise ReferenceError('sample number changed within with... statement')
-        self._pm.mask = self._oldmask
+        self._pm.mask = [self._oldmask[i] for i in self._pm._pids]
+
+
+class mask_all_peakmatrix:
+    def __init__(self, pm):
+        self._pm = pm
+        self._oldmask = dict(zip(pm._pids, pm._mask))
+
+    def __enter__(self):
+        self._pm.mask = [True] * self._pm.full_shape[0]
+        return self._pm
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self._pm.mask = [self._oldmask[i] for i in self._pm._pids]
 
 
 class unmask_all_peakmatrix:
     def __init__(self, pm):
         self._pm = pm
-        self._oldmask = pm.mask
+        self._oldmask = dict(zip(pm._pids, pm._mask))
 
     def __enter__(self):
         self._pm.mask = None
         return self._pm
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        if len(self._oldmask) != self._pm.full_shape[0]:
-            raise ReferenceError('sample number changed within with... statement')
-        self._pm.mask = self._oldmask
-
-
+        self._pm.mask = [self._oldmask[i] for i in self._pm._pids]
 

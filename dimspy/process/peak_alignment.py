@@ -10,25 +10,16 @@ origin: Oct. 2016
 
 from __future__ import division
 
-import logging, sys
+import logging
 import numpy as np
 import fastcluster as fc
 from string import join
 from operator import itemgetter
 from multiprocessing import Pool, cpu_count
-from collections import defaultdict
+from collections import Counter
 from scipy import cluster
 from scipy.spatial.distance import squareform
 from dimspy.models.peak_matrix import PeakMatrix
-
-if sys.version_info < (2, 7):
-    def Counter(lst):
-        dct = defaultdict(lambda: 0)
-        for k in set(lst):
-            dct[k] += 1
-        return dct
-else:
-    from collections import Counter
 
 
 # single cluster
@@ -116,8 +107,8 @@ def _cluster_peaks_map(mzs, ppm, block_size, fixed_block, edge_extend, ncpus):
     slimbk = map(lambda x: len(x) == 0 or abs(x[-1] - x[0]) / x[0] < eeppm * 10, bkmzs)
     if np.sum(slimbk) > 0:
         pbrngs = [map(lambda x: min(x, len(mzs) - 1), (r[0], r[-1] - 1 if r[-1] != r[0] else r[-1])) for r in brngs]
-        pblns = ['block %d' % i + ': [%f, %f]' % itemgetter(*r)(mzs) for i, (s, r) in enumerate(zip(slimbk, pbrngs)) if
-                 s]
+        pblns = ['block %d' % i + ': [%f, %f]' % itemgetter(*r)(mzs)
+                 for i, (s, r) in enumerate(zip(slimbk, pbrngs)) if s]
         logging.warning('[%d] empty / slim clustering block(s) found, consider increasing the block size\n%s' %
                         (np.sum(slimbk), join(pblns, '\n')))
     bcids = pmap(_cluster_peaks_mp, [(m, ppm) for m in bkmzs])
@@ -151,7 +142,7 @@ def _align_peaks(cids, pids, *attrs):
         cM[pos] = count
 
     # fill all the attributes into matrix
-    def _fillam(a):
+    def _avg_am(a):
         aM = np.zeros(map(len, (upids, ucids)))
         for p, v in zip(zip(mpids, mcids), a):
             aM[p] += v
@@ -159,6 +150,19 @@ def _align_peaks(cids, pids, *attrs):
             aM /= cM
         aM[np.isnan(aM)] = 0
         return aM
+
+    def _cat_am(a):
+        aM = [[[] for _ in ucids] for _ in upids]
+        for (r, c), v in zip(zip(mpids, mcids), a):
+            aM[r][c] += [str(v)]
+        aM = [[join(val, ',') for val in ln] for ln in aM]
+        return np.array(aM)
+
+    def _fillam(a):
+        alg = _avg_am if a.dtype.kind in ('i', 'u', 'f') else \
+              _cat_am if a.dtype.kind in ('?', 'b', 'a', 'S', 'U') else \
+              lambda x: logging.warning('undefined alignment behaviour for [%s] dtype data') # returns None
+        return alg(a)
 
     attrMs = map(_fillam, attrs)
 
@@ -185,12 +189,13 @@ def align_peaks(peaks, ppm=2.0, block_size=2000, fixed_block=True, edge_extend=1
         raise ValueError('peak attributes not the same')
     if 'intra_count' in attrs:
         raise AttributeError('preserved attribute name [intra_count] already exists')
+    attrs = filter(lambda x: x not in peaks[0].flag_attributes, attrs) # flags should be excluded
 
     # single peaklist
     if len(peaks) == 1:
-        attrdct = dict((a, peaks[0][a].reshape((1, -1))) for a in attrs)
-        attrdct.update(intra_count=np.ones((1, peaks[0].size)))
-        return PeakMatrix([peaks[0].ID], [peaks[0].tags], **attrdct)
+        attrlst = [(a, peaks[0][a].reshape((1, -1))) for a in attrs] + \
+                  [('intra_count', np.ones((1, peaks[0].size)))]
+        return PeakMatrix([peaks[0].ID], [peaks[0].tags], attrlst)
 
     # flatten
     f_pids = np.hstack(map(lambda p: [p.ID] * p.size, peaks))
@@ -212,6 +217,6 @@ def align_peaks(peaks, ppm=2.0, block_size=2000, fixed_block=True, edge_extend=1
     pids = f_pids[sorted(np.unique(f_pids, return_index=True)[1])]
     pdct = dict((i, mi) for mi, i in enumerate(a_pids))
     porder = [pdct[i] for i in pids]
-    o_attrms = map(lambda x: x[porder], a_attrms)
+    o_attrms = map(lambda x: x[porder] if x is not None else None, a_attrms)
 
-    return PeakMatrix(pids, [p.tags for p in peaks], **dict(zip(attrs, o_attrms)))
+    return PeakMatrix(pids, [p.tags for p in peaks], filter(lambda x: x[1] is not None, zip(attrs, o_attrms)))

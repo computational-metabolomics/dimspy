@@ -315,13 +315,13 @@ def merge_peaklists(source, filelist=None):
             else:
                 raise IOError("Incorrect Object in list. Peaklist Object expected.")
         elif isinstance(s, PeakMatrix):
-            pls = s.get_peaklists()
+            pls = s.extract_peaklists()
             pls_merged.extend(pls)
         elif h5py.is_hdf5(s):
             f = h5py.File(s, 'r')
             if "mz" in f:
                 pm = txt_portal.load_peak_matrix_from_txt(s)
-                pls = pm.get_peaklists()
+                pls = pm.extract_peaklists()
             else:
                 pls = hdf5_portal.load_peaklists_from_hdf5(s)
             f.close()
