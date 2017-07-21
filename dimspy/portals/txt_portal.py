@@ -2,10 +2,11 @@
 #  -*- coding: utf-8 -*-
 
 """
-txt_portal: PeakList and PeakMatrix plain text portals.
+The PeakList and PeakMatrix plain text portals.
 
-author(s): Albert Zhou, Ralf Weber
-origin: Apr. 13, 2017
+.. moduleauthor:: Albert Zhou, Ralf Weber
+
+.. versionadded:: 0.1
 
 """
 
@@ -29,12 +30,34 @@ def _evalv(vect):
 
 # peaklist portals
 def save_peaklist_as_txt(pkl, file_name, *args, **kwargs):
+    """
+    Saves a peaklist in plain text file.
+
+    :param pkl: the target peaklist object
+    :param file_name: name of the file to export data
+    :param args: arguments to be passed to PeakList.to_str
+    :param kwargs: keyword arguments to be passed to PeakList.to_str
+
+    """
     if os.path.isfile(file_name):
         logging.warning('plain text file [%s] already exists, override' % file_name)
     with open(file_name, 'w') as f: f.write(pkl.to_str(*args, **kwargs))
 
 
 def load_peaklist_from_txt(file_name, ID, delimiter=',', flag_names='auto', has_flag_col=True):
+    """
+    Loads a peaklist from plain text file.
+
+    :param file_name: name of the file to import data
+    :param ID: ID of the loaded peaklist
+    :param delimiter: delimiter of the text file. Default = ',', i.e., CSV format
+    :param flag_names: name of the flag attributes. Default = 'auto', indicating attribute names ends with "_flag".
+        Provide None to indicate no flag attributes
+    :param has_flag_col: whether the text file contains the overall "flags" column. If True, it's values will be
+        discarded. The overall flags of the new peaklist will be re-calculated automatically. Default = True
+    :rtype: PeakList object
+
+    """
     if not os.path.isfile(file_name):
         raise IOError('plain text file [%s] not exists' % file_name)
     with open(file_name, 'rU') as f:
@@ -54,8 +77,7 @@ def load_peaklist_from_txt(file_name, ID, delimiter=',', flag_names='auto', has_
     pkl = PeakList(ID, mzs, ints)
 
     flag_names = filter(lambda x: x.endswith('_flag'), hd) if flag_names == 'auto' else \
-        [] if flag_names is None else \
-            set(flag_names)
+                 [] if flag_names is None else set(flag_names)
     for n, v in zip(hd[2:], dm[2:]): pkl.add_attribute(n, _evalv(v), is_flag=n in flag_names, flagged_only=False)
 
     return pkl
@@ -63,6 +85,15 @@ def load_peaklist_from_txt(file_name, ID, delimiter=',', flag_names='auto', has_
 
 # peak matrix portals
 def save_peak_matrix_as_txt(pm, file_name, *args, **kwargs):
+    """
+    Saves a peak matrix in plain text file.
+
+    :param pm: the target peak matrix object
+    :param file_name: name of the file to export data
+    :param args: arguments to be passed to PeakMatrix.to_str
+    :param kwargs: keyword arguments to be passed to PeakMatrix.to_str
+
+    """
     if os.path.isfile(file_name):
         logging.warning('plain text file [%s] already exists, override' % file_name)
     with open(file_name, 'w') as f:
@@ -70,6 +101,16 @@ def save_peak_matrix_as_txt(pm, file_name, *args, **kwargs):
 
 
 def load_peak_matrix_from_txt(file_name, delimiter='\t', transposed=False, comprehensive=False):
+    """
+    Loads a peak matrix from plain text file.
+
+    :param file_name: name of the file to import data
+    :param delimiter: delimiter of the text file. Default = '\t', i.e., TSV format
+    :param transposed: whether the attribute matrix has been transposed during the export. Default = False
+    :param comprehensive: whether comprehensive info has been included during the export. Default = False
+    :rtype: PeakMatrix object
+
+    """
     if not os.path.isfile(file_name):
         raise IOError('plain text file [%s] not exists' % file_name)
     with open(file_name, 'rU') as f:
