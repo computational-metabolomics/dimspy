@@ -289,10 +289,10 @@ class PeakList(object):
         """
         Re-calculates the flags according to the flag attributes.
 
+        :rtype: numpy array
+
         .. note::
             This method will be called automatically every time a flag attribute is added, removed, or changed.
-
-        :rtype: numpy array
 
         """
         self._flags = np.ones_like(self._flags) if len(self._flag_attrs) == 0 else \

@@ -375,8 +375,8 @@ class PeakMatrix(object):
         """
         Property of the purity level array.
 
-        :getter: returns the purity array, indicating the total number of peaks (including peaks in the same sample)
-            aliged in each mz value. This property is valid only when the *intra_count* attribute matrix is available
+        :getter: returns the purity array, indicating the ratio of only one peak in each sample being aligned in each mz
+            value. This property is valid only when the *intra_count*  attribute matrix is available
         :type: numpy array
 
         >>> print pm.attr_matrix('intra_count')
@@ -384,8 +384,8 @@ class PeakMatrix(object):
                [ 1,  1,  0,  0,  1],
                [ 1,  3,  1,  2,  1],
                [ 0,  1,  0,  1,  1],])
-        >>> print pm.occurrence
-        array([ 4,  6,  2,  4,  3])
+        >>> print pm.purity
+        array([ 0.75,  0.75,  1.0,  0.75,  1.0])
 
         """
         if not self._attr_dict.has_key('intra_count'):
@@ -396,23 +396,58 @@ class PeakMatrix(object):
     # attribute matrix
     @property
     def mz_matrix(self):
+        """
+        Property of the mz matrix.
+
+        :getter: returns the mz attribute matrix, unmasked and flagged values only
+        :type: numpy array
+        
+        """       
         return self.attr_matrix('mz')
 
     @property
     def intensity_matrix(self):
+        """
+        Property of the intensity matrix.
+
+        :getter: returns the intensity attribute matrix, unmasked and flagged values only
+        :type: numpy array
+        
+        """        
         return self.attr_matrix('intensity')
 
     @property
     def mz_mean_vector(self):
+        """
+        Property of the mz mean values array.
+
+        :getter: returns the mean values array of the mz attribute matrix, unmasked and flagged values only
+        :type: numpy array
+        
+        """               
         return self.attr_mean_vector('mz')
 
     @property
     def intensity_mean_vector(self):
+        """
+        Property of the intensity mean values array.
+
+        :getter: returns the mean values array of the intensity attribute matrix, unmasked and flagged values only
+        :type: numpy array
+        
+        """                   
         return self.attr_mean_vector('intensity')
 
     # publics
     # tags and mask
     def tags_of(self, tag_type=None):
+        """
+        Obtains tags of the peaklist_tags with particular tag type.
+
+        :param tag_type: the type of the returning tags. Provide None to obtain untyped tags
+        :rtype: tuple
+
+        """        
         if not (tag_type is None or all(map(lambda x: x.has_tag_type(tag_type), self.peaklist_tags))):
             raise ValueError('not all samples has tag type [%s]' % tag_type)
         tlst = [t.tag_of(tag_type) for t in self.peaklist_tags]
@@ -420,6 +455,22 @@ class PeakMatrix(object):
         return tuple(set(tlst))
 
     def mask_tags(self, *args, **kwargs):  # match to all
+        """
+        Masks samples with particular tags.
+
+        :param override: whether to override the current mask, default = False
+        :param args: target tag values, both typed and untyped
+        :param kwargs: target typed tag types and values
+        :rtype: PeakMatrix object (self)
+
+        This function will mask samples with ALL the tags. To match ANY of the tags, use cascade form instead.
+        
+        >>> pm.mask_tags('qc', plate = 1)
+        (will mask all QC samples on plate 1)
+        >>> pm.mask_tags('qc').mask_tags(plate = 1)
+        (will mask QC samples and all samples on plate 1)
+
+        """            
         override = kwargs.pop('override') if kwargs.has_key('override') else False
         mask = map(lambda x: all(map(lambda t: x.has_tag(t), args)) and
                              all(map(lambda t: x.has_tag(**dict([t])), kwargs.items())), self._tags)
@@ -427,6 +478,23 @@ class PeakMatrix(object):
         return self
 
     def unmask_tags(self, *args, **kwargs):  # match to all
+        """
+        Unmasks samples with particular tags.
+
+        :param override: whether to override the current mask, default = False
+        :param args: target tag values, both typed and untyped
+        :param kwargs: target typed tag types and values
+        :rtype: PeakMatrix object (self)
+
+        This function will unmask samples with ALL the tags. To unmask ANY of the tags, use cascade form instead.
+        
+        >>> pm.mask = [True] * pm.full_shape[0]
+        >>> pm.unmask_tags('qc', plate = 1)
+        (will unmask all QC samples on plate 1)
+        >>> pm.unmask_tags('qc').unmask_tags(plate = 1)
+        (will unmask QC samples and all samples on plate 1)
+
+        """                
         override = kwargs.pop('override') if kwargs.has_key('override') else False
         mask = map(lambda x: not (all(map(lambda t: x.has_tag(t), args)) and
                                   all(map(lambda t: x.has_tag(**dict([t])), kwargs.items()))), self._tags)
@@ -435,6 +503,18 @@ class PeakMatrix(object):
 
     # flags
     def add_flag(self, flag_name, flag_values, flagged_only = True):
+        """
+        Adds a flag to the peak matrix peaks.
+
+        :param flag_name: name of the flag, it must be unique and not equal to "flags"
+        :param flag_values: values of the flag. It must have a length of pm.shape[1] if flagged_only = True, or
+            pm.full_shape[1] if flagged_only = False
+        :param flagged_only: whether to set the flagged peaks only. Default = True, and the values of the unflagged peaks
+            are set to False
+
+        The overall flags property will be automatically recalculated.
+
+        """                
         if flag_name == 'flags':
             raise KeyError('reserved flag name [flags] cannot be added')
         if self._flags_dict.has_key(flag_name):
@@ -449,6 +529,14 @@ class PeakMatrix(object):
             self._flags_dict[flag_name] = np.array(flag_values, dtype = bool)
 
     def drop_flag(self, flag_name):
+        """
+        Drops a existing flag from the peak matrix.
+
+        :param flag_name: name of the flag to drop. It must exist and not equal to "flags"
+
+        The overall flags property will be automatically recalculated.
+        
+        """                
         if flag_name == 'flags':
             raise KeyError('reserved flag name [flags] cannot be droppped')
         if not self._flags_dict.has_key(flag_name):
@@ -456,6 +544,13 @@ class PeakMatrix(object):
         del self._flags_dict[flag_name]
 
     def flag_values(self, flag_name):
+        """
+        Obtains values of an existing flag.
+
+        :param flag_name: name of the target flag. It must exist and not equal to "flags"
+        :rtype: numpy array
+
+        """                
         if flag_name == 'flags':
             raise KeyError('use PeakMatrix.flags to access reserved flag name [flags]')
         if not self._flags_dict.has_key(flag_name):
@@ -464,19 +559,45 @@ class PeakMatrix(object):
 
     # access
     def attr_matrix(self, attr_name, flagged_only = True):
+        """
+        Obtains an existing attribute matrix.
+
+        :param attr_name: name of the target attribute
+        :param flagged_only: whether to return the flagged values only. Default = True
+        :rtype: numpy array
+
+        """                        
         if not self._attr_dict.has_key(attr_name):
             raise KeyError('attribute matrix [%s] not available' % attr_name)
         aM = self._attr_dict[attr_name][~self._mask]
         return aM[:,self.flags] if flagged_only else aM
 
     def attr_mean_vector(self, attr_name, flagged_only = True):
+        """
+        Obtains the mean array of an existing attribute matrix.
+
+        :param attr_name: name of the target attribute
+        :param flagged_only: whether to return the mean array of the flagged values only. Default = True
+        :rtype: numpy array
+
+        Noting that only the "present" peaks will be used for mean values calculation. If the attribute matrix has a
+        string / unicode data type, the values in each column will be concated.
+
+        """                                
         aM = self.attr_matrix(attr_name, flagged_only)
         aV = self._present_mean(aM, 0, flagged_only) if aM.dtype.kind in ('i', 'u', 'f') else \
-             np.array([join([str(v) for v,p in zip(ln,self.present_matrix[:,j]) if p],';')
-                       for j,ln in enumerate(zip(*aM))]) # for strings
+             np.array([join([str(v) for v,p in zip(ln,self.present_matrix[:,j]) if p],';') for j,ln in enumerate(zip(*aM))]) # for strings
         return aV
 
     def remove_samples(self, sample_ids, masked_only=True):
+        """
+        Removes samples from the peak matrix.
+
+        :param sample_ids: the indices of the samples to remove
+        :param masked_only: whether the indices are for unmasked samples or all samples. Default = True
+        :rtype: PeakMatrix object (self)
+
+        """        
         if isinstance(sample_ids, Iterable): sample_ids = list(sample_ids)
         rmids = np.where(~self.mask)[0][sample_ids] if masked_only else sample_ids
         self._pids = np.delete(self._pids, rmids, axis=0)
@@ -487,6 +608,14 @@ class PeakMatrix(object):
         return self
 
     def remove_peaks(self, peak_ids, flagged_only = True):
+        """
+        Removes peaks from the peak matrix.
+
+        :param peak_ids: the indices of the peaks to remove
+        :param flagged_only: whether the indices are for flagged peaks or all peaks. Default = True
+        :rtype: PeakMatrix object (self)
+
+        """
         if isinstance(peak_ids, Iterable): peak_ids = list(peak_ids)
         rmids = np.where(self.flags)[0][peak_ids] if flagged_only else peak_ids
         self._attr_dict = OrderedDict((k, np.delete(v, rmids, axis=1)) for k,v in self._attr_dict.items())
@@ -495,10 +624,25 @@ class PeakMatrix(object):
         return self
 
     def is_empty(self):
+        """
+        Checks whether the peak matrix is empty under the current mask and flags.
+
+        :rtype: bool
+
+        """
         return 0 in self.shape
 
     # exports
     def extract_peaklist(self, peaklist_id):
+        """
+        Extracts one peaklist from the peak matrix.
+
+        :param peaklist_id: ID of the peaklist to extract
+        :rtype: PeakList object
+
+        Only the "present" peaks will be included in the result peaklist.
+
+        """
         if peaklist_id not in self.peaklist_ids:
             raise ValueError('peaklist id has to match those in the peak matrix')
         idx = self.peaklist_ids.index(peaklist_id)
@@ -510,9 +654,25 @@ class PeakMatrix(object):
         return pl
 
     def extract_peaklists(self):
+        """
+        Extracts all peaklists from the peak matrix.
+
+        :rtype: list
+
+        """
         return map(self.extract_peaklist, self.peaklist_ids)
 
     def to_peaklist(self, ID):
+        """
+        Averages the peak matrix into a single peaklist.
+
+        :param ID: ID of the merged peaklist
+        :rtype: PeakList object
+
+        Only the "present" peaks will be included in the result peaklist. The new peaklist will only contain the
+        following attributes: mz, intensity, present, fraction, rsd, occurence, and purity.
+
+        """
         presids = self.present > 0 # presented peaks only
         if False in presids:
             logging.warning('[%d] empty peaks removed when exporting PeakMatrix to PeakList' % np.sum(~presids))
@@ -525,6 +685,16 @@ class PeakMatrix(object):
         return pl
 
     def to_str(self, attr_name='intensity', delimiter='\t', transpose=False, comprehensive=True):
+        """
+        Exports the peak matrix to a string.
+
+        :param attr_name: name of the attribute matrix for exporting. Default = 'intensity'
+        :param delimiter: delimiter to separate the matrix. Default = '\t', i.e., TSV format
+        :param transpose: whether to transpose the matrix. Default = False
+        :param comprehensive: whether to include comprehensive info, e.g., mask, flags, present, rsd etc. Default = True
+        :rtype: str
+
+        """
         hd = ['m/z'] + map(str, self.attr_mean_vector('mz', flagged_only = False))
         dm = [map(str, self.peaklist_ids)] + \
              [map(str, ln) for ln in self.attr_matrix(attr_name, flagged_only = False).T]
@@ -558,6 +728,27 @@ class PeakMatrix(object):
 
 # with statements
 class mask_peakmatrix:
+    """
+    The mask_peakmatrix statement.
+
+    Temporary mask the peak matrix with particular tags. Within the statement the samples can be motified or removed.
+    After leaving the statement the original mask will be recoverd.
+
+    :param pm: the target peak matrix
+    :param override: whether to override the current mask, default = True
+    :param args: target tag values, both typed and untyped
+    :param kwargs: target typed tag types and values
+    :rtype: PeakMatrix object
+
+    >>> print pm.peaklist_ids
+    ('sample_1', 'sample_2', 'qc_1', 'sample_3', 'sample_4', 'qc_2')
+    >>> with mask_peakmatrix(pm., 'qc') as m: print m.peaklist_ids
+    ('sample_1', 'sample_2', 'sample_3', 'sample_4')
+    >>> print pm.peaklist_ids
+    ('sample_1', 'sample_2', 'qc_1', 'sample_3', 'sample_4', 'qc_2')
+
+    """
+
     def __init__(self, pm, *args, **kwargs):
         self._pm = pm
         self._utags = args
@@ -574,6 +765,27 @@ class mask_peakmatrix:
 
 
 class unmask_peakmatrix:
+    """
+    The unmask_peakmatrix statement.
+
+    Temporary unmask the peak matrix with particular tags. Within the statement the samples can be motified or removed.
+    After leaving the statement the original mask will be recoverd.
+
+    :param pm: the target peak matrix
+    :param override: whether to override the current mask, default = True
+    :param args: target tag values, both typed and untyped
+    :param kwargs: target typed tag types and values
+    :rtype: PeakMatrix object
+
+    >>> print pm.peaklist_ids
+    ('sample_1', 'sample_2', 'qc_1', 'sample_3', 'sample_4', 'qc_2')
+    >>> with unmask_peakmatrix(pm, 'qc') as m: print m.peaklist_ids
+    ('qc_1', 'qc_2') # no need to set pm.mask to True
+    >>> print pm.peaklist_ids
+    ('sample_1', 'sample_2', 'qc_1', 'sample_3', 'sample_4', 'qc_2')
+
+    """
+
     def __init__(self, pm, *args, **kwargs):
         self._pm = pm
         self._utags = args
@@ -590,6 +802,24 @@ class unmask_peakmatrix:
 
 
 class mask_all_peakmatrix:
+    """
+    The mask_all_peakmatrix statement.
+
+    Temporary mask all the peak matrix samples. Within the statement the samples can be motified or removed.
+    After leaving the statement the original mask will be recoverd.
+
+    :param pm: the target peak matrix
+    :rtype: PeakMatrix object
+
+    >>> print pm.peaklist_ids
+    ('sample_1', 'sample_2', 'qc_1', 'sample_3', 'sample_4', 'qc_2')
+    >>> with mask_all_peakmatrix(pm) as m: print m.peaklist_ids
+    ()
+    >>> print pm.peaklist_ids
+    ('sample_1', 'sample_2', 'qc_1', 'sample_3', 'sample_4', 'qc_2')
+
+    """
+
     def __init__(self, pm):
         self._pm = pm
         self._oldmask = dict(zip(pm._pids, pm._mask))
@@ -603,6 +833,24 @@ class mask_all_peakmatrix:
 
 
 class unmask_all_peakmatrix:
+    """
+    The unmask_all_peakmatrix statement.
+
+    Temporary unmask all the peak matrix samples. Within the statement the samples can be motified or removed.
+    After leaving the statement the original mask will be recoverd.
+
+    :param pm: the target peak matrix
+    :rtype: PeakMatrix object
+
+    >>> print pm.peaklist_ids
+    ('sample_1', 'sample_2', 'qc_1', 'sample_3', 'sample_4', 'qc_2')
+    >>> with unmask_all_peakmatrix(pm) as m: print m.peaklist_ids
+    ('sample_1', 'sample_2', 'qc_1', 'sample_3', 'sample_4', 'qc_2')
+    >>> print pm.peaklist_ids
+    ('sample_1', 'sample_2', 'qc_1', 'sample_3', 'sample_4', 'qc_2')
+
+    """
+
     def __init__(self, pm):
         self._pm = pm
         self._oldmask = dict(zip(pm._pids, pm._mask))
