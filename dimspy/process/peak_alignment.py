@@ -2,10 +2,12 @@
 # -*- coding: utf-8 -*-
 
 """
-Cluster and Align peaklists
+Cluster and align peaklists into peak matrix.
 
-author(s): Ralf Weber, Albert Zhou
-origin: Oct. 2016
+.. moduleauthor:: Albert Zhou, Ralf Weber
+
+.. versionadded:: 0.1
+
 """
 
 from __future__ import division
@@ -173,6 +175,30 @@ def _align_peaks(cids, pids, *attrs):
 
 # interface
 def align_peaks(peaks, ppm=2.0, block_size=2000, fixed_block=True, edge_extend=10, ncpus=None):
+    """
+    Cluster and align peaklists into a peak matrix.
+
+    :param peaks: the list of peaklists for alignment
+    :param ppm: the hierarchical clustering cutting height, i.e., ppm range for each aligned mz value. Default = 2.0
+    :param block_size: number peaks in each parallel clustering block. This can be a approximated number depends on the
+        fixed_block parameter. Default = 2000
+    :param fixed_block: whether the blocks contain fixed number of peaks. Default = True
+    :param edge_extend: ppm range for clustering the block edges. Default = 10
+    :param ncpus: number of CPUs for parallel clustering. Default = None, indicating using as many as possible
+    :rtype: PeakMatrix object
+
+    This function uses hierarchical clustering to cluster the mz values of the input peaklists. The "width" of the clusters
+    is decided by the parameter of ppm. Due to the large number of peaks, the function splits them into fixed length or
+    approximate length blocks, and clusters in a parallel manner on multiple CPUs. When running, the block edges are
+    clustered first to prevent separating the same peak into two adjacent blocks. The size of the edges is decided by
+    edge_extend. The blocks clustering is conducted afterwards.
+
+    Then the clustering results are merged, and all the attributes (mz, intensity, snr, etc.) are aligned into matrix.
+    If multiple peaks from the same sample are clustered into the one mz value, their attributes are averaged
+    (real value attributes e.g. mz and intensity) or concated (string, unicode, or bool attributes). The flag attributes
+    are ignored. The number of overlapping peaks is recorded in a new intra_count attribute matrix.
+
+    """
     # remove empty peaklists
     emlst = np.array(map(lambda x: x.size == 0, peaks))
     if np.sum(emlst) > 0:
