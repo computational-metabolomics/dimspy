@@ -2,10 +2,11 @@
 # -*- coding: utf-8 -*-
 
 """
-peaksAlignment: the PeaksAlignment class.
+The PeakMatrix data object class.
 
-author(s): Albert Zhou, Ralf Weber
-origin: Nov. 10, 2016
+.. moduleauthor:: Albert Zhou, Ralf Weber
+
+.. versionadded:: 0.1
 
 """
 
@@ -19,6 +20,68 @@ from peaklist import PeakList
 
 
 class PeakMatrix(object):
+    """
+    The PeakMatrix class.
+
+    Stores aligned mass spectrometry peaks matrix data. It requires IDs, tags, and attributes from the source peak
+    lists. It uses tags based mask to "hide" the unrelated samples for convenient processing. It utilises the
+    automatically managed flags to "remove" peaks without actually delete them. Therefore the filterings on the peaks
+    are traceable. Normally, PeakMatrix object is created by functions e.g. align_peaks() rather than manual.
+
+    :param peaklist_ids: the IDs of the source peak lists
+    :param peaklist_tags: the tags (PeakList_Tags) of the source peak lists
+    :param peaklist_attributes: the attributes of the source peak lists. Must be a list or tuple in the format of
+        [(attr_name, attr_matrix), ...], where attr_name is name of the attribute, and attr_matrix is the vertically
+        stacked arrtibute values in the shape of samples x peaks. The order of the attributes will be kept in the
+        PeakMatrix. The first two attributes must be "mz" and "intensity".
+
+    >>> pids = [pl.ID for pl in peaklists]
+    >>> tags = [pl.tags for pl in peaklists]
+    >>> attrs = [(attr_name, np.vstack([pl[attr_name] for pl in peaklists])) \
+                 for attr_name in peaklists[0].attributes]
+    >>> pm = PeakMatrix(pids, tags, attrs)
+
+    Internally the attribute data is stored in OrderedDict as a list of matrix. An attribute matrix can be illustrated
+    as follows, in which the mask and flags are the same for all attributes. The final row "flags" is automatically
+    calculated based on the manually added flags. It decides which peaks are "removed" i.e. unflagged. Particularly,
+    the "--" indicates no peak in that sample can be aligned into the mz value.
+
+    **attribute: "mz"**
+
+    +------------+--------+--------+--------+-----+
+    | mask       | peak_1 | peak_2 | peak_3 | ... |
+    +============+========+========+========+=====+
+    | False      | 12.7   | 14.9   | 21.0   |     |
+    +------------+--------+--------+--------+     +
+    | True       | --     | 15.1   | 21.1   | ... |
+    +------------+--------+--------+--------+     +
+    | False      | 12.1   | 14.7   | --     |     |
+    +------------+--------+--------+--------+     +
+    | False      | 12.9   | 14.8   | 20.9   |     |
+    +------------+--------+--------+--------+-----+
+    | ...        |        |        |        |     |
+    +------------+--------+--------+--------+-----+
+    | **flag_1** | True   | False  | True   |     |
+    +------------+--------+--------+--------+     +
+    | **flag_2** | True   | True   | False  | ... |
+    +------------+--------+--------+--------+     +
+    | **flags*** | True   | False  | False  |     |
+    +------------+--------+--------+--------+-----+
+
+    .. warning::
+        Removing a flag may change the overall "flags", and cause the unflagged peaks to be flagged again. As
+        most the processes are applied only on the flagged peaks, these peaks, if the others have gone through such process,
+        may have incorrect values.
+
+        In principle, setting a flag attribute should be considered as an irreversible process.
+
+    Different from the flags, mask should be considered as a more temporary way to hide the unrelated samples. A masked
+    sample (row) will not be used for processing, but its data is still in the attribute matrix. For this reason,
+    the mask_peakmatrix, unmask_peakmatrix, and unmask_all_peakmatrix statements are provided as a more flexible way
+    to set / unset the mask.
+
+    """
+
     def __init__(self, peaklist_ids, peaklist_tags, peaklist_attributes):
         if len(set(peaklist_ids)) != len(peaklist_ids):
             raise ValueError('duplicate peaklist IDs found')
@@ -64,6 +127,14 @@ class PeakMatrix(object):
     # properties
     @property
     def mask(self):  # mask is different from flags in that they will not be masked by themselves, i.e., more temporary
+        """
+        Property of the mask.
+
+        :getter: returns a deep copy of the mask array
+        :setter: sets the mask array. Provide None to unmask all samples
+        :type: numpy array
+
+        """
         return self._mask.copy()
 
     @mask.setter
@@ -73,6 +144,13 @@ class PeakMatrix(object):
 
     @property
     def flag_names(self):
+        """
+        Property of the flag names.
+
+        :getter: returns a tuple including the names of the manually set flags
+        :type: tuple
+
+        """
         return tuple(self._flags_dict.keys())
 
     @property
@@ -89,57 +167,178 @@ class PeakMatrix(object):
 
     @property
     def attributes(self):
+        """
+        Property of the attribute names.
+
+        :getter: returns a tuple including the names of the attribute matrix
+        :type: tuple
+
+        """
         return tuple(self._attr_dict.keys())
 
     @property
     def peaklist_ids(self):
+        """
+        Property of the source peaklist IDs.
+
+        :getter: returns a tuple including the IDs of the source peaklists
+        :type: tuple
+
+        """
         return tuple(self._pids[~self._mask])
 
     @property
     def peaklist_tags(self):
+        """
+        Property of the source peaklist tags.
+
+        :getter: returns a tuple including the Peaklist_Tags objects of the source peaklists
+        :type: tuple
+
+        """
         return tuple(self._tags[~self._mask])
 
     @property
     def peaklist_tag_types(self):
+        """
+        Property of the source peaklist tag types.
+
+        :getter: returns a tuple including the types of the typed tags of the source peaklists
+        :type: tuple
+
+        """
         return tuple(set(reduce(lambda x, y: x + y, [t.tag_types for t in self.peaklist_tags], ())))
 
     @property
     def peaklist_tag_values(self):
+        """
+        Property of the source peaklist tag values.
+
+        :getter: returns a tuple including the values of the source peaklists tags, both typed and untyped
+        :type: tuple
+
+        """
         return tuple(set(reduce(lambda x, y: x + y, [t.tag_values for t in self.peaklist_tags], ())))
 
     @property
     def shape(self):
+        """
+        Property of the peak matrix shape.
+
+        :getter: returns the shape of the attribute matrix
+        :type: tuple
+
+        """
         return np.sum(~self._mask), np.sum(self.flags)
 
     @property
     def full_shape(self):
+        """
+        Property of the peak matrix full shape.
+
+        :getter: returns the full shape of the attribute matrix, i.e., ignore mask and flags
+        :type: tuple
+
+        """
         return self._attr_dict['mz'].shape
 
     @property
     def present(self):
+        """
+        Property of the present array.
+
+        :getter: returns the present array, indicating how many peaks are aligned in each mz value
+        :type: numpy array
+
+        """
         return np.sum(self.present_matrix, axis=0)
 
     @property
     def present_matrix(self):
+        """
+        Property of the present matrix.
+
+        :getter: returns the present matrix, indicating whether a sample has peak(s) aligned in each mz value
+        :type: numpy array
+
+        >>> print pm.present_matrix
+        array([[ True,  True,  True,  True, False],
+               [ True,  True, False, False,  True],
+               [ True,  True,  True,  True,  True],
+               [False,  True, False,  True,  True],])
+        >>> print pm.present
+        array([3, 4, 2, 3, 3])
+
+        """
         pmx = self.attr_matrix('intra_count') if 'intra_count' in self.attributes else self.mz_matrix
         return pmx > 0
 
     @property
     def full_present_matrix(self):
+        """
+        Property of the full present matrix.
+
+        :getter: returns the full present matrix, i.e., ignore mask and flags
+        :type: numpy array
+
+        """
         pmx = self.attr_matrix('intra_count', flagged_only = False) if 'intra_count' in self.attributes else \
               self.attr_matrix('mz', flagged_only = False)
         return pmx > 0
 
     @property
     def fraction(self):
+        """
+        Property of the fraction array.
+
+        :getter: returns the fraction array, indicating the ratio of present peaks on each mz value
+        :type: numpy array
+
+        >>> print pm.present
+        array([3, 4, 2, 3, 3])
+        >>> print pm.shape[0]
+        4
+        >>> print pm.fraction
+        array([0.75, 1.0, 0.5, 0.75, 0.75])
+
+        """
         return self.present / self.shape[0]
 
     @property
     def missing_values(self):
+        """
+        Property of the missing values array.
+
+        :getter: returns the missing values array, indicating the number of unaligned peaks on each sample
+        :type: numpy array
+
+        >>> print pm.present_matrix
+        array([[ True,  True,  True,  True, False],
+               [ True,  True, False, False,  True],
+               [ True,  True,  True,  True,  True],
+               [False,  True, False,  True,  True],])
+        >>> print pm.missing_values
+        array([1, 2, 0, 2])
+
+        """
         return np.sum(~self.present_matrix, axis=1)
 
     @property
     def rsd(self):
+        """
+        Property of the relative standard deviation (RSD) array.
+
+        :getter: returns the RSD array
+        :type: numpy array
+
+        The RSD is calculated as:
+
+        >>> rsd = std(pm.intensity_matrix, axis = 0) / mean(pm.intensity_matrix, axis = 0) * 100
+
+        Noting that only the "present" peaks will be used for calculation. If a column has less than 2 peaks, the
+        corresponding rsd value will be set to np.nan.
+
+        """
         if self.shape[0] < 2:
             # logging.warning('calculating RSD on less than 2 samples')
             return np.ones(self.shape[1]) * np.nan
@@ -150,6 +349,22 @@ class PeakMatrix(object):
 
     @property
     def occurrence(self):
+        """
+        Property of the occurrence array.
+
+        :getter: returns the occurrence array, indicating the total number of peaks (including peaks in the same sample)
+            aliged in each mz value. This property is valid only when the *intra_count* attribute matrix is available
+        :type: numpy array
+
+        >>> print pm.attr_matrix('intra_count')
+        array([[ 2,  1,  1,  1,  0],
+               [ 1,  1,  0,  0,  1],
+               [ 1,  3,  1,  2,  1],
+               [ 0,  1,  0,  1,  1],])
+        >>> print pm.occurrence
+        array([ 4,  6,  2,  4,  3])
+
+        """
         if not self._attr_dict.has_key('intra_count'):
             logging.warning("attribute matrix ['intra_count'] not available")
             return np.ones(self.shape[1])
@@ -157,6 +372,22 @@ class PeakMatrix(object):
 
     @property
     def purity(self):
+        """
+        Property of the purity level array.
+
+        :getter: returns the purity array, indicating the total number of peaks (including peaks in the same sample)
+            aliged in each mz value. This property is valid only when the *intra_count* attribute matrix is available
+        :type: numpy array
+
+        >>> print pm.attr_matrix('intra_count')
+        array([[ 2,  1,  1,  1,  0],
+               [ 1,  1,  0,  0,  1],
+               [ 1,  3,  1,  2,  1],
+               [ 0,  1,  0,  1,  1],])
+        >>> print pm.occurrence
+        array([ 4,  6,  2,  4,  3])
+
+        """
         if not self._attr_dict.has_key('intra_count'):
             logging.warning("attribute matrix ['intra_count'] not available")
             return np.zeros(self.shape[1])
