@@ -24,11 +24,11 @@ def filter_attr(pl, attr_name, max_threshold=None, min_threshold=None, flag_name
 
     :param pl: the target peaklist
     :param attr_name: name of the target attribute
-    :param max_threshold: maximum threshold. A peak will be unflagged if the value of it's attr_name is larger than this
+    :param max_threshold: maximum threshold. A peak will be unflagged if the value of it's attr_name is larger than the
         threshold. Default = None, indicating no threshold
-    :param min_threshold: Minimum threshold. A peak will be unflagged if the value of it's attr_name is smaller than this
+    :param min_threshold: Minimum threshold. A peak will be unflagged if the value of it's attr_name is smaller than the
         threshold. Default = None, indicating no threshold
-    :param flag_name: name of the new flag to be added. Default = None, indicating using attr_name + '_flag'
+    :param flag_name: name of the new flag attribute. Default = None, indicating using attr_name + '_flag'
     :param flag_index: index of the new flag to be inserted into the peaklist. Default = None
     :rtype: PeakList object
 
@@ -48,15 +48,14 @@ def filter_ringing(pl, threshold, bin_size=1.0, flag_name='ringing_flag', flag_i
     Peaklist ringing filter.
 
     :param pl: the target peaklist
-    :param threshold: threshold ratio of the intensity. A peak will be removed if it's intensity is smaller than this
-        threshold x the highest intensity within the bin
-    :param bin_size: size of the mz bin for intensity filtering. Default = 1.0 ppm
-    :param flag_name: name of the new flag to be added. Default = 'ringing_flag'
+    :param threshold: intensity threshold ratio
+    :param bin_size: size of the mz chunk for intensity filtering. Default = 1.0 ppm
+    :param flag_name: name of the new flag attribute. Default = 'ringing_flag'
     :param flag_index: index of the new flag to be inserted into the peaklist. Default = None
     :rtype: PeakList object
 
     This filter will split the mz values into bin_size chunks, and search the highest intensity value for each chunk.
-    All other peaks, if it's intensity is smaller than threshold x the highest intensity, will be unflagged.
+    All other peaks, if it's intensity is smaller than threshold x the highest intensity in that chunk, will be unflagged.
 
     """
     if not 0 <= threshold <= 1:
@@ -73,11 +72,11 @@ def filter_mz_ranges(pl, mz_remove_rngs, flag_name='mz_range_remove_flag', flag_
 
     :param pl: the target peaklist
     :param mz_remove_rngs: the mz ranges to remove. Must be in the format of [(mz_min1, mz_max2), (mz_min2, mz_max2), ...]
-    :param flag_name: name of the new flag to be added. Default = 'mz_range_remove_flag'
+    :param flag_name: name of the new flag attribute. Default = 'mz_range_remove_flag'
     :param flag_index: index of the new flag to be inserted into the peaklist. Default = None
     :rtype: PeakList object
 
-    This filter will remove all the peaks with mz values within the mz_remove_rngs.
+    This filter will remove all the peaks whose mz values are within any of the ranges in the mz_remove_rngs.
 
     """
     mzrs_removed_flags = np.ones(pl.shape[0], dtype=bool)
@@ -98,11 +97,11 @@ def filter_rsd(pm, rsd_threshold, qc_label='qc', flag_name='rsd_flag'):
 
     :param pm: the target peak matrix
     :param rsd_threshold: threshold of the RSD of the QC samples
-    :param qc_label: tag label to be used to unmask qc samples
-    :param flag_name: name of the new flag to be added. Default = 'rsd_flag'
+    :param qc_label: tag label to unmask qc samples
+    :param flag_name: name of the new flag. Default = 'rsd_flag'
     :rtype: PeakMatrix object
 
-    This filter will calculate the RSD array based on the QC samples. All the peaks with a RSD value larger than the
+    This filter will calculate the RSD values of the QC samples. A peak with a QC RSD value larger than the
     threshold will be unflagged.
 
     """
@@ -123,13 +122,13 @@ def filter_fraction(pm, fraction_threshold, within_classes=False, class_tag_type
 
     :param pm: the target peak matrix
     :param fraction_threshold: threshold of the sample fractions
-    :param within_classes: whether to calculate fraction array within each class. Default = False
-    :param class_tag_type: tag type to be used to unmask samples within the same class. Default = None, indicating untyped tags
-    :param flag_name: name of the new flag to be added. Default = 'fraction_flag'
+    :param within_classes: whether to calculate the fraction array within each class. Default = False
+    :param class_tag_type: tag type to unmask samples within the same class. Default = None, indicating untyped tags
+    :param flag_name: name of the new flag. Default = 'fraction_flag'
     :rtype: PeakMatrix object
 
-    This filter will calculate the fraction array over all samples or within each class. The peaks with a fraction value
-    smaller than the threshold will be unflagged.
+    This filter will calculate the fraction array over all samples or within each class (based on class_tag_type).
+    The peaks with a fraction value smaller than the threshold will be unflagged.
 
     """
     if not within_classes:
@@ -150,18 +149,18 @@ def filter_blank_peaks(pm, blank_label, fraction_threshold=1, fold_threshold=1, 
     PeakMatrix blank filter.
 
     :param pm: the target peak matrix
-    :param blank_label: tag label to be used to unmask blank samples
-    :param fraction_threshold: threshold of the blank sample fractions. Default = 1
-    :param fold_threshold: threshold of the blank sample folds. Default = 1
+    :param blank_label: tag label to mask blank samples
+    :param fraction_threshold: threshold of the sample fractions. Default = 1
+    :param fold_threshold: threshold of the blank sample intensity folds. Default = 1
     :param method: method to calculate blank sample intensity array. Valid values include 'mean', 'median', and 'max'.
         Default = 'mean'
     :param rm_blanks: whether to remove (not mask) blank samples after filtering
-    :param flag_name: name of the new flag to be added. Default = 'blank_flag'
+    :param flag_name: name of the new flag. Default = 'blank_flag'
     :rtype: PeakMatrix object
 
-    This filter will calculate the intensity array of the blank samples using the "method", and compare with the
-    intensity of the other samples. The peaks over all samples with fraction_threshold% of intensity values
-    smaller than the blank intensity x fold_threshold will be unflagged.
+    This filter will calculate the intensity array of the blanks using the "method", and compare with the
+    intensities of the other samples. If fraction_threshold% of the intensity values of a peak are smaller than the
+    blank intensities x fold_threshold, this peak will be unflagged.
 
     """
     if blank_label not in pm.peaklist_tag_values:

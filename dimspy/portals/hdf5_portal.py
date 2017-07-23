@@ -33,8 +33,8 @@ def save_peaklists_as_hdf5(pkls, file_name):
     :param pkls: the target list of peaklist objects
     :param file_name: name of the file to export data
 
-    The order of the peaklists will be retained. To incorporate with multiple dtypes in the attribute matrix, in HDF5
-    data tables all the values are converted into fix-lenght strings for more efficient storage.
+    To incorporate with different dtypes in the attribute matrix, this portal converts all the arribute values
+    into fix-lenght strings for HDF5 data tables storage. The order of the peaklists will be retained.
 
     """
     if os.path.isfile(file_name):
@@ -69,7 +69,7 @@ def load_peaklists_from_hdf5(file_name):
     :param file_name: name of the file to import data
     :rtype: list
 
-    The order of the peaklists will be retained.
+    The values in HDF5 data tables are automatically converted to their original dtypes before loading in the the peaklist.
 
     """
     if not os.path.isfile(file_name):
@@ -155,8 +155,6 @@ def load_peak_matrix_from_hdf5(file_name):
 
     :param file_name: name of the file to import data
     :rtype: PeakMatrix object
-
-    The order of the attributes and flags will be retained.
 
     """
     if not os.path.isfile(file_name):

@@ -178,25 +178,28 @@ def align_peaks(peaks, ppm=2.0, block_size=2000, fixed_block=True, edge_extend=1
     """
     Cluster and align peaklists into a peak matrix.
 
-    :param peaks: the list of peaklists for alignment
+    :param peaks: list of peaklists for alignment
     :param ppm: the hierarchical clustering cutting height, i.e., ppm range for each aligned mz value. Default = 2.0
-    :param block_size: number peaks in each parallel clustering block. This can be a approximated number depends on the
-        fixed_block parameter. Default = 2000
+    :param block_size: number peaks in each centre clustering block. This can be a exact or approximate number depends
+        on the fixed_block parameter. Default = 2000
     :param fixed_block: whether the blocks contain fixed number of peaks. Default = True
-    :param edge_extend: ppm range for clustering the block edges. Default = 10
+    :param edge_extend: ppm range for the edge blocks. Default = 10
     :param ncpus: number of CPUs for parallel clustering. Default = None, indicating using as many as possible
     :rtype: PeakMatrix object
 
-    This function uses hierarchical clustering to cluster the mz values of the input peaklists. The "width" of the clusters
-    is decided by the parameter of ppm. Due to the large number of peaks, the function splits them into fixed length or
-    approximate length blocks, and clusters in a parallel manner on multiple CPUs. When running, the block edges are
-    clustered first to prevent separating the same peak into two adjacent blocks. The size of the edges is decided by
-    edge_extend. The blocks clustering is conducted afterwards.
+    .. figure::  images/alignment.png
+        :align:   center
 
-    Then the clustering results are merged, and all the attributes (mz, intensity, snr, etc.) are aligned into matrix.
-    If multiple peaks from the same sample are clustered into the one mz value, their attributes are averaged
-    (real value attributes e.g. mz and intensity) or concated (string, unicode, or bool attributes). The flag attributes
-    are ignored. The number of overlapping peaks is recorded in a new intra_count attribute matrix.
+    This function uses hierarchical clustering to align the mz values of the input peaklists. The alignment "width" is
+    decided by the parameter of ppm. Due to a large number of peaks, this function splits them into blocks with fixed
+    or approximate length, and clusters in a parallel manner on multiple CPUs. When running, the edge blocks are
+    clustered first to prevent separating the same peak into two adjacent centre blocks. The size of the edge blocks is
+    decided by edge_extend. The clustering of centre blocks is conducted afterwards.
+
+    After merging the clustering results, all the attributes (mz, intensity, snr, etc.) are aligned into matrix
+    accordingly. If multiple peaks from the same sample are clustered into one mz value, their attributes are averaged
+    (for real value attributes e.g. mz and intensity) or concatenated (string, unicode, or bool attributes). The flag
+    attributes are ignored. The number of these overlapping peaks is recorded in a new intra_count attribute matrix.
 
     """
     # remove empty peaklists

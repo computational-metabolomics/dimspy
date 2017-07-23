@@ -50,11 +50,11 @@ def load_peaklist_from_txt(file_name, ID, delimiter=',', flag_names='auto', has_
 
     :param file_name: name of the file to import data
     :param ID: ID of the loaded peaklist
-    :param delimiter: delimiter of the text file. Default = ',', i.e., CSV format
-    :param flag_names: name of the flag attributes. Default = 'auto', indicating attribute names ends with "_flag".
-        Provide None to indicate no flag attributes
+    :param delimiter: delimiter of the text lines. Default = ',', i.e., CSV format
+    :param flag_names: names of the flag attributes. Default = 'auto', indicating all the attribute names ends
+        with "_flag" will be treated as flag attibute. Provide None to indicate no flag attributes
     :param has_flag_col: whether the text file contains the overall "flags" column. If True, it's values will be
-        discarded. The overall flags of the new peaklist will be re-calculated automatically. Default = True
+        discarded. The overall flags of the new peaklist will be calculated automatically. Default = True
     :rtype: PeakList object
 
     """
@@ -105,9 +105,9 @@ def load_peak_matrix_from_txt(file_name, delimiter='\t', transposed=False, compr
     Loads a peak matrix from plain text file.
 
     :param file_name: name of the file to import data
-    :param delimiter: delimiter of the text file. Default = '\t', i.e., TSV format
+    :param delimiter: delimiter of the text lines. Default = '\t', i.e., TSV format
     :param transposed: whether the attribute matrix has been transposed during the export. Default = False
-    :param comprehensive: whether comprehensive info has been included during the export. Default = False
+    :param comprehensive: whether the comprehensive information has been included during the export. Default = False
     :rtype: PeakMatrix object
 
     """

@@ -581,7 +581,7 @@ class PeakMatrix(object):
         :rtype: numpy array
 
         Noting that only the "present" peaks will be used for mean values calculation. If the attribute matrix has a
-        string / unicode data type, the values in each column will be concated.
+        string / unicode data type, the values in each column will be concatenated.
 
         """                                
         aM = self.attr_matrix(attr_name, flagged_only)
