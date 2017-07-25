@@ -376,7 +376,7 @@ class PeakMatrix(object):
         Property of the purity level array.
 
         :getter: returns the purity array, indicating the ratio of only one peak in each sample being aligned in each mz
-            value. This property is valid only when the *intra_count*  attribute matrix is available
+            value. This property is valid only when the *intra_count* attribute matrix is available
         :type: numpy array
 
         >>> print pm.attr_matrix('intra_count')
@@ -385,13 +385,13 @@ class PeakMatrix(object):
                [ 1,  3,  1,  2,  1],
                [ 0,  1,  0,  1,  1],])
         >>> print pm.purity
-        array([ 0.75,  0.75,  1.0,  0.75,  1.0])
+        array([ 0.667,  0.75,  1.0,  0.667,  1.0])
 
         """
         if not self._attr_dict.has_key('intra_count'):
             logging.warning("attribute matrix ['intra_count'] not available")
             return np.zeros(self.shape[1])
-        return 1 - (np.sum(self.attr_matrix('intra_count') > 1, axis=0) / self.shape[0])
+        return 1 - (np.sum(self.attr_matrix('intra_count') > 1, axis=0) / np.sum(self.present_matrix, axis = 0))
 
     # attribute matrix
     @property

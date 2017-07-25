@@ -10,7 +10,7 @@ The PeakList data object class.
 
 """
 
-import logging
+import logging, warnings
 import numpy as np
 import numpy.lib.recfunctions as rfn
 from collections import OrderedDict, Iterable
@@ -366,11 +366,17 @@ class PeakList(object):
         anames, atypes = map(list, zip(*self._dtable.dtype.descr))
         prevnm, restnm, resttp = anames[:on_index], anames[on_index:], atypes[on_index:]
 
+        # suppress numpy's future warning regarding the structure array indexing
+        # "Numpy has detected that you (may be) writing to an array returned
+        #  by numpy.diagonal or by selecting multiple fields in a structured
+        #  array. This code will likely break in a future numpy release ..."
+        warnings.simplefilter(action = 'ignore', category = FutureWarning)
         prevtb = np.array(nattr, dtype=[(attr_name, adt)]) if len(prevnm) == 0 else \
             rfn.append_fields(self._fields_view(self._dtable, prevnm), attr_name, nattr, dtypes=adt, usemask=False)
         self._dtable = prevtb if len(restnm) == 0 else \
             rfn.append_fields(prevtb, restnm, zip(*self._fields_view(self._dtable, restnm)), dtypes=resttp,
                               usemask=False)
+        warnings.resetwarnings()
 
         if is_flag:
             self._flag_attrs += [attr_name]

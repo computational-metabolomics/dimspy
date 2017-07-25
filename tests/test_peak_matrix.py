@@ -73,7 +73,7 @@ class PeakListTestCase(unittest.TestCase):
                                     [47.14045208, 59.32638115,              68.6934703, 66.17173282,
                                      56.56854249, 55.09113315, 53.36953524, 51.7522766, 50.23015081,]))
         self.assertTrue(np.all(pm.occurrence == [10]*2+[0]+[10]*3+[12]*4))
-        self.assertTrue(np.allclose(pm.purity, [0.16666667]*2+[1]+[0.16666667]*3+[0]*4))
+        self.assertTrue(np.allclose(pm.purity[~np.isnan(pm.purity)], [0]*9))
 
         mmz = np.arange(0, 1000, step = 100, dtype = float) + 1
         mmz[2] = np.nan
