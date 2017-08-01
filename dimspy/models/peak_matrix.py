@@ -872,7 +872,7 @@ def peak_matrix_rsd(pm, *args, **kwargs):
         # logging.warning('calculating RSD on less than 2 samples')
         return np.ones(pm.shape[1] if flagged_only else pm.full_shape[1]) * np.nan
 
-    with unmask_peakmatrix(pm, *args, **kwargs) as m:
+    with (unmask_all_peakmatrix(pm) if len(args) + len(kwargs) == 0 else unmask_peakmatrix(pm, *args, **kwargs)) as m:
         if m.shape[0] == 0:
             raise AttributeError('peak matrix does not have QC labels [%s]' % join(map(lambda x: str(x)[1:-1], (args,kwargs)), ', '))
         ints = m.attr_matrix('intensity', flagged_only)
