@@ -853,8 +853,8 @@ def peak_matrix_rsd(pm, *args, **kwargs):
     Calculate the QC samples' relative standard deviation (RSD) array for PeakMatrix.
 
     :param pm: target peak matrix object
-    :param args: untyped QC tag label for RSD calculation
-    :param kwargs: typed QC tag label for RSD calculation
+    :param args: untyped tag label for RSD calculation, no value = calculate over all samples
+    :param kwargs: typed tag label for RSD calculation, , no value = calculate over all samples
     :param flagged_only: whether to calculate on flagged peaks only. Default = True
     :type: numpy array
 
@@ -874,7 +874,7 @@ def peak_matrix_rsd(pm, *args, **kwargs):
 
     with (unmask_all_peakmatrix(pm) if len(args) + len(kwargs) == 0 else unmask_peakmatrix(pm, *args, **kwargs)) as m:
         if m.shape[0] == 0:
-            raise AttributeError('peak matrix does not have QC labels [%s]' % join(map(lambda x: str(x)[1:-1], (args,kwargs)), ', '))
+            raise AttributeError('peak matrix does not have label(s) [%s]' % join(map(lambda x: str(x)[1:-1], (args,kwargs)), ', '))
         ints = m.attr_matrix('intensity', flagged_only)
         rsd = m._present_std(ints, 0, flagged_only) / m._present_mean(ints, 0, flagged_only) * 100
 
