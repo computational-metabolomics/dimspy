@@ -80,7 +80,12 @@ def _cluster_peaks_map(mzs, ppm, block_size, fixed_block, edge_extend, ncpus):
     def _smap(f, p):
         return map(f, p)
 
-    pmap = _smap if ncpus == 1 or cpu_count() <= 2 else _mmap
+    def _pmap(f, p):
+        largechk = filter(lambda x: len(x[0]) > 1E+5, p)
+        if len(largechk) > 0:
+            raise RuntimeError('Some of the clustering chunks contain too many peaks: \n%s' %
+                join(map(lambda x: 'mz range [%.5f - %.5f] ... [%d] peaks' % (min(x[0]),max(x[0]),len(x[0])), largechk), '\n'))
+        return (_smap if ncpus == 1 or cpu_count() <= 2 else _mmap)(f, p)
 
     # align edges
     eeppm = edge_extend * ppm * 1e-6
@@ -94,7 +99,7 @@ def _cluster_peaks_map(mzs, ppm, block_size, fixed_block, edge_extend, ncpus):
                        zip(erngs[1:], overlap), [erngs[0]])
         sids = [sids[0]] + [s for s, o in zip(sids[1:], overlap) if not o]
 
-    _cids = pmap(_cluster_peaks_mp, [(mzs[r], ppm) for r in erngs])
+    _cids = _pmap(_cluster_peaks_mp, [(mzs[r], ppm) for r in erngs])
     eblks = [r[c == c[r == s]] for s, r, c in zip(sids, erngs, map(lambda x: x.flatten(), _cids))]
     ecids = map(lambda x: np.zeros_like(x).reshape((-1, 1)), eblks)
 
@@ -113,7 +118,7 @@ def _cluster_peaks_map(mzs, ppm, block_size, fixed_block, edge_extend, ncpus):
                  for i, (s, r) in enumerate(zip(slimbk, pbrngs)) if s]
         logging.warning('[%d] empty / slim clustering block(s) found, consider increasing the block size\n%s' %
                         (np.sum(slimbk), join(pblns, '\n')))
-    bcids = pmap(_cluster_peaks_mp, [(m, ppm) for m in bkmzs])
+    bcids = _pmap(_cluster_peaks_mp, [(m, ppm) for m in bkmzs])
 
     # combine
     cids = [None] * (len(bcids) + len(ecids))
