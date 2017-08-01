@@ -11,10 +11,9 @@ origin: 05-14-2017
 
 
 import unittest
-import numpy as np
 from dimspy.models.peaklist_tags import PeakList_Tags
 from dimspy.models.peaklist import PeakList
-from dimspy.models.peak_matrix import PeakMatrix, mask_peakmatrix
+from dimspy.models.peak_matrix import PeakMatrix, peak_matrix_rsd
 from dimspy.process.peak_filters import *
 
 
@@ -88,8 +87,8 @@ class PeakFiltersTestCase(unittest.TestCase):
             pm = filter_rsd(pm, 45, 'qc')
         except Exception, e:
             self.fail('filter peak_matrix rsd failed: ' + str(e))
-        self.assertTrue(np.allclose(pm.rsd,
-            [57.28219619, 55.88506945, 54.55447256, 53.28576389, 52.07472381]))
+        self.assertTrue(np.allclose(peak_matrix_rsd(pm, 'qc'),
+            [44.44444444, 43.47826087, 42.55319149, 41.66666667, 40.81632653]))
 
         self.assertRaises(AttributeError, lambda: filter_rsd(pm, 45, 'not_QC'))
         def _maskedcall():

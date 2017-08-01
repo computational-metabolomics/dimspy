@@ -14,7 +14,7 @@ from __future__ import division
 
 import logging
 import numpy as np
-from dimspy.models.peak_matrix import mask_peakmatrix, unmask_peakmatrix
+from dimspy.models.peak_matrix import mask_peakmatrix, unmask_peakmatrix, peak_matrix_rsd
 
 
 # peaklist filters
@@ -105,10 +105,7 @@ def filter_rsd(pm, rsd_threshold, qc_label='qc', flag_name='rsd_flag'):
     threshold will be unflagged.
 
     """
-    if qc_label not in pm.peaklist_tag_values:
-        raise AttributeError('peaklist object does not have QC label [%s]' % str(qc_label))
-
-    with unmask_peakmatrix(pm, qc_label) as m: rsd_values = m.rsd
+    rsd_values = peak_matrix_rsd(pm, qc_label)
     if np.any(np.isnan(rsd_values)):
         logging.warning('nan found in QC rsd values, filter might not work properly')
 

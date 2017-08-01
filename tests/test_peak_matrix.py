@@ -14,7 +14,8 @@ import unittest
 import numpy as np
 import cPickle as cp
 from dimspy.models.peaklist_tags import PeakList_Tags
-from dimspy.models.peak_matrix import PeakMatrix, mask_peakmatrix, unmask_peakmatrix, mask_all_peakmatrix, unmask_all_peakmatrix
+from dimspy.models.peak_matrix import PeakMatrix, peak_matrix_rsd
+from dimspy.models.peak_matrix import mask_peakmatrix, unmask_peakmatrix, mask_all_peakmatrix, unmask_all_peakmatrix
 
 
 class PeakListTestCase(unittest.TestCase):
@@ -67,13 +68,14 @@ class PeakListTestCase(unittest.TestCase):
 
         self.assertTrue(np.all(pm.present == [5]*2+[0]+[5]*3+[6]*4))
         self.assertTrue(np.allclose(pm.fraction, [0.83333333]*2+[0]+[0.83333333]*3+[1]*4))
-
         self.assertTrue(np.all(pm.missing_values == [2]*2+[1]+[2]*3))
-        self.assertTrue(np.allclose(pm.rsd[~np.isnan(pm.rsd)],
-                                    [47.14045208, 59.32638115,              68.6934703, 66.17173282,
-                                     56.56854249, 55.09113315, 53.36953524, 51.7522766, 50.23015081,]))
         self.assertTrue(np.all(pm.occurrence == [10]*2+[0]+[10]*3+[12]*4))
         self.assertTrue(np.allclose(pm.purity[~np.isnan(pm.purity)], [0]*9))
+
+        pm.add_flag('odd_flag', [1, 0] * 5)
+        self.assertTrue(np.all(pm.property('present') == [5, 0, 5, 6, 6]))
+        self.assertTrue(np.all(pm.property('present', flagged_only = False) == [5]*2+[0]+[5]*3+[6]*4))
+        pm.drop_flag('odd_flag')
 
         mmz = np.arange(0, 1000, step = 100, dtype = float) + 1
         mmz[2] = np.nan
@@ -178,15 +180,17 @@ class PeakListTestCase(unittest.TestCase):
                                     [101.0, 301.0, 501.0, 701.0, 901.0]))
         self.assertTrue(np.allclose(*map(np.nan_to_num, (pm.attr_mean_vector('mz', flagged_only = False),
                                     [1.0, 101.0, np.nan, 301.0, 401.0, 501.0, 601.0, 701.0, 801.0, 901.0]))))
-        self.assertTrue(np.allclose(pm.rsd,
-                                    [59.32638115, 68.6934703, 56.56854249, 53.36953524, 50.23015081]))
+        self.assertTrue(np.allclose((lambda x: x[~np.isnan(x)])(peak_matrix_rsd(pm, 'qc')),
+                                    [41.666667, 39.473684, 35.714285, 34.090909]))
 
         pm.remove_peaks((0, 1), flagged_only = False)
-        self.assertTrue(np.allclose(pm.rsd,
-                                    [68.6934703, 56.56854249, 53.36953524, 50.23015081]))
+        self.assertTrue(np.allclose((lambda x: x[~np.isnan(x)])(peak_matrix_rsd(pm, 'qc')),
+                                    [39.473684, 35.714285, 34.090909]))
         pm.remove_peaks((0, 1), flagged_only = True)
-        self.assertTrue(np.allclose(pm.rsd,
-                                    [53.36953524, 50.23015081]))
+        self.assertTrue(np.allclose(peak_matrix_rsd(pm, 'qc'),
+                                    [35.714285, 34.090909]))
+
+        self.assertRaises(AttributeError, lambda: peak_matrix_rsd(pm, 'no_such_tag'))
 
         with mask_peakmatrix(pm, 'sample', plate = 1):
             pm.remove_samples((0, 1))

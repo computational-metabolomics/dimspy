@@ -104,7 +104,7 @@ class PeakMatrix(object):
     # privates
     # np.average accepts weights, set to 0 to exclude value
     def _present_mask(self, x, _func, flagged_only):
-        pmx = self.present_matrix if flagged_only else self.full_present_matrix
+        pmx = self.property('present_matrix', flagged_only)
         mskx = np.ma.masked_array(x, mask = ~pmx)
         vals = _func(mskx)
         rval = np.array(vals)
@@ -251,7 +251,7 @@ class PeakMatrix(object):
         :type: numpy array
 
         """
-        return np.sum(self.present_matrix, axis=0)
+        return  self.property('present')
 
     @property
     def present_matrix(self):
@@ -270,21 +270,7 @@ class PeakMatrix(object):
         array([3, 4, 2, 3, 3])
 
         """
-        pmx = self.attr_matrix('intra_count') if 'intra_count' in self.attributes else self.mz_matrix
-        return pmx > 0
-
-    @property
-    def full_present_matrix(self):
-        """
-        Property of the full present matrix.
-
-        :getter: returns the full present matrix, i.e., ignore mask and flags
-        :type: numpy array
-
-        """
-        pmx = self.attr_matrix('intra_count', flagged_only = False) if 'intra_count' in self.attributes else \
-              self.attr_matrix('mz', flagged_only = False)
-        return pmx > 0
+        return self.property('present_matrix')
 
     @property
     def fraction(self):
@@ -302,7 +288,7 @@ class PeakMatrix(object):
         array([0.75, 1.0, 0.5, 0.75, 0.75])
 
         """
-        return self.present / self.shape[0]
+        return self.property('fraction')
 
     @property
     def missing_values(self):
@@ -321,31 +307,7 @@ class PeakMatrix(object):
         array([1, 2, 0, 2])
 
         """
-        return np.sum(~self.present_matrix, axis=1)
-
-    @property
-    def rsd(self):
-        """
-        Property of the relative standard deviation (RSD) array.
-
-        :getter: returns the RSD array
-        :type: numpy array
-
-        The RSD is calculated as:
-
-        >>> rsd = std(pm.intensity_matrix, axis = 0) / mean(pm.intensity_matrix, axis = 0) * 100
-
-        Noting that only the "present" peaks will be used for calculation. If a column has less than 2 peaks, the
-        corresponding rsd value will be set to np.nan.
-
-        """
-        if self.shape[0] < 2:
-            # logging.warning('calculating RSD on less than 2 samples')
-            return np.ones(self.shape[1]) * np.nan
-        ints = self.intensity_matrix
-        rsd = self._present_std(ints, 0, True) / self._present_mean(ints, 0, True) * 100
-        rsd[np.where(map(lambda x: len(set(x[np.nonzero(x)])) == 1, ints.T))] = np.nan # only one valid value
-        return rsd
+        return self.property('missing_values')
 
     @property
     def occurrence(self):
@@ -365,10 +327,7 @@ class PeakMatrix(object):
         array([ 4,  6,  2,  4,  3])
 
         """
-        if not self._attr_dict.has_key('intra_count'):
-            logging.warning("attribute matrix ['intra_count'] not available")
-            return np.ones(self.shape[1])
-        return np.sum(self.attr_matrix('intra_count'), axis=0)
+        return self.property('occurrence')
 
     @property
     def purity(self):
@@ -388,10 +347,7 @@ class PeakMatrix(object):
         array([ 0.667,  0.75,  1.0,  0.667,  1.0])
 
         """
-        if not self._attr_dict.has_key('intra_count'):
-            logging.warning("attribute matrix ['intra_count'] not available")
-            return np.zeros(self.shape[1])
-        return 1 - (np.sum(self.attr_matrix('intra_count') > 1, axis=0) / np.sum(self.present_matrix, axis = 0))
+        return self.property('purity')
 
     # attribute matrix
     @property
@@ -458,9 +414,9 @@ class PeakMatrix(object):
         """
         Masks samples with particular tags.
 
-        :param override: whether to override the current mask, default = False
         :param args: target tag values, both typed and untyped
         :param kwargs: target typed tag types and values
+        :param override: whether to override the current mask, default = False
         :rtype: PeakMatrix object (self)
 
         This function will mask samples with ALL the tags. To match ANY of the tags, use cascade form instead.
@@ -481,9 +437,9 @@ class PeakMatrix(object):
         """
         Unmasks samples with particular tags.
 
-        :param override: whether to override the current mask, default = False
         :param args: target tag values, both typed and untyped
         :param kwargs: target typed tag types and values
+        :param override: whether to override the current mask, default = False
         :rtype: PeakMatrix object (self)
 
         This function will unmask samples with ALL the tags. To unmask ANY of the tags, use cascade form instead.
@@ -535,7 +491,7 @@ class PeakMatrix(object):
         :param flag_name: name of the flag to drop. It must exist and not equal to "flags"
 
         The overall flags property will be automatically recalculated.
-        
+
         """                
         if flag_name == 'flags':
             raise KeyError('reserved flag name [flags] cannot be droppped')
@@ -558,6 +514,41 @@ class PeakMatrix(object):
         return self._flags_dict[flag_name]
 
     # access
+    def property(self, prop_name, flagged_only = True):
+        """
+        Obtains an existing attribute matrix.
+
+        :param prop_name: name of the target property. Valid properties include 'present', 'present_matrix', 'fraction',
+            'missing_values', 'occurrence', and 'purity'
+        :param flagged_only: whether to return the flagged values only. Default = True
+        :rtype: numpy array
+
+        """
+        if prop_name in ('occurrence', 'purity') and 'intra_count' not in self.attributes:
+            logging.warning("attribute matrix ['intra_count'] not available")
+
+        # use lambda to postpone the actual calculation
+        _prop = {
+            'present_matrix':
+                lambda: self.attr_matrix('intra_count' if 'intra_count' in self.attributes else 'mz', flagged_only) > 0,
+            'present':
+                lambda: np.sum(self.property('present_matrix', flagged_only), axis = 0),
+            'fraction':
+                lambda: self.property('present', flagged_only) / self.shape[0],
+            'missing_values':
+                lambda: np.sum(~self.property('present_matrix', flagged_only), axis = 1),
+            'occurrence':
+                lambda: np.ones(self.shape[1] if flagged_only else self.full_shape[1]) if 'intra_count' not in self.attributes else
+                        np.sum(self.attr_matrix('intra_count', flagged_only), axis = 0),
+            'purity':
+                lambda: np.ones(self.shape[1] if flagged_only else self.full_shape[1]) if 'intra_count' not in self.attributes else
+                        1 - np.sum(self.attr_matrix('intra_count', flagged_only) > 1, axis = 0) /
+                            np.sum(self.property('present_matrix', flagged_only), axis = 0),
+        }.get(prop_name, None)
+
+        if _prop is None: raise ValueError('unknown property name [%s]' % prop_name)
+        return _prop()
+
     def attr_matrix(self, attr_name, flagged_only = True):
         """
         Obtains an existing attribute matrix.
@@ -679,7 +670,6 @@ class PeakMatrix(object):
         pl = PeakList(ID, self.mz_mean_vector[presids], self.intensity_mean_vector[presids], aligned_ids = self.peaklist_ids)
         pl.add_attribute('present', self.present[presids])
         pl.add_attribute('fraction', self.fraction[presids])
-        pl.add_attribute('rsd', self.rsd[presids])
         pl.add_attribute('occurrence', self.occurrence[presids])
         pl.add_attribute('purity', self.purity[presids])
         return pl
@@ -709,18 +699,12 @@ class PeakMatrix(object):
                  [map(lambda x: join(map(str, x.tag_of(None)), ';'), self.peaklist_tags)] + \
                  dm[1:]
 
-            def _refill(vals):
-                vect = np.array(['--'] * self.full_shape[1], dtype = vals.dtype)
-                vect[np.where(self.flags)] = vals
-                return list(vect)
-
-            prelst = ['present']    + ([''] * (tnum + 2)) + _refill(self.present.astype(str))
-            rsdlst = ['rsd']        + ([''] * (tnum + 2)) + _refill(self.rsd.astype(str))
-            ocrlst = ['occurrence'] + ([''] * (tnum + 2)) + _refill(self.occurrence.astype(str))
-            puplst = ['purity']     + ([''] * (tnum + 2)) + _refill(self.purity.astype(str))
-            flgmtx = [[fn] + ([''] * (tnum + 2)) + map(str, self.flag_values(fn)) for fn in self.flag_names]
-            flglst = ['flags']      + ([''] * (tnum + 2)) + map(str, self.flags)
-            dm = zip(*([prelst, rsdlst, ocrlst, puplst] + flgmtx + [flglst] + zip(*dm)))
+            prelst = ['present']    + ([''] * (tnum + 2)) + map(str, self.property('present', flagged_only = False))
+            ocrlst = ['occurrence'] + ([''] * (tnum + 2)) + map(str, self.property('occurrence', flagged_only = False))
+            puplst = ['purity']     + ([''] * (tnum + 2)) + map(str, self.property('purity', flagged_only = False))
+            flgmtx = [[fn] + ([''] * (tnum + 2)) + map(str, self.flag_values(fn).astype(int)) for fn in self.flag_names]
+            flglst = ['flags']      + ([''] * (tnum + 2)) + map(str, self.flags.astype(int))
+            dm = zip(*([prelst, ocrlst, puplst] + flgmtx + [flglst] + zip(*dm)))
 
         lm = [hd] + zip(*dm)
         return join(map(lambda x: join(x, delimiter), zip(*lm) if transpose else lm), '\n')
@@ -862,3 +846,37 @@ class unmask_all_peakmatrix:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self._pm.mask = [self._oldmask[i] for i in self._pm._pids]
 
+
+# RSD calculation
+def peak_matrix_rsd(pm, *args, **kwargs):
+    """
+    Calculate the QC samples' relative standard deviation (RSD) array for PeakMatrix.
+
+    :param pm: target peak matrix object
+    :param args: untyped QC tag label for RSD calculation
+    :param kwargs: typed QC tag label for RSD calculation
+    :param flagged_only: whether to calculate on flagged peaks only. Default = True
+    :type: numpy array
+
+    The RSD is calculated as:
+
+    >>> rsd = std(pm.intensity_matrix, axis = 0) / mean(pm.intensity_matrix, axis = 0) * 100
+
+    Noting that only the "present" peaks will be used for calculation. If a column has less than 2 peaks, the
+    corresponding rsd value will be set to np.nan.
+
+    """
+    flagged_only = kwargs.pop('flagged_only') if kwargs.has_key('flagged_only') else True
+
+    if pm.shape[0] < 2:
+        # logging.warning('calculating RSD on less than 2 samples')
+        return np.ones(pm.shape[1] if flagged_only else pm.full_shape[1]) * np.nan
+
+    with unmask_peakmatrix(pm, *args, **kwargs) as m:
+        if m.shape[0] == 0:
+            raise AttributeError('peak matrix does not have QC labels [%s]' % join(map(lambda x: str(x)[1:-1], (args,kwargs)), ', '))
+        ints = m.attr_matrix('intensity', flagged_only)
+        rsd = m._present_std(ints, 0, flagged_only) / m._present_mean(ints, 0, flagged_only) * 100
+
+    rsd[np.where(map(lambda x: len(set(x[np.nonzero(x)])) == 1, ints.T))] = np.nan # only one valid value
+    return rsd

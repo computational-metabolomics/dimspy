@@ -82,7 +82,8 @@ class HDF5PortalsTestCase(unittest.TestCase):
         self.assertTrue(np.allclose(pm.intensity_matrix, npm.intensity_matrix))
         self.assertTrue(np.allclose(pm.attr_matrix('snr'), npm.attr_matrix('snr')))
         self.assertTrue(np.all(pm.attr_matrix('lab') == npm.attr_matrix('lab')))
-        self.assertTrue(np.all(pm.full_present_matrix == npm.full_present_matrix))
+        self.assertTrue(np.all( pm.property('present_matrix', flagged_only = False) ==
+                               npm.property('present_matrix', flagged_only = False)))
         self.assertTupleEqual(pm.peaklist_tag_types, npm.peaklist_tag_types)
         self.assertTupleEqual(pm.peaklist_tag_values, npm.peaklist_tag_values)
         self.assertTrue(np.all(pm.mask == npm.mask))

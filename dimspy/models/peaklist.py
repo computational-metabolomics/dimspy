@@ -430,10 +430,12 @@ class PeakList(object):
 
         # May raise FutureWarning, but that shold be a false alarm, because attr_name is a string rather than a list
         # we are not accessing multiple fields by their names here
+        warnings.simplefilter(action = 'ignore', category = FutureWarning)
         self._dtable[attr_name][self._flags if flagged_only else slice(None)] = attr_value
+        warnings.resetwarnings()
+
         if attr_name == 'mz' and unsorted_mz: self.sort_peaks_order()
         if attr_name in self._flag_attrs: self.calculate_flags()
-
         return self
 
     def get_attribute(self, attr_name, flagged_only=True):
