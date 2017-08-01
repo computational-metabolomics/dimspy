@@ -7,6 +7,7 @@ import os
 import zipfile
 import numpy as np
 from dimspy.models.peaklist import PeakList
+from dimspy.models.peak_matrix import peak_matrix_rsd
 from dimspy.portals import mzml_portal
 from dimspy.portals import thermo_raw_portal
 from dimspy.process.peak_alignment import align_peaks
@@ -143,6 +144,8 @@ def average_replicate_scans(ID, pls, ppm=2.0, min_fraction=0.8, rsd_thres=30.0, 
 
     pl_avg.add_attribute("snr", pm.attr_mean_vector('snr'), on_index=2)
     pl_avg.add_attribute("snr_flag", np.ones(pl_avg.full_size), flagged_only=False, is_flag=True)
+
+    pl_avg.add_attribute("rsd", peak_matrix_rsd(pm), on_index=5)
 
     if min_fraction is not None:
         pl_avg.add_attribute("fraction_flag", (pm.present / float(pm.shape[0])) >= min_fraction, flagged_only=False, is_flag=True)
