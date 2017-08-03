@@ -527,7 +527,16 @@ class PeakMatrix(object):
         if prop_name in ('occurrence', 'purity') and 'intra_count' not in self.attributes:
             logging.warning("attribute matrix ['intra_count'] not available")
 
-        # use lambda to postpone the actual calculation
+        def _purity():
+            if 'intra_count' not in self.attributes: np.ones(self.shape[1] if flagged_only else self.full_shape[1])
+            if 0 in self.property('present'):
+                logging.warning("found empty peak when calculating property ['purity']")
+            with np.errstate(divide = 'ignore', invalid = 'ignore'):
+                ret = 1 - np.sum(self.attr_matrix('intra_count', flagged_only) > 1, axis = 0) / self.property('present', flagged_only)
+            ret[np.isinf(ret)] = np.nan
+            return ret
+
+        # use lambda to postpone the actual calculations
         _prop = {
             'present_matrix':
                 lambda: self.attr_matrix('intra_count' if 'intra_count' in self.attributes else 'mz', flagged_only) > 0,
@@ -540,10 +549,7 @@ class PeakMatrix(object):
             'occurrence':
                 lambda: np.ones(self.shape[1] if flagged_only else self.full_shape[1]) if 'intra_count' not in self.attributes else
                         np.sum(self.attr_matrix('intra_count', flagged_only), axis = 0),
-            'purity':
-                lambda: np.ones(self.shape[1] if flagged_only else self.full_shape[1]) if 'intra_count' not in self.attributes else
-                        1 - np.sum(self.attr_matrix('intra_count', flagged_only) > 1, axis = 0) /
-                            np.sum(self.property('present_matrix', flagged_only), axis = 0),
+            'purity': _purity
         }.get(prop_name, None)
 
         if _prop is None: raise ValueError('unknown property name [%s]' % prop_name)

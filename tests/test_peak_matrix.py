@@ -72,6 +72,11 @@ class PeakListTestCase(unittest.TestCase):
         self.assertTrue(np.all(pm.occurrence == [10]*2+[0]+[10]*3+[12]*4))
         self.assertTrue(np.allclose(pm.purity[~np.isnan(pm.purity)], [0]*9))
 
+        ics = pm._attr_dict['intra_count']
+        ics[0, 1] = ics[2, 1] = 1
+        self.assertTrue(np.isclose(pm.purity[1], 0.4))
+        ics[0, 1] = ics[2, 1] = 2
+
         pm.add_flag('odd_flag', [1, 0] * 5)
         self.assertTrue(np.all(pm.property('present') == [5, 0, 5, 6, 6]))
         self.assertTrue(np.all(pm.property('present', flagged_only = False) == [5]*2+[0]+[5]*3+[6]*4))
