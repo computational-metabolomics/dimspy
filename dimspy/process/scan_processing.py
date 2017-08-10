@@ -120,7 +120,6 @@ def read_scans(fn, source, function_noise, min_scans=1, filter_scan_events=None)
             logging.warning('Not enough scans for [{}] [{} < {}]. Event {} has been removed.'.format(h, len(scans), min_scans, h))
     return scans
 
-
 def average_replicate_scans(ID, pls, ppm=2.0, min_fraction=0.8, rsd_thres=30.0, block_size=2000, ncpus=None):
 
     emlst = np.array(map(lambda x: x.size == 0, pls))

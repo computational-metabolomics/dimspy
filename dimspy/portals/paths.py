@@ -21,7 +21,7 @@ def check_paths(tsv, source):
                     filenames = [fn for fn in zf.namelist() if fn.lower().endswith(".mzml")]
             elif h5py.is_hdf5(source):
                 peaklists = hdf5_portal.load_peaklists_from_hdf5(source)
-                filenames = [pl.ID for pl in peaklists]
+                filenames = [os.path.join(os.path.abspath(os.path.dirname(source)), pl.ID) for pl in peaklists]
             elif os.path.isfile(source):
                 if source.lower().endswith(".raw") or source.lower().endswith(".mzml"):
                     filenames = [source]
