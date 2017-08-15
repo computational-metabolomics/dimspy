@@ -10,7 +10,7 @@ The PeakList data object class.
 
 """
 
-import logging
+import logging, warnings
 import numpy as np
 import numpy.lib.recfunctions as rfn
 from collections import OrderedDict, Iterable
@@ -289,10 +289,10 @@ class PeakList(object):
         """
         Re-calculates the flags according to the flag attributes.
 
+        :rtype: numpy array
+
         .. note::
             This method will be called automatically every time a flag attribute is added, removed, or changed.
-
-        :rtype: numpy array
 
         """
         self._flags = np.ones_like(self._flags) if len(self._flag_attrs) == 0 else \
@@ -316,7 +316,7 @@ class PeakList(object):
         """
         Adds an new attribute to the PeakList attribute table.
 
-        :param attr_name: the name of the new attribute
+        :param attr_name: the name of the new attribute, must be a string
         :param attr_value: the values of the new attribute. It's size must equals to PeakList.size
             (if flagged_only == True), or PeakList.full_size (if flagged_only == False)
         :param attr_dtype: the data type of the new attribute. If it is set to None, the PeakList will
@@ -337,18 +337,16 @@ class PeakList(object):
             raise AttributeError('cannot add reserved attribute [%s]' % attr_name)
         if self.has_attribute(attr_name):
             raise AttributeError('attribute [%s] already exists' % attr_name)
-        if is_flag and self.size > 0 and not (set(attr_value) in ({0}, {1}, {0, 1})):
-            raise ValueError('flag attribute can only contain True / False values')
         if on_index is not None and not (-self.shape[1] + 1 < on_index < 0 or 1 < on_index < self.shape[1]):
             raise IndexError('index [%d] out of (insertable) range' % on_index)
 
-        attr_name = str(attr_name) # rfn.append_fields doesn't recognises unicode
+        attr_name = str(attr_name) # rfn.append_fields doesn't recognise unicode
 
         adt = bool if is_flag else \
-            attr_dtype if attr_dtype is not None else \
-                attr_value.dtype.str if hasattr(attr_value, 'dtype') else \
-                    ('S%d' % max(map(len, attr_value))) if type(attr_value[0]) in (unicode, str) else \
-                        type(attr_value[0])
+              attr_dtype if attr_dtype is not None else \
+              attr_value.dtype.str if hasattr(attr_value, 'dtype') else \
+              ('S%d' % max(map(len, attr_value))) if type(attr_value[0]) in (unicode, str) else \
+              type(attr_value[0])
         if adt in (bool, 'bool', '|b1'): adt = 'b'  # fix numpy dtype bug
 
         if flagged_only:
@@ -361,15 +359,24 @@ class PeakList(object):
                 raise ValueError('input attibute value size not match')
             nattr = np.array(attr_value).astype(adt)
 
+        if is_flag and self.size > 0 and not (set(nattr) in ({0}, {1}, {0, 1})):
+            raise ValueError('flag attribute can only contain True / False values')
+
         if on_index is None: on_index = self.shape[1]
         anames, atypes = map(list, zip(*self._dtable.dtype.descr))
         prevnm, restnm, resttp = anames[:on_index], anames[on_index:], atypes[on_index:]
 
+        # suppress numpy's future warning regarding the structure array indexing
+        # "Numpy has detected that you (may be) writing to an array returned
+        #  by numpy.diagonal or by selecting multiple fields in a structured
+        #  array. This code will likely break in a future numpy release ..."
+        warnings.simplefilter(action = 'ignore', category = FutureWarning)
         prevtb = np.array(nattr, dtype=[(attr_name, adt)]) if len(prevnm) == 0 else \
             rfn.append_fields(self._fields_view(self._dtable, prevnm), attr_name, nattr, dtypes=adt, usemask=False)
         self._dtable = prevtb if len(restnm) == 0 else \
             rfn.append_fields(prevtb, restnm, zip(*self._fields_view(self._dtable, restnm)), dtypes=resttp,
                               usemask=False)
+        warnings.resetwarnings()
 
         if is_flag:
             self._flag_attrs += [attr_name]
@@ -423,10 +430,12 @@ class PeakList(object):
 
         # May raise FutureWarning, but that shold be a false alarm, because attr_name is a string rather than a list
         # we are not accessing multiple fields by their names here
+        warnings.simplefilter(action = 'ignore', category = FutureWarning)
         self._dtable[attr_name][self._flags if flagged_only else slice(None)] = attr_value
+        warnings.resetwarnings()
+
         if attr_name == 'mz' and unsorted_mz: self.sort_peaks_order()
         if attr_name in self._flag_attrs: self.calculate_flags()
-
         return self
 
     def get_attribute(self, attr_name, flagged_only=True):
@@ -472,6 +481,7 @@ class PeakList(object):
         50, 50, 50, True
 
         """
+        if isinstance(peak_index, Iterable): peak_index = list(peak_index)
         self._dtable[np.where(self._flags)[0][peak_index] if flagged_only else peak_index] = peak_value
         self.sort_peaks_order()
         self.calculate_flags()
@@ -486,6 +496,7 @@ class PeakList(object):
         :rtype: numpy array
 
         """
+        if isinstance(peak_index, Iterable): peak_index = list(peak_index)
         return self._dtable[self._flags][peak_index] if flagged_only else self._dtable[peak_index]
 
     def insert_peak(self, peak_value):

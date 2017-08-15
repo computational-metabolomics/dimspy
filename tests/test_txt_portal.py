@@ -23,8 +23,8 @@ class TxtPortalsTestCase(unittest.TestCase):
         pkl = PeakList('peaklist', np.sort(np.random.uniform(100, 1200, size = 100)), np.random.normal(100, 10, size = 100))
         pkl.add_attribute('odd_flag', [0, 1] * 50, is_flag = True)
 
-        save_peaklist_as_txt(pkl, 'peaklist.txt')
-        npkl = load_peaklist_from_txt('peaklist.txt', 'peaklist')
+        save_peaklist_as_txt(pkl, '.test_peaklist.txt')
+        npkl = load_peaklist_from_txt('.test_peaklist.txt', 'peaklist')
 
         self.assertEqual(npkl.size, 50)
         self.assertEqual(npkl.full_size, 100)
@@ -50,19 +50,22 @@ class TxtPortalsTestCase(unittest.TestCase):
         pkls[4].tags.add_tags('sample', treatment = 'compound_2', time_point = '6hr', plate = 2)
         pkls[5].tags.add_tags('qc', plate = 2)
 
-        pm = align_peaks(pkls, ppm = 2.0, block_size = 10, ncpus = 2)
+        pm = align_peaks(pkls, ppm = 2e+4, block_size = 10, ncpus = 2)
+        pm.add_flag('odd_flag', ([0, 1] * int(pm.shape[1]/2+1))[:pm.shape[1]])
+        pm.add_flag('qua_flag', ([0, 0, 1, 1] * int(pm.shape[1]/4+1))[:pm.shape[1]])
 
-        save_peak_matrix_as_txt(pm, 'peak_matrix.txt', transpose = True, comprehensive = True)
-        npm = load_peak_matrix_from_txt('peak_matrix.txt', transposed = True, comprehensive = True)
+        save_peak_matrix_as_txt(pm, '.test_peak_matrix.txt', transpose = True, comprehensive = True)
+        npm = load_peak_matrix_from_txt('.test_peak_matrix.txt', transposed = True, comprehensive = True)
 
         self.assertEqual(pm.shape, npm.shape)
+        self.assertEqual(pm.full_shape, npm.full_shape)
         self.assertTrue(np.allclose(pm.intensity_matrix, npm.intensity_matrix))
         self.assertTupleEqual(pm.peaklist_tag_types, npm.peaklist_tag_types)
         self.assertTupleEqual(pm.peaklist_tag_values, npm.peaklist_tag_values)
 
     def tearDown(self):
-        if os.path.isfile('peaklist.txt'): os.remove('peaklist.txt')
-        if os.path.isfile('peak_matrix.txt'): os.remove('peak_matrix.txt')
+        if os.path.isfile('.test_peaklist.txt'): os.remove('.test_peaklist.txt')
+        if os.path.isfile('.test_peak_matrix.txt'): os.remove('.test_peak_matrix.txt')
 
 
 if __name__ == '__main__':

@@ -12,6 +12,7 @@ from itertools import combinations
 import zipfile
 from models.peaklist import PeakList
 from models.peak_matrix import PeakMatrix
+from models.peak_matrix import peak_matrix_rsd
 from portals import hdf5_portal
 from portals import txt_portal
 from portals.paths import check_paths
@@ -186,15 +187,17 @@ def replicate_filter(source, ppm, replicates, min_peaks, rsd_thres=None, filelis
             if "snr" in pm.attributes:
                 pl.add_attribute("snr", pm.attr_mean_vector("snr"), on_index=2)
 
+            pl.add_attribute("rsd", peak_matrix_rsd(pm), on_index=5)
+
             pl.tags.add_tags(*pls_comb[0].tags.tag_of(None), **{t: pls_comb[0].tags.tag_of(t) for t in pls_comb[0].tags.tag_types})
             pl.add_attribute("present_flag", pm.present >= min_peaks, is_flag=True)
 
             if rsd_thres is not None:
-                rsd_flag = map(lambda x: not np.isnan(x) and x < rsd_thres, pm.rsd)
+                rsd_flag = map(lambda x: not np.isnan(x) and x < rsd_thres, pl.rsd)
                 pl.add_attribute("rsd_flag", rsd_flag, flagged_only=False, is_flag=True)
 
             pl_filt = filter_attr(pl.copy(), attr_name="present", min_threshold=replicates, flag_name="pres_rsd")
-            temp.append([pl, pl_filt.shape[0], np.median(pl_filt.rsd)])
+            temp.append([pl, pl_filt.shape[0], np.median(pl.rsd)])
 
         temp.sort(key=operator.itemgetter(2, 1))
         pls_rep_filt.append(temp[0][0])  # Most reproducible set of replicates
@@ -315,13 +318,13 @@ def merge_peaklists(source, filelist=None):
             else:
                 raise IOError("Incorrect Object in list. Peaklist Object expected.")
         elif isinstance(s, PeakMatrix):
-            pls = s.get_peaklists()
+            pls = s.extract_peaklists()
             pls_merged.extend(pls)
         elif h5py.is_hdf5(s):
             f = h5py.File(s, 'r')
             if "mz" in f:
                 pm = txt_portal.load_peak_matrix_from_txt(s)
-                pls = pm.get_peaklists()
+                pls = pm.extract_peaklists()
             else:
                 pls = hdf5_portal.load_peaklists_from_hdf5(s)
             f.close()

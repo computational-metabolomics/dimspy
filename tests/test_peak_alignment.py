@@ -35,9 +35,23 @@ class PeakAlignmentTestCase(unittest.TestCase):
         [                65,                    ],
     ]
 
+    strs = [
+        ['a','b','c','d','e','f','g','h','i','j'],
+        ['k',    'l',    'm','n','o','p','q','r'],
+        [    's','t','u',        'v','w','x','y'],
+        ['z','a','b',                'c','d','e'],
+        ['f','g',        'h','i','j','k',       ],
+        [                'l',                   ],
+    ]
+
     def _createPeakLists(self):
         mz = [np.array(m) + np.random.normal(0, 1e-5, len(m)) for m in self.mz]
-        return [PeakList('peaklist_' + str(i), mz[i], self.ints[i]) for i in range(len(mz))]
+        pkls = []
+        for i in range(len(mz)):
+            pl = PeakList('peaklist_' + str(i), mz[i], self.ints[i])
+            pl.add_attribute('str_attr', self.strs[i])
+            pkls += [pl]
+        return pkls
 
     def _checkAlignmentResults(self, pm):
         self.assertTrue(np.allclose(np.unique(np.round(pm.to_peaklist('merged').mz)), np.arange(10, 110, step = 10)))
@@ -48,6 +62,8 @@ class PeakAlignmentTestCase(unittest.TestCase):
 
         try:
             pm = align_peaks(pkls, ppm = 2.0, block_size = 5, fixed_block = True, edge_extend = 10, ncpus = 2)
+            # print pm.attr_matrix('str_attr')
+            # print pm.attr_mean_vector('str_attr')
         except Exception, e:
             self.fail('alignment failed: ' + str(e))
 
