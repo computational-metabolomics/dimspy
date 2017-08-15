@@ -115,7 +115,7 @@ class PeakMatrix(object):
         return self._present_mask(x, lambda v: np.mean(v, axis = axis), flagged_only)
 
     def _present_std(self, x, axis, flagged_only):
-        return self._present_mask(x, lambda v: np.std(v, axis = axis), flagged_only)
+        return self._present_mask(x, lambda v: np.std(v, axis = axis, ddof = 1), flagged_only)
 
     # built-ins
     def __len__(self):
@@ -866,9 +866,10 @@ def peak_matrix_rsd(pm, *args, **kwargs):
 
     The RSD is calculated as:
 
-    >>> rsd = std(pm.intensity_matrix, axis = 0) / mean(pm.intensity_matrix, axis = 0) * 100
+    >>> rsd = std(pm.intensity_matrix, axis = 0, ddof = 1) / mean(pm.intensity_matrix, axis = 0) * 100
 
-    Noting that only the "present" peaks will be used for calculation. If a column has less than 2 peaks, the
+    Noting that the means delta degrees of freedom (ddof) is set to 1 for standard deviation calculation.
+    Moreover, only the "present" peaks will be used for calculation. If a column has less than 2 peaks, the
     corresponding rsd value will be set to np.nan.
 
     """

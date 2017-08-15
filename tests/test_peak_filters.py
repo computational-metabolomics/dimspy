@@ -84,11 +84,11 @@ class PeakFiltersTestCase(unittest.TestCase):
         pm = self._createPeakMatrix()
 
         try:
-            pm = filter_rsd(pm, 45, 'qc')
+            pm = filter_rsd(pm, 62, 'qc')
         except Exception, e:
             self.fail('filter peak_matrix rsd failed: ' + str(e))
         self.assertTrue(np.allclose(peak_matrix_rsd(pm, 'qc'),
-            [44.44444444, 43.47826087, 42.55319149, 41.66666667, 40.81632653]))
+            [61.48754619, 60.17930052, 58.92556509, 57.72300254]))
 
         self.assertRaises(AttributeError, lambda: filter_rsd(pm, 45, 'not_QC'))
         def _maskedcall():

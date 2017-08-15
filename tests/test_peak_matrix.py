@@ -186,16 +186,16 @@ class PeakListTestCase(unittest.TestCase):
         self.assertTrue(np.allclose(*map(np.nan_to_num, (pm.attr_mean_vector('mz', flagged_only = False),
                                     [1.0, 101.0, np.nan, 301.0, 401.0, 501.0, 601.0, 701.0, 801.0, 901.0]))))
         self.assertTrue(np.allclose((lambda x: x[~np.isnan(x)])(peak_matrix_rsd(pm, 'qc')),
-                                    [41.666667, 39.473684, 35.714285, 34.090909]))
+                                    [58.92556509, 55.82421956, 50.50762722, 48.21182598]))
         self.assertTrue(np.allclose((lambda x: x[~np.isnan(x)])(peak_matrix_rsd(pm)),
-                                    [59.32638115, 68.6934703, 56.56854249, 53.36953524, 50.23015081]))
+                                    [66.32891055, 76.80163464, 63.24555320, 58.46339666, 55.02437333]))
 
         pm.remove_peaks((0, 1), flagged_only = False)
         self.assertTrue(np.allclose((lambda x: x[~np.isnan(x)])(peak_matrix_rsd(pm, 'qc')),
-                                    [39.473684, 35.714285, 34.090909]))
+                                    [55.82421956, 50.50762722, 48.21182598]))
         pm.remove_peaks((0, 1), flagged_only = True)
         self.assertTrue(np.allclose(peak_matrix_rsd(pm, 'qc'),
-                                    [35.714285, 34.090909]))
+                                    [50.50762722, 48.21182598]))
 
         self.assertRaises(AttributeError, lambda: peak_matrix_rsd(pm, 'no_such_tag'))
 
