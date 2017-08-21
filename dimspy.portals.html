@@ -1,0 +1,532 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>dimspy.portals package &mdash; DIMSPy 0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="DIMSPy 0.1 documentation" href="index.html"/>
+        <link rel="up" title="dimspy package" href="dimspy.html"/>
+        <link rel="next" title="dimspy.process package" href="dimspy.process.html"/>
+        <link rel="prev" title="dimspy.models package" href="dimspy.models.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> DIMSPy
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="dimspy.html">dimspy package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="dimspy.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="dimspy.models.html">dimspy.models package</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">dimspy.portals package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-dimspy.portals.hdf5_portal">dimspy.portals.hdf5_portal module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-dimspy.portals.mzml_portal">dimspy.portals.mzml_portal module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-dimspy.portals.paths">dimspy.portals.paths module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-dimspy.portals.thermo_raw_portal">dimspy.portals.thermo_raw_portal module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-dimspy.portals.txt_portal">dimspy.portals.txt_portal module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-dimspy.portals">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="dimspy.process.html">dimspy.process package</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="dimspy.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dimspy.html#module-dimspy.dimspy">dimspy.dimspy module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dimspy.html#module-dimspy.experiment">dimspy.experiment module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dimspy.html#module-dimspy.log_setting">dimspy.log_setting module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dimspy.html#module-dimspy.workflow">dimspy.workflow module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dimspy.html#module-dimspy">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">DIMSPy</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="dimspy.html">dimspy package</a> &raquo;</li>
+        
+      <li>dimspy.portals package</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/dimspy.portals.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="dimspy-portals-package">
+<h1>dimspy.portals package<a class="headerlink" href="#dimspy-portals-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-dimspy.portals.hdf5_portal">
+<span id="dimspy-portals-hdf5-portal-module"></span><h2>dimspy.portals.hdf5_portal module<a class="headerlink" href="#module-dimspy.portals.hdf5_portal" title="Permalink to this headline">¶</a></h2>
+<p>The PeakList and PeakMatrix HDF5 portals.</p>
+<div class="versionadded">
+<p><span class="versionmodified">New in version 0.1.</span></p>
+</div>
+<dl class="function">
+<dt id="dimspy.portals.hdf5_portal.save_peaklists_as_hdf5">
+<code class="descclassname">dimspy.portals.hdf5_portal.</code><code class="descname">save_peaklists_as_hdf5</code><span class="sig-paren">(</span><em>pkls</em>, <em>file_name</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.portals.hdf5_portal.save_peaklists_as_hdf5" title="Permalink to this definition">¶</a></dt>
+<dd><p>Saves multiple peaklists in HDF5 file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>pkls</strong> – the target list of peaklist objects</li>
+<li><strong>file_name</strong> – name of the file to export data</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>To incorporate with different dtypes in the attribute matrix, this portal converts all the arribute values
+into fix-lenght strings for HDF5 data tables storage. The order of the peaklists will be retained.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="dimspy.portals.hdf5_portal.load_peaklists_from_hdf5">
+<code class="descclassname">dimspy.portals.hdf5_portal.</code><code class="descname">load_peaklists_from_hdf5</code><span class="sig-paren">(</span><em>file_name</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.portals.hdf5_portal.load_peaklists_from_hdf5" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads a list of peaklists from HDF5 file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>file_name</strong> – name of the file to import data</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list</td>
+</tr>
+</tbody>
+</table>
+<p>The values in HDF5 data tables are automatically converted to their original dtypes before loading in the the peaklist.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="dimspy.portals.hdf5_portal.save_peak_matrix_as_hdf5">
+<code class="descclassname">dimspy.portals.hdf5_portal.</code><code class="descname">save_peak_matrix_as_hdf5</code><span class="sig-paren">(</span><em>pm</em>, <em>file_name</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.portals.hdf5_portal.save_peak_matrix_as_hdf5" title="Permalink to this definition">¶</a></dt>
+<dd><p>Saves a peak matrix in HDF5 file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>pm</strong> – the target peak matrix object</li>
+<li><strong>file_name</strong> – name of the file to export data</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>The order of the attributes and flags will be retained.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="dimspy.portals.hdf5_portal.load_peak_matrix_from_hdf5">
+<code class="descclassname">dimspy.portals.hdf5_portal.</code><code class="descname">load_peak_matrix_from_hdf5</code><span class="sig-paren">(</span><em>file_name</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.portals.hdf5_portal.load_peak_matrix_from_hdf5" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads a peak matrix from HDF5 file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>file_name</strong> – name of the file to import data</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">PeakMatrix object</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-dimspy.portals.mzml_portal">
+<span id="dimspy-portals-mzml-portal-module"></span><h2>dimspy.portals.mzml_portal module<a class="headerlink" href="#module-dimspy.portals.mzml_portal" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="dimspy.portals.mzml_portal.Mzml">
+<em class="property">class </em><code class="descclassname">dimspy.portals.mzml_portal.</code><code class="descname">Mzml</code><span class="sig-paren">(</span><em>fname=''</em>, <em>archive=None</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.portals.mzml_portal.Mzml" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="dimspy.portals.mzml_portal.Mzml.run">
+<code class="descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.portals.mzml_portal.Mzml.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="dimspy.portals.mzml_portal.Mzml.headers">
+<code class="descname">headers</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.portals.mzml_portal.Mzml.headers" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="dimspy.portals.mzml_portal.Mzml.peaklist">
+<code class="descname">peaklist</code><span class="sig-paren">(</span><em>scan_id</em>, <em>mode_noise='median'</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.portals.mzml_portal.Mzml.peaklist" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="dimspy.portals.mzml_portal.Mzml.peaklists">
+<code class="descname">peaklists</code><span class="sig-paren">(</span><em>scan_ids</em>, <em>mode='median'</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.portals.mzml_portal.Mzml.peaklists" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="dimspy.portals.mzml_portal.Mzml.headers_scan_ids">
+<code class="descname">headers_scan_ids</code><span class="sig-paren">(</span><em>n=None</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.portals.mzml_portal.Mzml.headers_scan_ids" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="dimspy.portals.mzml_portal.Mzml.tics">
+<code class="descname">tics</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.portals.mzml_portal.Mzml.tics" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="dimspy.portals.mzml_portal.Mzml.extra_info">
+<code class="descname">extra_info</code><span class="sig-paren">(</span><em>scan_id</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.portals.mzml_portal.Mzml.extra_info" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-dimspy.portals.paths">
+<span id="dimspy-portals-paths-module"></span><h2>dimspy.portals.paths module<a class="headerlink" href="#module-dimspy.portals.paths" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="dimspy.portals.paths.check_paths">
+<code class="descclassname">dimspy.portals.paths.</code><code class="descname">check_paths</code><span class="sig-paren">(</span><em>tsv</em>, <em>source</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.portals.paths.check_paths" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-dimspy.portals.thermo_raw_portal">
+<span id="dimspy-portals-thermo-raw-portal-module"></span><h2>dimspy.portals.thermo_raw_portal module<a class="headerlink" href="#module-dimspy.portals.thermo_raw_portal" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="dimspy.portals.thermo_raw_portal.mz_range_from_header">
+<code class="descclassname">dimspy.portals.thermo_raw_portal.</code><code class="descname">mz_range_from_header</code><span class="sig-paren">(</span><em>h</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.portals.thermo_raw_portal.mz_range_from_header" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="dimspy.portals.thermo_raw_portal.ThermoRaw">
+<em class="property">class </em><code class="descclassname">dimspy.portals.thermo_raw_portal.</code><code class="descname">ThermoRaw</code><span class="sig-paren">(</span><em>fname</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.portals.thermo_raw_portal.ThermoRaw" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="dimspy.portals.thermo_raw_portal.ThermoRaw.headers">
+<code class="descname">headers</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.portals.thermo_raw_portal.ThermoRaw.headers" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="dimspy.portals.thermo_raw_portal.ThermoRaw.headers_scan_ids">
+<code class="descname">headers_scan_ids</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.portals.thermo_raw_portal.ThermoRaw.headers_scan_ids" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="dimspy.portals.thermo_raw_portal.ThermoRaw.peaklist">
+<code class="descname">peaklist</code><span class="sig-paren">(</span><em>scan_id</em>, <em>mode_noise='noise_packets'</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.portals.thermo_raw_portal.ThermoRaw.peaklist" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="dimspy.portals.thermo_raw_portal.ThermoRaw.peaklists">
+<code class="descname">peaklists</code><span class="sig-paren">(</span><em>scan_ids</em>, <em>mode_noise='noise_packets'</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.portals.thermo_raw_portal.ThermoRaw.peaklists" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="dimspy.portals.thermo_raw_portal.ThermoRaw.close">
+<code class="descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.portals.thermo_raw_portal.ThermoRaw.close" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-dimspy.portals.txt_portal">
+<span id="dimspy-portals-txt-portal-module"></span><h2>dimspy.portals.txt_portal module<a class="headerlink" href="#module-dimspy.portals.txt_portal" title="Permalink to this headline">¶</a></h2>
+<p>The PeakList and PeakMatrix plain text portals.</p>
+<div class="versionadded">
+<p><span class="versionmodified">New in version 0.1.</span></p>
+</div>
+<dl class="function">
+<dt id="dimspy.portals.txt_portal.save_peaklist_as_txt">
+<code class="descclassname">dimspy.portals.txt_portal.</code><code class="descname">save_peaklist_as_txt</code><span class="sig-paren">(</span><em>pkl</em>, <em>file_name</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.portals.txt_portal.save_peaklist_as_txt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Saves a peaklist in plain text file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>pkl</strong> – the target peaklist object</li>
+<li><strong>file_name</strong> – name of the file to export data</li>
+<li><strong>args</strong> – arguments to be passed to PeakList.to_str</li>
+<li><strong>kwargs</strong> – keyword arguments to be passed to PeakList.to_str</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="dimspy.portals.txt_portal.load_peaklist_from_txt">
+<code class="descclassname">dimspy.portals.txt_portal.</code><code class="descname">load_peaklist_from_txt</code><span class="sig-paren">(</span><em>file_name</em>, <em>ID</em>, <em>delimiter='</em>, <em>'</em>, <em>flag_names='auto'</em>, <em>has_flag_col=True</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.portals.txt_portal.load_peaklist_from_txt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads a peaklist from plain text file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>file_name</strong> – name of the file to import data</li>
+<li><strong>ID</strong> – ID of the loaded peaklist</li>
+<li><strong>delimiter</strong> – delimiter of the text lines. Default = ‘,’, i.e., CSV format</li>
+<li><strong>flag_names</strong> – names of the flag attributes. Default = ‘auto’, indicating all the attribute names ends
+with “_flag” will be treated as flag attibute. Provide None to indicate no flag attributes</li>
+<li><strong>has_flag_col</strong> – whether the text file contains the overall “flags” column. If True, it’s values will be
+discarded. The overall flags of the new peaklist will be calculated automatically. Default = True</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">PeakList object</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="dimspy.portals.txt_portal.save_peak_matrix_as_txt">
+<code class="descclassname">dimspy.portals.txt_portal.</code><code class="descname">save_peak_matrix_as_txt</code><span class="sig-paren">(</span><em>pm</em>, <em>file_name</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.portals.txt_portal.save_peak_matrix_as_txt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Saves a peak matrix in plain text file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>pm</strong> – the target peak matrix object</li>
+<li><strong>file_name</strong> – name of the file to export data</li>
+<li><strong>args</strong> – arguments to be passed to PeakMatrix.to_str</li>
+<li><strong>kwargs</strong> – keyword arguments to be passed to PeakMatrix.to_str</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="dimspy.portals.txt_portal.load_peak_matrix_from_txt">
+<code class="descclassname">dimspy.portals.txt_portal.</code><code class="descname">load_peak_matrix_from_txt</code><span class="sig-paren">(</span><em>file_name</em>, <em>delimiter='\t'</em>, <em>transposed=False</em>, <em>comprehensive=False</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.portals.txt_portal.load_peak_matrix_from_txt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads a peak matrix from plain text file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>file_name</strong> – name of the file to import data</li>
+<li><strong>delimiter</strong> – delimiter of the text lines. Default = ‘  ‘, i.e., TSV format</li>
+<li><strong>transposed</strong> – whether the attribute matrix has been transposed during the export. Default = False</li>
+<li><strong>comprehensive</strong> – whether the comprehensive information has been included during the export. Default = False</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">PeakMatrix object</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-dimspy.portals">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-dimspy.portals" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="dimspy.process.html" class="btn btn-neutral float-right" title="dimspy.process package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="dimspy.models.html" class="btn btn-neutral" title="dimspy.models package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Ralf Weber, Jiarui (Albert) Zhou.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

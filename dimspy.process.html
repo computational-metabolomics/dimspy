@@ -1,0 +1,501 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>dimspy.process package &mdash; DIMSPy 0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="DIMSPy 0.1 documentation" href="index.html"/>
+        <link rel="up" title="dimspy package" href="dimspy.html"/>
+        <link rel="prev" title="dimspy.portals package" href="dimspy.portals.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> DIMSPy
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="dimspy.html">dimspy package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="dimspy.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="dimspy.models.html">dimspy.models package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dimspy.portals.html">dimspy.portals package</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">dimspy.process package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-dimspy.process.mass_calibration">dimspy.process.mass_calibration module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-dimspy.process.peak_alignment">dimspy.process.peak_alignment module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-dimspy.process.peak_filters">dimspy.process.peak_filters module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-dimspy.process.scan_processing">dimspy.process.scan_processing module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-dimspy.process">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="dimspy.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dimspy.html#module-dimspy.dimspy">dimspy.dimspy module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dimspy.html#module-dimspy.experiment">dimspy.experiment module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dimspy.html#module-dimspy.log_setting">dimspy.log_setting module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dimspy.html#module-dimspy.workflow">dimspy.workflow module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dimspy.html#module-dimspy">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">DIMSPy</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="dimspy.html">dimspy package</a> &raquo;</li>
+        
+      <li>dimspy.process package</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/dimspy.process.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="dimspy-process-package">
+<h1>dimspy.process package<a class="headerlink" href="#dimspy-process-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-dimspy.process.mass_calibration">
+<span id="dimspy-process-mass-calibration-module"></span><h2>dimspy.process.mass_calibration module<a class="headerlink" href="#module-dimspy.process.mass_calibration" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-dimspy.process.peak_alignment">
+<span id="dimspy-process-peak-alignment-module"></span><h2>dimspy.process.peak_alignment module<a class="headerlink" href="#module-dimspy.process.peak_alignment" title="Permalink to this headline">¶</a></h2>
+<p>Cluster and align peaklists into peak matrix.</p>
+<div class="versionadded">
+<p><span class="versionmodified">New in version 0.1.</span></p>
+</div>
+<dl class="function">
+<dt id="dimspy.process.peak_alignment.align_peaks">
+<code class="descclassname">dimspy.process.peak_alignment.</code><code class="descname">align_peaks</code><span class="sig-paren">(</span><em>peaks</em>, <em>ppm=2.0</em>, <em>block_size=2000</em>, <em>fixed_block=True</em>, <em>edge_extend=10</em>, <em>ncpus=None</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.process.peak_alignment.align_peaks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Cluster and align peaklists into a peak matrix.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>peaks</strong> – list of peaklists for alignment</li>
+<li><strong>ppm</strong> – the hierarchical clustering cutting height, i.e., ppm range for each aligned mz value. Default = 2.0</li>
+<li><strong>block_size</strong> – number peaks in each centre clustering block. This can be a exact or approximate number depends
+on the fixed_block parameter. Default = 2000</li>
+<li><strong>fixed_block</strong> – whether the blocks contain fixed number of peaks. Default = True</li>
+<li><strong>edge_extend</strong> – ppm range for the edge blocks. Default = 10</li>
+<li><strong>ncpus</strong> – number of CPUs for parallel clustering. Default = None, indicating using as many as possible</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">PeakMatrix object</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="figure align-center">
+<img alt="_images/alignment.png" src="_images/alignment.png" />
+</div>
+<p>This function uses hierarchical clustering to align the mz values of the input peaklists. The alignment “width” is
+decided by the parameter of ppm. Due to a large number of peaks, this function splits them into blocks with fixed
+or approximate length, and clusters in a parallel manner on multiple CPUs. When running, the edge blocks are
+clustered first to prevent separating the same peak into two adjacent centre blocks. The size of the edge blocks is
+decided by edge_extend. The clustering of centre blocks is conducted afterwards.</p>
+<p>After merging the clustering results, all the attributes (mz, intensity, snr, etc.) are aligned into matrix
+accordingly. If multiple peaks from the same sample are clustered into one mz value, their attributes are averaged
+(for real value attributes e.g. mz and intensity) or concatenated (string, unicode, or bool attributes). The flag
+attributes are ignored. The number of these overlapping peaks is recorded in a new intra_count attribute matrix.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-dimspy.process.peak_filters">
+<span id="dimspy-process-peak-filters-module"></span><h2>dimspy.process.peak_filters module<a class="headerlink" href="#module-dimspy.process.peak_filters" title="Permalink to this headline">¶</a></h2>
+<p>PeakList and PeakMatrix filters.</p>
+<div class="versionadded">
+<p><span class="versionmodified">New in version 0.1.</span></p>
+</div>
+<dl class="function">
+<dt id="dimspy.process.peak_filters.filter_attr">
+<code class="descclassname">dimspy.process.peak_filters.</code><code class="descname">filter_attr</code><span class="sig-paren">(</span><em>pl</em>, <em>attr_name</em>, <em>max_threshold=None</em>, <em>min_threshold=None</em>, <em>flag_name=None</em>, <em>flag_index=None</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.process.peak_filters.filter_attr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Peaklist attribute values filter.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>pl</strong> – the target peaklist</li>
+<li><strong>attr_name</strong> – name of the target attribute</li>
+<li><strong>max_threshold</strong> – maximum threshold. A peak will be unflagged if the value of it’s attr_name is larger than the
+threshold. Default = None, indicating no threshold</li>
+<li><strong>min_threshold</strong> – Minimum threshold. A peak will be unflagged if the value of it’s attr_name is smaller than the
+threshold. Default = None, indicating no threshold</li>
+<li><strong>flag_name</strong> – name of the new flag attribute. Default = None, indicating using attr_name + ‘_flag’</li>
+<li><strong>flag_index</strong> – index of the new flag to be inserted into the peaklist. Default = None</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">PeakList object</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>This filter accepts real value attributes only.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="dimspy.process.peak_filters.filter_ringing">
+<code class="descclassname">dimspy.process.peak_filters.</code><code class="descname">filter_ringing</code><span class="sig-paren">(</span><em>pl</em>, <em>threshold</em>, <em>bin_size=1.0</em>, <em>flag_name='ringing_flag'</em>, <em>flag_index=None</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.process.peak_filters.filter_ringing" title="Permalink to this definition">¶</a></dt>
+<dd><p>Peaklist ringing filter.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>pl</strong> – the target peaklist</li>
+<li><strong>threshold</strong> – intensity threshold ratio</li>
+<li><strong>bin_size</strong> – size of the mz chunk for intensity filtering. Default = 1.0 ppm</li>
+<li><strong>flag_name</strong> – name of the new flag attribute. Default = ‘ringing_flag’</li>
+<li><strong>flag_index</strong> – index of the new flag to be inserted into the peaklist. Default = None</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">PeakList object</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>This filter will split the mz values into bin_size chunks, and search the highest intensity value for each chunk.
+All other peaks, if it’s intensity is smaller than threshold x the highest intensity in that chunk, will be unflagged.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="dimspy.process.peak_filters.filter_mz_ranges">
+<code class="descclassname">dimspy.process.peak_filters.</code><code class="descname">filter_mz_ranges</code><span class="sig-paren">(</span><em>pl</em>, <em>mz_remove_rngs</em>, <em>flag_name='mz_range_remove_flag'</em>, <em>flag_index=None</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.process.peak_filters.filter_mz_ranges" title="Permalink to this definition">¶</a></dt>
+<dd><p>Peaklist mz range filter.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>pl</strong> – the target peaklist</li>
+<li><strong>mz_remove_rngs</strong> – the mz ranges to remove. Must be in the format of [(mz_min1, mz_max2), (mz_min2, mz_max2), …]</li>
+<li><strong>flag_name</strong> – name of the new flag attribute. Default = ‘mz_range_remove_flag’</li>
+<li><strong>flag_index</strong> – index of the new flag to be inserted into the peaklist. Default = None</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">PeakList object</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>This filter will remove all the peaks whose mz values are within any of the ranges in the mz_remove_rngs.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="dimspy.process.peak_filters.filter_rsd">
+<code class="descclassname">dimspy.process.peak_filters.</code><code class="descname">filter_rsd</code><span class="sig-paren">(</span><em>pm</em>, <em>rsd_threshold</em>, <em>qc_label='qc'</em>, <em>flag_name='rsd_flag'</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.process.peak_filters.filter_rsd" title="Permalink to this definition">¶</a></dt>
+<dd><p>PeakMatrix RSD filter.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>pm</strong> – the target peak matrix</li>
+<li><strong>rsd_threshold</strong> – threshold of the RSD of the QC samples</li>
+<li><strong>qc_label</strong> – tag label to unmask qc samples</li>
+<li><strong>flag_name</strong> – name of the new flag. Default = ‘rsd_flag’</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">PeakMatrix object</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>This filter will calculate the RSD values of the QC samples. A peak with a QC RSD value larger than the
+threshold will be unflagged.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="dimspy.process.peak_filters.filter_fraction">
+<code class="descclassname">dimspy.process.peak_filters.</code><code class="descname">filter_fraction</code><span class="sig-paren">(</span><em>pm</em>, <em>fraction_threshold</em>, <em>within_classes=False</em>, <em>class_tag_type=None</em>, <em>flag_name='fraction_flag'</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.process.peak_filters.filter_fraction" title="Permalink to this definition">¶</a></dt>
+<dd><p>PeakMatrix fraction filter.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>pm</strong> – the target peak matrix</li>
+<li><strong>fraction_threshold</strong> – threshold of the sample fractions</li>
+<li><strong>within_classes</strong> – whether to calculate the fraction array within each class. Default = False</li>
+<li><strong>class_tag_type</strong> – tag type to unmask samples within the same class. Default = None, indicating untyped tags</li>
+<li><strong>flag_name</strong> – name of the new flag. Default = ‘fraction_flag’</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">PeakMatrix object</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>This filter will calculate the fraction array over all samples or within each class (based on class_tag_type).
+The peaks with a fraction value smaller than the threshold will be unflagged.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="dimspy.process.peak_filters.filter_blank_peaks">
+<code class="descclassname">dimspy.process.peak_filters.</code><code class="descname">filter_blank_peaks</code><span class="sig-paren">(</span><em>pm</em>, <em>blank_label</em>, <em>fraction_threshold=1</em>, <em>fold_threshold=1</em>, <em>method='mean'</em>, <em>rm_blanks=True</em>, <em>flag_name='blank_flag'</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.process.peak_filters.filter_blank_peaks" title="Permalink to this definition">¶</a></dt>
+<dd><p>PeakMatrix blank filter.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>pm</strong> – the target peak matrix</li>
+<li><strong>blank_label</strong> – tag label to mask blank samples</li>
+<li><strong>fraction_threshold</strong> – threshold of the sample fractions. Default = 1</li>
+<li><strong>fold_threshold</strong> – threshold of the blank sample intensity folds. Default = 1</li>
+<li><strong>method</strong> – method to calculate blank sample intensity array. Valid values include ‘mean’, ‘median’, and ‘max’.
+Default = ‘mean’</li>
+<li><strong>rm_blanks</strong> – whether to remove (not mask) blank samples after filtering</li>
+<li><strong>flag_name</strong> – name of the new flag. Default = ‘blank_flag’</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">PeakMatrix object</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>This filter will calculate the intensity array of the blanks using the “method”, and compare with the
+intensities of the other samples. If fraction_threshold% of the intensity values of a peak are smaller than the
+blank intensities x fold_threshold, this peak will be unflagged.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-dimspy.process.scan_processing">
+<span id="dimspy-process-scan-processing-module"></span><h2>dimspy.process.scan_processing module<a class="headerlink" href="#module-dimspy.process.scan_processing" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="dimspy.process.scan_processing.remove_edges">
+<code class="descclassname">dimspy.process.scan_processing.</code><code class="descname">remove_edges</code><span class="sig-paren">(</span><em>pls_sd</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.process.scan_processing.remove_edges" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="dimspy.process.scan_processing.read_scans">
+<code class="descclassname">dimspy.process.scan_processing.</code><code class="descname">read_scans</code><span class="sig-paren">(</span><em>fn</em>, <em>source</em>, <em>function_noise</em>, <em>min_scans=1</em>, <em>filter_scan_events=None</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.process.scan_processing.read_scans" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="dimspy.process.scan_processing.average_replicate_scans">
+<code class="descclassname">dimspy.process.scan_processing.</code><code class="descname">average_replicate_scans</code><span class="sig-paren">(</span><em>ID</em>, <em>pls</em>, <em>ppm=2.0</em>, <em>min_fraction=0.8</em>, <em>rsd_thres=30.0</em>, <em>block_size=2000</em>, <em>ncpus=None</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.process.scan_processing.average_replicate_scans" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="dimspy.process.scan_processing.join_peaklists">
+<code class="descclassname">dimspy.process.scan_processing.</code><code class="descname">join_peaklists</code><span class="sig-paren">(</span><em>ID</em>, <em>pls</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.process.scan_processing.join_peaklists" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-dimspy.process">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-dimspy.process" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="dimspy.portals.html" class="btn btn-neutral" title="dimspy.portals package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Ralf Weber, Jiarui (Albert) Zhou.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

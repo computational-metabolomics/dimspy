@@ -1,0 +1,2157 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>dimspy.models package &mdash; DIMSPy 0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="DIMSPy 0.1 documentation" href="index.html"/>
+        <link rel="up" title="dimspy package" href="dimspy.html"/>
+        <link rel="next" title="dimspy.portals package" href="dimspy.portals.html"/>
+        <link rel="prev" title="dimspy package" href="dimspy.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> DIMSPy
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="dimspy.html">dimspy package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="dimspy.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">dimspy.models package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-dimspy.models.peak_matrix">dimspy.models.peak_matrix module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-dimspy.models.peaklist">dimspy.models.peaklist module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-dimspy.models.peaklist_metadata">dimspy.models.peaklist_metadata module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-dimspy.models.peaklist_tags">dimspy.models.peaklist_tags module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-dimspy.models">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="dimspy.portals.html">dimspy.portals package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dimspy.process.html">dimspy.process package</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="dimspy.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dimspy.html#module-dimspy.dimspy">dimspy.dimspy module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dimspy.html#module-dimspy.experiment">dimspy.experiment module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dimspy.html#module-dimspy.log_setting">dimspy.log_setting module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dimspy.html#module-dimspy.workflow">dimspy.workflow module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dimspy.html#module-dimspy">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">DIMSPy</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="dimspy.html">dimspy package</a> &raquo;</li>
+        
+      <li>dimspy.models package</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/dimspy.models.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="dimspy-models-package">
+<h1>dimspy.models package<a class="headerlink" href="#dimspy-models-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-dimspy.models.peak_matrix">
+<span id="dimspy-models-peak-matrix-module"></span><h2>dimspy.models.peak_matrix module<a class="headerlink" href="#module-dimspy.models.peak_matrix" title="Permalink to this headline">¶</a></h2>
+<p>The PeakMatrix data object class.</p>
+<div class="versionadded">
+<p><span class="versionmodified">New in version 0.1.</span></p>
+</div>
+<dl class="class">
+<dt id="dimspy.models.peak_matrix.PeakMatrix">
+<em class="property">class </em><code class="descclassname">dimspy.models.peak_matrix.</code><code class="descname">PeakMatrix</code><span class="sig-paren">(</span><em>peaklist_ids</em>, <em>peaklist_tags</em>, <em>peaklist_attributes</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.models.peak_matrix.PeakMatrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>The PeakMatrix class.</p>
+<p>Stores aligned mass spectrometry peaks matrix data. It requires IDs, tags, and attributes from the source peak
+lists. It uses tags based mask to “hide” the unrelated samples for convenient processing. It utilises the
+automatically managed flags to “remove” peaks without actually delete them. Therefore the filterings on the peaks
+are traceable. Normally, PeakMatrix object is created by functions e.g. align_peaks() rather than manual.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>peaklist_ids</strong> – the IDs of the source peak lists</li>
+<li><strong>peaklist_tags</strong> – the tags (PeakList_Tags) of the source peak lists</li>
+<li><strong>peaklist_attributes</strong> – the attributes of the source peak lists. Must be a list or tuple in the format of
+[(attr_name, attr_matrix), …], where attr_name is name of the attribute, and attr_matrix is the vertically
+stacked arrtibute values in the shape of samples x peaks. The order of the attributes will be kept in the
+PeakMatrix. The first two attributes must be “mz” and “intensity”.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pids</span> <span class="o">=</span> <span class="p">[</span><span class="n">pl</span><span class="o">.</span><span class="n">ID</span> <span class="k">for</span> <span class="n">pl</span> <span class="ow">in</span> <span class="n">peaklists</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tags</span> <span class="o">=</span> <span class="p">[</span><span class="n">pl</span><span class="o">.</span><span class="n">tags</span> <span class="k">for</span> <span class="n">pl</span> <span class="ow">in</span> <span class="n">peaklists</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">attrs</span> <span class="o">=</span> <span class="p">[(</span><span class="n">attr_name</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">pl</span><span class="p">[</span><span class="n">attr_name</span><span class="p">]</span> <span class="k">for</span> <span class="n">pl</span> <span class="ow">in</span> <span class="n">peaklists</span><span class="p">]))</span>                  <span class="k">for</span> <span class="n">attr_name</span> <span class="ow">in</span> <span class="n">peaklists</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">attributes</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pm</span> <span class="o">=</span> <span class="n">PeakMatrix</span><span class="p">(</span><span class="n">pids</span><span class="p">,</span> <span class="n">tags</span><span class="p">,</span> <span class="n">attrs</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Internally the attribute data is stored in OrderedDict as a list of matrix. An attribute matrix can be illustrated
+as follows, in which the mask and flags are the same for all attributes. The final row “flags” is automatically
+calculated based on the manually added flags. It decides which peaks are “removed” i.e. unflagged. Particularly,
+the “–” indicates no peak in that sample can be aligned into the mz value.</p>
+<p><strong>attribute: “mz”</strong></p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="29%" />
+<col width="20%" />
+<col width="20%" />
+<col width="20%" />
+<col width="12%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">mask</th>
+<th class="head">peak_1</th>
+<th class="head">peak_2</th>
+<th class="head">peak_3</th>
+<th class="head">…</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>False</td>
+<td>12.7</td>
+<td>14.9</td>
+<td>21.0</td>
+<td rowspan="4">…</td>
+</tr>
+<tr class="row-odd"><td>True</td>
+<td>–</td>
+<td>15.1</td>
+<td>21.1</td>
+</tr>
+<tr class="row-even"><td>False</td>
+<td>12.1</td>
+<td>14.7</td>
+<td>–</td>
+</tr>
+<tr class="row-odd"><td>False</td>
+<td>12.9</td>
+<td>14.8</td>
+<td>20.9</td>
+</tr>
+<tr class="row-even"><td>…</td>
+<td>&#160;</td>
+<td>&#160;</td>
+<td>&#160;</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td><strong>flag_1</strong></td>
+<td>True</td>
+<td>False</td>
+<td>True</td>
+<td rowspan="3">…</td>
+</tr>
+<tr class="row-even"><td><strong>flag_2</strong></td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+</tr>
+<tr class="row-odd"><td><strong>flags*</strong></td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p>Removing a flag may change the overall “flags”, and cause the unflagged peaks to be flagged again. As
+most the processes are applied only on the flagged peaks, these peaks, if the others have gone through such process,
+may have incorrect values.</p>
+<p class="last">In principle, setting a flag attribute should be considered as an irreversible process.</p>
+</div>
+<p>Different from the flags, mask should be considered as a more temporary way to hide the unrelated samples. A masked
+sample (row) will not be used for processing, but its data is still in the attribute matrix. For this reason,
+the mask_peakmatrix, unmask_peakmatrix, and unmask_all_peakmatrix statements are provided as a more flexible way
+to set / unset the mask.</p>
+<dl class="attribute">
+<dt id="dimspy.models.peak_matrix.PeakMatrix.mask">
+<code class="descname">mask</code><a class="headerlink" href="#dimspy.models.peak_matrix.PeakMatrix.mask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Property of the mask.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">returns a deep copy of the mask array</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Setter:</th><td class="field-body">sets the mask array. Provide None to unmask all samples</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">numpy array</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dimspy.models.peak_matrix.PeakMatrix.flag_names">
+<code class="descname">flag_names</code><a class="headerlink" href="#dimspy.models.peak_matrix.PeakMatrix.flag_names" title="Permalink to this definition">¶</a></dt>
+<dd><p>Property of the flag names.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">returns a tuple including the names of the manually set flags</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">tuple</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dimspy.models.peak_matrix.PeakMatrix.flags">
+<code class="descname">flags</code><a class="headerlink" href="#dimspy.models.peak_matrix.PeakMatrix.flags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Property of the flags.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">returns a deep copy of the flags array</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">numpy array</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dimspy.models.peak_matrix.PeakMatrix.attributes">
+<code class="descname">attributes</code><a class="headerlink" href="#dimspy.models.peak_matrix.PeakMatrix.attributes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Property of the attribute names.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">returns a tuple including the names of the attribute matrix</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">tuple</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dimspy.models.peak_matrix.PeakMatrix.peaklist_ids">
+<code class="descname">peaklist_ids</code><a class="headerlink" href="#dimspy.models.peak_matrix.PeakMatrix.peaklist_ids" title="Permalink to this definition">¶</a></dt>
+<dd><p>Property of the source peaklist IDs.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">returns a tuple including the IDs of the source peaklists</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">tuple</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dimspy.models.peak_matrix.PeakMatrix.peaklist_tags">
+<code class="descname">peaklist_tags</code><a class="headerlink" href="#dimspy.models.peak_matrix.PeakMatrix.peaklist_tags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Property of the source peaklist tags.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">returns a tuple including the Peaklist_Tags objects of the source peaklists</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">tuple</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dimspy.models.peak_matrix.PeakMatrix.peaklist_tag_types">
+<code class="descname">peaklist_tag_types</code><a class="headerlink" href="#dimspy.models.peak_matrix.PeakMatrix.peaklist_tag_types" title="Permalink to this definition">¶</a></dt>
+<dd><p>Property of the source peaklist tag types.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">returns a tuple including the types of the typed tags of the source peaklists</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">tuple</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dimspy.models.peak_matrix.PeakMatrix.peaklist_tag_values">
+<code class="descname">peaklist_tag_values</code><a class="headerlink" href="#dimspy.models.peak_matrix.PeakMatrix.peaklist_tag_values" title="Permalink to this definition">¶</a></dt>
+<dd><p>Property of the source peaklist tag values.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">returns a tuple including the values of the source peaklists tags, both typed and untyped</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">tuple</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dimspy.models.peak_matrix.PeakMatrix.shape">
+<code class="descname">shape</code><a class="headerlink" href="#dimspy.models.peak_matrix.PeakMatrix.shape" title="Permalink to this definition">¶</a></dt>
+<dd><p>Property of the peak matrix shape.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">returns the shape of the attribute matrix</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">tuple</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dimspy.models.peak_matrix.PeakMatrix.full_shape">
+<code class="descname">full_shape</code><a class="headerlink" href="#dimspy.models.peak_matrix.PeakMatrix.full_shape" title="Permalink to this definition">¶</a></dt>
+<dd><p>Property of the peak matrix full shape.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">returns the full shape of the attribute matrix, i.e., ignore mask and flags</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">tuple</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dimspy.models.peak_matrix.PeakMatrix.present">
+<code class="descname">present</code><a class="headerlink" href="#dimspy.models.peak_matrix.PeakMatrix.present" title="Permalink to this definition">¶</a></dt>
+<dd><p>Property of the present array.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">returns the present array, indicating how many peaks are aligned in each mz value</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">numpy array</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dimspy.models.peak_matrix.PeakMatrix.present_matrix">
+<code class="descname">present_matrix</code><a class="headerlink" href="#dimspy.models.peak_matrix.PeakMatrix.present_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Property of the present matrix.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">returns the present matrix, indicating whether a sample has peak(s) aligned in each mz value</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">numpy array</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">pm</span><span class="o">.</span><span class="n">present_matrix</span>
+<span class="go">array([[ True,  True,  True,  True, False],</span>
+<span class="go">       [ True,  True, False, False,  True],</span>
+<span class="go">       [ True,  True,  True,  True,  True],</span>
+<span class="go">       [False,  True, False,  True,  True],])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">pm</span><span class="o">.</span><span class="n">present</span>
+<span class="go">array([3, 4, 2, 3, 3])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dimspy.models.peak_matrix.PeakMatrix.fraction">
+<code class="descname">fraction</code><a class="headerlink" href="#dimspy.models.peak_matrix.PeakMatrix.fraction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Property of the fraction array.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">returns the fraction array, indicating the ratio of present peaks on each mz value</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">numpy array</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">pm</span><span class="o">.</span><span class="n">present</span>
+<span class="go">array([3, 4, 2, 3, 3])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">pm</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">pm</span><span class="o">.</span><span class="n">fraction</span>
+<span class="go">array([0.75, 1.0, 0.5, 0.75, 0.75])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dimspy.models.peak_matrix.PeakMatrix.missing_values">
+<code class="descname">missing_values</code><a class="headerlink" href="#dimspy.models.peak_matrix.PeakMatrix.missing_values" title="Permalink to this definition">¶</a></dt>
+<dd><p>Property of the missing values array.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">returns the missing values array, indicating the number of unaligned peaks on each sample</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">numpy array</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">pm</span><span class="o">.</span><span class="n">present_matrix</span>
+<span class="go">array([[ True,  True,  True,  True, False],</span>
+<span class="go">       [ True,  True, False, False,  True],</span>
+<span class="go">       [ True,  True,  True,  True,  True],</span>
+<span class="go">       [False,  True, False,  True,  True],])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">pm</span><span class="o">.</span><span class="n">missing_values</span>
+<span class="go">array([1, 2, 0, 2])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dimspy.models.peak_matrix.PeakMatrix.occurrence">
+<code class="descname">occurrence</code><a class="headerlink" href="#dimspy.models.peak_matrix.PeakMatrix.occurrence" title="Permalink to this definition">¶</a></dt>
+<dd><p>Property of the occurrence array.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">returns the occurrence array, indicating the total number of peaks (including peaks in the same sample)
+aliged in each mz value. This property is valid only when the <em>intra_count</em> attribute matrix is available</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">numpy array</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">pm</span><span class="o">.</span><span class="n">attr_matrix</span><span class="p">(</span><span class="s1">&#39;intra_count&#39;</span><span class="p">)</span>
+<span class="go">array([[ 2,  1,  1,  1,  0],</span>
+<span class="go">       [ 1,  1,  0,  0,  1],</span>
+<span class="go">       [ 1,  3,  1,  2,  1],</span>
+<span class="go">       [ 0,  1,  0,  1,  1],])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">pm</span><span class="o">.</span><span class="n">occurrence</span>
+<span class="go">array([ 4,  6,  2,  4,  3])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dimspy.models.peak_matrix.PeakMatrix.purity">
+<code class="descname">purity</code><a class="headerlink" href="#dimspy.models.peak_matrix.PeakMatrix.purity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Property of the purity level array.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">returns the purity array, indicating the ratio of only one peak in each sample being aligned in each mz
+value. This property is valid only when the <em>intra_count</em> attribute matrix is available</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">numpy array</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">pm</span><span class="o">.</span><span class="n">attr_matrix</span><span class="p">(</span><span class="s1">&#39;intra_count&#39;</span><span class="p">)</span>
+<span class="go">array([[ 2,  1,  1,  1,  0],</span>
+<span class="go">       [ 1,  1,  0,  0,  1],</span>
+<span class="go">       [ 1,  3,  1,  2,  1],</span>
+<span class="go">       [ 0,  1,  0,  1,  1],])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">pm</span><span class="o">.</span><span class="n">purity</span>
+<span class="go">array([ 0.667,  0.75,  1.0,  0.667,  1.0])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dimspy.models.peak_matrix.PeakMatrix.mz_matrix">
+<code class="descname">mz_matrix</code><a class="headerlink" href="#dimspy.models.peak_matrix.PeakMatrix.mz_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Property of the mz matrix.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">returns the mz attribute matrix, unmasked and flagged values only</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">numpy array</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dimspy.models.peak_matrix.PeakMatrix.intensity_matrix">
+<code class="descname">intensity_matrix</code><a class="headerlink" href="#dimspy.models.peak_matrix.PeakMatrix.intensity_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Property of the intensity matrix.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">returns the intensity attribute matrix, unmasked and flagged values only</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">numpy array</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dimspy.models.peak_matrix.PeakMatrix.mz_mean_vector">
+<code class="descname">mz_mean_vector</code><a class="headerlink" href="#dimspy.models.peak_matrix.PeakMatrix.mz_mean_vector" title="Permalink to this definition">¶</a></dt>
+<dd><p>Property of the mz mean values array.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">returns the mean values array of the mz attribute matrix, unmasked and flagged values only</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">numpy array</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dimspy.models.peak_matrix.PeakMatrix.intensity_mean_vector">
+<code class="descname">intensity_mean_vector</code><a class="headerlink" href="#dimspy.models.peak_matrix.PeakMatrix.intensity_mean_vector" title="Permalink to this definition">¶</a></dt>
+<dd><p>Property of the intensity mean values array.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">returns the mean values array of the intensity attribute matrix, unmasked and flagged values only</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">numpy array</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="dimspy.models.peak_matrix.PeakMatrix.tags_of">
+<code class="descname">tags_of</code><span class="sig-paren">(</span><em>tag_type=None</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.models.peak_matrix.PeakMatrix.tags_of" title="Permalink to this definition">¶</a></dt>
+<dd><p>Obtains tags of the peaklist_tags with particular tag type.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>tag_type</strong> – the type of the returning tags. Provide None to obtain untyped tags</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">tuple</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="dimspy.models.peak_matrix.PeakMatrix.mask_tags">
+<code class="descname">mask_tags</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.models.peak_matrix.PeakMatrix.mask_tags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Masks samples with particular tags.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>args</strong> – target tag values, both typed and untyped</li>
+<li><strong>kwargs</strong> – target typed tag types and values</li>
+<li><strong>override</strong> – whether to override the current mask, default = False</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">PeakMatrix object (self)</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>This function will mask samples with ALL the tags. To match ANY of the tags, use cascade form instead.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pm</span><span class="o">.</span><span class="n">mask_tags</span><span class="p">(</span><span class="s1">&#39;qc&#39;</span><span class="p">,</span> <span class="n">plate</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">(will mask all QC samples on plate 1)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pm</span><span class="o">.</span><span class="n">mask_tags</span><span class="p">(</span><span class="s1">&#39;qc&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">mask_tags</span><span class="p">(</span><span class="n">plate</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">(will mask QC samples and all samples on plate 1)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="dimspy.models.peak_matrix.PeakMatrix.unmask_tags">
+<code class="descname">unmask_tags</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.models.peak_matrix.PeakMatrix.unmask_tags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Unmasks samples with particular tags.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>args</strong> – target tag values, both typed and untyped</li>
+<li><strong>kwargs</strong> – target typed tag types and values</li>
+<li><strong>override</strong> – whether to override the current mask, default = False</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">PeakMatrix object (self)</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>This function will unmask samples with ALL the tags. To unmask ANY of the tags, use cascade form instead.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pm</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="p">[</span><span class="kc">True</span><span class="p">]</span> <span class="o">*</span> <span class="n">pm</span><span class="o">.</span><span class="n">full_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pm</span><span class="o">.</span><span class="n">unmask_tags</span><span class="p">(</span><span class="s1">&#39;qc&#39;</span><span class="p">,</span> <span class="n">plate</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">(will unmask all QC samples on plate 1)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pm</span><span class="o">.</span><span class="n">unmask_tags</span><span class="p">(</span><span class="s1">&#39;qc&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">unmask_tags</span><span class="p">(</span><span class="n">plate</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">(will unmask QC samples and all samples on plate 1)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="dimspy.models.peak_matrix.PeakMatrix.add_flag">
+<code class="descname">add_flag</code><span class="sig-paren">(</span><em>flag_name</em>, <em>flag_values</em>, <em>flagged_only=True</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.models.peak_matrix.PeakMatrix.add_flag" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds a flag to the peak matrix peaks.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>flag_name</strong> – name of the flag, it must be unique and not equal to “flags”</li>
+<li><strong>flag_values</strong> – values of the flag. It must have a length of pm.shape[1] if flagged_only = True, or
+pm.full_shape[1] if flagged_only = False</li>
+<li><strong>flagged_only</strong> – whether to set the flagged peaks only. Default = True, and the values of the unflagged peaks
+are set to False</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>The overall flags property will be automatically recalculated.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dimspy.models.peak_matrix.PeakMatrix.drop_flag">
+<code class="descname">drop_flag</code><span class="sig-paren">(</span><em>flag_name</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.models.peak_matrix.PeakMatrix.drop_flag" title="Permalink to this definition">¶</a></dt>
+<dd><p>Drops a existing flag from the peak matrix.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>flag_name</strong> – name of the flag to drop. It must exist and not equal to “flags”</td>
+</tr>
+</tbody>
+</table>
+<p>The overall flags property will be automatically recalculated.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dimspy.models.peak_matrix.PeakMatrix.flag_values">
+<code class="descname">flag_values</code><span class="sig-paren">(</span><em>flag_name</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.models.peak_matrix.PeakMatrix.flag_values" title="Permalink to this definition">¶</a></dt>
+<dd><p>Obtains values of an existing flag.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>flag_name</strong> – name of the target flag. It must exist and not equal to “flags”</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">numpy array</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="dimspy.models.peak_matrix.PeakMatrix.property">
+<code class="descname">property</code><span class="sig-paren">(</span><em>prop_name</em>, <em>flagged_only=True</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.models.peak_matrix.PeakMatrix.property" title="Permalink to this definition">¶</a></dt>
+<dd><p>Obtains an existing attribute matrix.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>prop_name</strong> – name of the target property. Valid properties include ‘present’, ‘present_matrix’, ‘fraction’,
+‘missing_values’, ‘occurrence’, and ‘purity’</li>
+<li><strong>flagged_only</strong> – whether to return the flagged values only. Default = True</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">numpy array</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="dimspy.models.peak_matrix.PeakMatrix.attr_matrix">
+<code class="descname">attr_matrix</code><span class="sig-paren">(</span><em>attr_name</em>, <em>flagged_only=True</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.models.peak_matrix.PeakMatrix.attr_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Obtains an existing attribute matrix.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>attr_name</strong> – name of the target attribute</li>
+<li><strong>flagged_only</strong> – whether to return the flagged values only. Default = True</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">numpy array</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="dimspy.models.peak_matrix.PeakMatrix.attr_mean_vector">
+<code class="descname">attr_mean_vector</code><span class="sig-paren">(</span><em>attr_name</em>, <em>flagged_only=True</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.models.peak_matrix.PeakMatrix.attr_mean_vector" title="Permalink to this definition">¶</a></dt>
+<dd><p>Obtains the mean array of an existing attribute matrix.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>attr_name</strong> – name of the target attribute</li>
+<li><strong>flagged_only</strong> – whether to return the mean array of the flagged values only. Default = True</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">numpy array</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Noting that only the “present” peaks will be used for mean values calculation. If the attribute matrix has a
+string / unicode data type, the values in each column will be concatenated.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dimspy.models.peak_matrix.PeakMatrix.remove_samples">
+<code class="descname">remove_samples</code><span class="sig-paren">(</span><em>sample_ids</em>, <em>masked_only=True</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.models.peak_matrix.PeakMatrix.remove_samples" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes samples from the peak matrix.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>sample_ids</strong> – the indices of the samples to remove</li>
+<li><strong>masked_only</strong> – whether the indices are for unmasked samples or all samples. Default = True</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">PeakMatrix object (self)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="dimspy.models.peak_matrix.PeakMatrix.remove_peaks">
+<code class="descname">remove_peaks</code><span class="sig-paren">(</span><em>peak_ids</em>, <em>flagged_only=True</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.models.peak_matrix.PeakMatrix.remove_peaks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes peaks from the peak matrix.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>peak_ids</strong> – the indices of the peaks to remove</li>
+<li><strong>flagged_only</strong> – whether the indices are for flagged peaks or all peaks. Default = True</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">PeakMatrix object (self)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="dimspy.models.peak_matrix.PeakMatrix.is_empty">
+<code class="descname">is_empty</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.models.peak_matrix.PeakMatrix.is_empty" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks whether the peak matrix is empty under the current mask and flags.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">bool</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="dimspy.models.peak_matrix.PeakMatrix.extract_peaklist">
+<code class="descname">extract_peaklist</code><span class="sig-paren">(</span><em>peaklist_id</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.models.peak_matrix.PeakMatrix.extract_peaklist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extracts one peaklist from the peak matrix.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>peaklist_id</strong> – ID of the peaklist to extract</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">PeakList object</td>
+</tr>
+</tbody>
+</table>
+<p>Only the “present” peaks will be included in the result peaklist.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dimspy.models.peak_matrix.PeakMatrix.extract_peaklists">
+<code class="descname">extract_peaklists</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.models.peak_matrix.PeakMatrix.extract_peaklists" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extracts all peaklists from the peak matrix.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">list</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="dimspy.models.peak_matrix.PeakMatrix.to_peaklist">
+<code class="descname">to_peaklist</code><span class="sig-paren">(</span><em>ID</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.models.peak_matrix.PeakMatrix.to_peaklist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Averages the peak matrix into a single peaklist.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>ID</strong> – ID of the merged peaklist</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">PeakList object</td>
+</tr>
+</tbody>
+</table>
+<p>Only the “present” peaks will be included in the result peaklist. The new peaklist will only contain the
+following attributes: mz, intensity, present, fraction, rsd, occurence, and purity.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dimspy.models.peak_matrix.PeakMatrix.to_str">
+<code class="descname">to_str</code><span class="sig-paren">(</span><em>attr_name='intensity'</em>, <em>delimiter='\t'</em>, <em>transpose=False</em>, <em>comprehensive=True</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.models.peak_matrix.PeakMatrix.to_str" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exports the peak matrix to a string.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>attr_name</strong> – name of the attribute matrix for exporting. Default = ‘intensity’</li>
+<li><strong>delimiter</strong> – delimiter to separate the matrix. Default = ‘ ‘, i.e., TSV format</li>
+<li><strong>transpose</strong> – whether to transpose the matrix. Default = False</li>
+<li><strong>comprehensive</strong> – whether to include comprehensive info, e.g., mask, flags, present, rsd etc. Default = True</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">str</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="dimspy.models.peak_matrix.mask_peakmatrix">
+<em class="property">class </em><code class="descclassname">dimspy.models.peak_matrix.</code><code class="descname">mask_peakmatrix</code><span class="sig-paren">(</span><em>pm</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.models.peak_matrix.mask_peakmatrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>The mask_peakmatrix statement.</p>
+<p>Temporary mask the peak matrix with particular tags. Within the statement the samples can be motified or removed.
+After leaving the statement the original mask will be recoverd.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>pm</strong> – the target peak matrix</li>
+<li><strong>override</strong> – whether to override the current mask, default = True</li>
+<li><strong>args</strong> – target tag values, both typed and untyped</li>
+<li><strong>kwargs</strong> – target typed tag types and values</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">PeakMatrix object</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">pm</span><span class="o">.</span><span class="n">peaklist_ids</span>
+<span class="go">(&#39;sample_1&#39;, &#39;sample_2&#39;, &#39;qc_1&#39;, &#39;sample_3&#39;, &#39;sample_4&#39;, &#39;qc_2&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">mask_peakmatrix</span><span class="p">(</span><span class="n">pm</span><span class="o">.</span><span class="p">,</span> <span class="s1">&#39;qc&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">m</span><span class="p">:</span> <span class="nb">print</span> <span class="n">m</span><span class="o">.</span><span class="n">peaklist_ids</span>
+<span class="go">(&#39;sample_1&#39;, &#39;sample_2&#39;, &#39;sample_3&#39;, &#39;sample_4&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">pm</span><span class="o">.</span><span class="n">peaklist_ids</span>
+<span class="go">(&#39;sample_1&#39;, &#39;sample_2&#39;, &#39;qc_1&#39;, &#39;sample_3&#39;, &#39;sample_4&#39;, &#39;qc_2&#39;)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="dimspy.models.peak_matrix.unmask_peakmatrix">
+<em class="property">class </em><code class="descclassname">dimspy.models.peak_matrix.</code><code class="descname">unmask_peakmatrix</code><span class="sig-paren">(</span><em>pm</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.models.peak_matrix.unmask_peakmatrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>The unmask_peakmatrix statement.</p>
+<p>Temporary unmask the peak matrix with particular tags. Within the statement the samples can be motified or removed.
+After leaving the statement the original mask will be recoverd.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>pm</strong> – the target peak matrix</li>
+<li><strong>override</strong> – whether to override the current mask, default = True</li>
+<li><strong>args</strong> – target tag values, both typed and untyped</li>
+<li><strong>kwargs</strong> – target typed tag types and values</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">PeakMatrix object</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">pm</span><span class="o">.</span><span class="n">peaklist_ids</span>
+<span class="go">(&#39;sample_1&#39;, &#39;sample_2&#39;, &#39;qc_1&#39;, &#39;sample_3&#39;, &#39;sample_4&#39;, &#39;qc_2&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">unmask_peakmatrix</span><span class="p">(</span><span class="n">pm</span><span class="p">,</span> <span class="s1">&#39;qc&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">m</span><span class="p">:</span> <span class="nb">print</span> <span class="n">m</span><span class="o">.</span><span class="n">peaklist_ids</span>
+<span class="go">(&#39;qc_1&#39;, &#39;qc_2&#39;) # no need to set pm.mask to True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">pm</span><span class="o">.</span><span class="n">peaklist_ids</span>
+<span class="go">(&#39;sample_1&#39;, &#39;sample_2&#39;, &#39;qc_1&#39;, &#39;sample_3&#39;, &#39;sample_4&#39;, &#39;qc_2&#39;)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="dimspy.models.peak_matrix.mask_all_peakmatrix">
+<em class="property">class </em><code class="descclassname">dimspy.models.peak_matrix.</code><code class="descname">mask_all_peakmatrix</code><span class="sig-paren">(</span><em>pm</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.models.peak_matrix.mask_all_peakmatrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>The mask_all_peakmatrix statement.</p>
+<p>Temporary mask all the peak matrix samples. Within the statement the samples can be motified or removed.
+After leaving the statement the original mask will be recoverd.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>pm</strong> – the target peak matrix</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">PeakMatrix object</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">pm</span><span class="o">.</span><span class="n">peaklist_ids</span>
+<span class="go">(&#39;sample_1&#39;, &#39;sample_2&#39;, &#39;qc_1&#39;, &#39;sample_3&#39;, &#39;sample_4&#39;, &#39;qc_2&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">mask_all_peakmatrix</span><span class="p">(</span><span class="n">pm</span><span class="p">)</span> <span class="k">as</span> <span class="n">m</span><span class="p">:</span> <span class="nb">print</span> <span class="n">m</span><span class="o">.</span><span class="n">peaklist_ids</span>
+<span class="go">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">pm</span><span class="o">.</span><span class="n">peaklist_ids</span>
+<span class="go">(&#39;sample_1&#39;, &#39;sample_2&#39;, &#39;qc_1&#39;, &#39;sample_3&#39;, &#39;sample_4&#39;, &#39;qc_2&#39;)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="dimspy.models.peak_matrix.unmask_all_peakmatrix">
+<em class="property">class </em><code class="descclassname">dimspy.models.peak_matrix.</code><code class="descname">unmask_all_peakmatrix</code><span class="sig-paren">(</span><em>pm</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.models.peak_matrix.unmask_all_peakmatrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>The unmask_all_peakmatrix statement.</p>
+<p>Temporary unmask all the peak matrix samples. Within the statement the samples can be motified or removed.
+After leaving the statement the original mask will be recoverd.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>pm</strong> – the target peak matrix</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">PeakMatrix object</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">pm</span><span class="o">.</span><span class="n">peaklist_ids</span>
+<span class="go">(&#39;sample_1&#39;, &#39;sample_2&#39;, &#39;qc_1&#39;, &#39;sample_3&#39;, &#39;sample_4&#39;, &#39;qc_2&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">unmask_all_peakmatrix</span><span class="p">(</span><span class="n">pm</span><span class="p">)</span> <span class="k">as</span> <span class="n">m</span><span class="p">:</span> <span class="nb">print</span> <span class="n">m</span><span class="o">.</span><span class="n">peaklist_ids</span>
+<span class="go">(&#39;sample_1&#39;, &#39;sample_2&#39;, &#39;qc_1&#39;, &#39;sample_3&#39;, &#39;sample_4&#39;, &#39;qc_2&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">pm</span><span class="o">.</span><span class="n">peaklist_ids</span>
+<span class="go">(&#39;sample_1&#39;, &#39;sample_2&#39;, &#39;qc_1&#39;, &#39;sample_3&#39;, &#39;sample_4&#39;, &#39;qc_2&#39;)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="dimspy.models.peak_matrix.peak_matrix_rsd">
+<code class="descclassname">dimspy.models.peak_matrix.</code><code class="descname">peak_matrix_rsd</code><span class="sig-paren">(</span><em>pm</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.models.peak_matrix.peak_matrix_rsd" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the QC samples’ relative standard deviation (RSD) array for PeakMatrix.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>pm</strong> – target peak matrix object</li>
+<li><strong>args</strong> – untyped tag label for RSD calculation, no value = calculate over all samples</li>
+<li><strong>kwargs</strong> – typed tag label for RSD calculation, , no value = calculate over all samples</li>
+<li><strong>flagged_only</strong> – whether to calculate on flagged peaks only. Default = True</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body"><p class="first last">numpy array</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>The RSD is calculated as:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">rsd</span> <span class="o">=</span> <span class="n">std</span><span class="p">(</span><span class="n">pm</span><span class="o">.</span><span class="n">intensity_matrix</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">ddof</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">mean</span><span class="p">(</span><span class="n">pm</span><span class="o">.</span><span class="n">intensity_matrix</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">*</span> <span class="mi">100</span>
+</pre></div>
+</div>
+<p>Noting that the means delta degrees of freedom (ddof) is set to 1 for standard deviation calculation.
+Moreover, only the “present” peaks will be used for calculation. If a column has less than 2 peaks, the
+corresponding rsd value will be set to np.nan.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-dimspy.models.peaklist">
+<span id="dimspy-models-peaklist-module"></span><h2>dimspy.models.peaklist module<a class="headerlink" href="#module-dimspy.models.peaklist" title="Permalink to this headline">¶</a></h2>
+<p>The PeakList data object class.</p>
+<div class="versionadded">
+<p><span class="versionmodified">New in version 0.1.</span></p>
+</div>
+<dl class="class">
+<dt id="dimspy.models.peaklist.PeakList">
+<em class="property">class </em><code class="descclassname">dimspy.models.peaklist.</code><code class="descname">PeakList</code><span class="sig-paren">(</span><em>ID</em>, <em>mz</em>, <em>intensity</em>, <em>**metadata</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.models.peaklist.PeakList" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>The PeakList class.</p>
+<p>Stores mass spectrometry peaks list data. It requires an ID, mz values, and intensities. It can store extra peak
+attributes e.g. SNRs, and peaklist tags and metadata. It utilises the automatically managed flags to “remove” or
+“retain” peaks without actually delete them. Therefore the filterings on the peaks are traceable.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>ID</strong> – the ID of the peaklist data, unique string or integer value is recommended</li>
+<li><strong>mz</strong> – mz values of all the peaks. Must in the ascending order</li>
+<li><strong>intensity</strong> – intensities of all the peaks. Must have the same size as mz</li>
+<li><strong>kwargs</strong> – key-value pairs of the peaklist metadata</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mz_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">1200</span><span class="p">,</span> <span class="n">size</span> <span class="o">=</span> <span class="mi">100</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">int_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">60</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="n">size</span> <span class="o">=</span> <span class="mi">100</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">peaks</span> <span class="o">=</span> <span class="n">PeakList</span><span class="p">(</span><span class="s1">&#39;dummy&#39;</span><span class="p">,</span> <span class="n">mz_values</span><span class="p">,</span> <span class="n">int_values</span><span class="p">,</span> <span class="n">description</span> <span class="o">=</span> <span class="s1">&#39;a dummy peaklist&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Internally the peaklist data is stored by using numpy structured array namely the attribute talbe (this may change in the future):</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="14%" />
+<col width="22%" />
+<col width="12%" />
+<col width="20%" />
+<col width="10%" />
+<col width="20%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">mz</th>
+<th class="head">intensity</th>
+<th class="head">snr</th>
+<th class="head">snr_flag</th>
+<th class="head">…</th>
+<th class="head"><em>flags*</em></th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>102.5</td>
+<td>21.7</td>
+<td>10.5</td>
+<td>True</td>
+<td rowspan="5">…</td>
+<td>True</td>
+</tr>
+<tr class="row-odd"><td>111.7</td>
+<td>12.3</td>
+<td>5.1</td>
+<td>False</td>
+<td>False</td>
+</tr>
+<tr class="row-even"><td>126.3</td>
+<td>98.1</td>
+<td>31.7</td>
+<td>True</td>
+<td>True</td>
+</tr>
+<tr class="row-odd"><td>133.1</td>
+<td>68.9</td>
+<td>12.6</td>
+<td>True</td>
+<td>True</td>
+</tr>
+<tr class="row-even"><td>…</td>
+<td>&#160;</td>
+<td>&#160;</td>
+<td>&#160;</td>
+<td>&#160;</td>
+</tr>
+</tbody>
+</table>
+<p>Each column is called an attribute. The first two attributes are fixed as “mz” and “intensity”. They cannot be added or
+removed as the others. The last “attribute” is the “flags”, which is fact stored separately. The “flags” column is
+calculated automatically according to all the manually set flag attributes, e.g., the “snr_flag”. It can only be changed
+by the class itself. The unflagged peaks are considered as “removed”. They are kept internally mainly for visualization
+and tracing purposes.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p>Removing a flag attribute may change the “flags” column, and cause the unflagged peaks to be flagged again. As
+most the processes are applied only on the flagged peaks, these peaks, if the others have gone through such process,
+may have incorrect values.</p>
+<p class="last">In principle, setting a flag attribute should be considered as an irreversible process.</p>
+</div>
+<dl class="attribute">
+<dt id="dimspy.models.peaklist.PeakList.ID">
+<code class="descname">ID</code><a class="headerlink" href="#dimspy.models.peaklist.PeakList.ID" title="Permalink to this definition">¶</a></dt>
+<dd><p>Property of the peaklist ID.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">returns the peaklist ID</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">same as input ID</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dimspy.models.peaklist.PeakList.size">
+<code class="descname">size</code><a class="headerlink" href="#dimspy.models.peaklist.PeakList.size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Property of the peaklist size.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">returns the flagged peaklist size</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dimspy.models.peaklist.PeakList.full_size">
+<code class="descname">full_size</code><a class="headerlink" href="#dimspy.models.peaklist.PeakList.full_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Property of the peaklist full size.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">returns the full peaklist size, i.e., including the unflagged peaks</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dimspy.models.peaklist.PeakList.shape">
+<code class="descname">shape</code><a class="headerlink" href="#dimspy.models.peaklist.PeakList.shape" title="Permalink to this definition">¶</a></dt>
+<dd><p>Property of the peaklist attributes table shape.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">returns the attibutes table shape, i.e., peaks number x attributes number. The “flags” column does not count</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">tuple</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dimspy.models.peaklist.PeakList.full_shape">
+<code class="descname">full_shape</code><a class="headerlink" href="#dimspy.models.peaklist.PeakList.full_shape" title="Permalink to this definition">¶</a></dt>
+<dd><p>Property of the peaklist full attributes table shape.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">returns the full attibutes table shape, including the unflagged peaks</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">tuple</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dimspy.models.peaklist.PeakList.metadata">
+<code class="descname">metadata</code><a class="headerlink" href="#dimspy.models.peaklist.PeakList.metadata" title="Permalink to this definition">¶</a></dt>
+<dd><p>Property of the peaklist metadata.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">returns an access interface to the peaklist metadata object</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">PeakList_Metadata object</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dimspy.models.peaklist.PeakList.tags">
+<code class="descname">tags</code><a class="headerlink" href="#dimspy.models.peaklist.PeakList.tags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Property of the peaklist tags.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">returns an access interface to the peaklist tags object</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">PeakList_Tags object</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dimspy.models.peaklist.PeakList.attributes">
+<code class="descname">attributes</code><a class="headerlink" href="#dimspy.models.peaklist.PeakList.attributes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Property of the attribute names.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">returns a tuple of the attribute names</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">tuple</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dimspy.models.peaklist.PeakList.flag_attributes">
+<code class="descname">flag_attributes</code><a class="headerlink" href="#dimspy.models.peaklist.PeakList.flag_attributes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Property of the flag attribute names.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">returns a tuple of the flag attribute names</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">tuple</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dimspy.models.peaklist.PeakList.peaks">
+<code class="descname">peaks</code><a class="headerlink" href="#dimspy.models.peaklist.PeakList.peaks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Property of the attribute table.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">returns a deep copy of the flagged attribute table</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">numpy structured array</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dimspy.models.peaklist.PeakList.flags">
+<code class="descname">flags</code><a class="headerlink" href="#dimspy.models.peaklist.PeakList.flags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Property of the flags.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">returns a deep copy of the flags array</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">numpy array</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dimspy.models.peaklist.PeakList.dtable">
+<code class="descname">dtable</code><a class="headerlink" href="#dimspy.models.peaklist.PeakList.dtable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Property of the overall attribute table.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">returns the original attribute table</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">numpy structured array</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">This property directly accesses the internal attribute table. Be careful when manipulating the data,
+particularly pay attention to the potential side-effects.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="dimspy.models.peaklist.PeakList.sort_peaks_order">
+<code class="descname">sort_peaks_order</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.models.peaklist.PeakList.sort_peaks_order" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sorts peaklist mz values into ascending order.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This method will be called automatically every time the mz values are changed.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="dimspy.models.peaklist.PeakList.calculate_flags">
+<code class="descname">calculate_flags</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.models.peaklist.PeakList.calculate_flags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Re-calculates the flags according to the flag attributes.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">numpy array</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This method will be called automatically every time a flag attribute is added, removed, or changed.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="dimspy.models.peaklist.PeakList.has_attribute">
+<code class="descname">has_attribute</code><span class="sig-paren">(</span><em>attr_name</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.models.peaklist.PeakList.has_attribute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks whether there exists an attribute in the table.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>attr_name</strong> – the attribute name for checking</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">bool</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="dimspy.models.peaklist.PeakList.add_attribute">
+<code class="descname">add_attribute</code><span class="sig-paren">(</span><em>attr_name</em>, <em>attr_value</em>, <em>attr_dtype=None</em>, <em>is_flag=False</em>, <em>on_index=None</em>, <em>flagged_only=True</em>, <em>invalid_value=nan</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.models.peaklist.PeakList.add_attribute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds an new attribute to the PeakList attribute table.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>attr_name</strong> – the name of the new attribute, must be a string</li>
+<li><strong>attr_value</strong> – the values of the new attribute. It’s size must equals to PeakList.size
+(if flagged_only == True), or PeakList.full_size (if flagged_only == False)</li>
+<li><strong>attr_dtype</strong> – the data type of the new attribute. If it is set to None, the PeakList will
+try to detect the data type based on attr_value. If the detection failed it will take the “object” type. Default = None</li>
+<li><strong>is_flag</strong> – whether the new attribute is a flag attribute, i.e., will be used in flags calculation. Default = False</li>
+<li><strong>on_index</strong> – insert the new attribute on a specific column. It can’t be 0 or 1, as the first two
+attributes are fixed as mz and intensity. Setting to None means to put it to the last column. Default = None</li>
+<li><strong>flagged_only</strong> – whether the attr_value is set to the flagged peaks or all peaks. Default = True</li>
+<li><strong>invalid_value</strong> – if flagged_only is set to True, this value will be assigned to the unflagged peaks.
+The actual value depends on the attribute data type. For instance, on a boolean attribute invalid_value = 0 will
+be converted to False. Default = numpy.nan</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">PeakList object (self)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="dimspy.models.peaklist.PeakList.drop_attribute">
+<code class="descname">drop_attribute</code><span class="sig-paren">(</span><em>attr_name</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.models.peaklist.PeakList.drop_attribute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Drops an existing attribute.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>attr_name</strong> – the attribute name to drop. It cannot be mz, intensity, or flags</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">PeakList object (self)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="dimspy.models.peaklist.PeakList.set_attribute">
+<code class="descname">set_attribute</code><span class="sig-paren">(</span><em>attr_name</em>, <em>attr_value</em>, <em>flagged_only=True</em>, <em>unsorted_mz=False</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.models.peaklist.PeakList.set_attribute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets values to an existing attribute.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>attr_name</strong> – the attribute to set values</li>
+<li><strong>attr_value</strong> – the new attribute values, It’s size must equals to PeakList.size
+(if flagged_only == True), or PeakList.full_size (if flagged_only == False)</li>
+<li><strong>flagged_only</strong> – whether the attr_value is set to the flagged peaks or all peaks. Default = True</li>
+<li><strong>unsorted_mz</strong> – whether the attr_value contains unsorted mz values. This parameter is valid only when
+attr_name == “mz”. Default = False</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">PeakList object (self)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="dimspy.models.peaklist.PeakList.get_attribute">
+<code class="descname">get_attribute</code><span class="sig-paren">(</span><em>attr_name</em>, <em>flagged_only=True</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.models.peaklist.PeakList.get_attribute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets values of an existing attribute.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>attr_name</strong> – the attribute to get values</li>
+<li><strong>flagged_only</strong> – whether to return the values of flagged peaks or all peaks. Default = True</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">numpy array</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="dimspy.models.peaklist.PeakList.set_peak">
+<code class="descname">set_peak</code><span class="sig-paren">(</span><em>peak_index</em>, <em>peak_value</em>, <em>flagged_only=True</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.models.peaklist.PeakList.set_peak" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets values to a peak.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>peak_index</strong> – the index of the peak to set values</li>
+<li><strong>peak_value</strong> – the new peak values. Must contain values for all the attributes (not including flags)</li>
+<li><strong>flagged_only</strong> – whether the peak_value is set to the index of flagged peaks or all peaks. Default = True</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">PeakList object (self)</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">peaks</span>
+<span class="go">mz, intensity, snr, flags</span>
+<span class="go">10, 10, 10, True</span>
+<span class="go">20, 20, 20, True</span>
+<span class="go">30, 30, 30, False</span>
+<span class="go">40, 40, 40, True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">peaks</span><span class="o">.</span><span class="n">set_peak</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="p">[</span><span class="mi">50</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">50</span><span class="p">],</span> <span class="n">flagged_only</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+<span class="go">mz, intensity, snr, flags</span>
+<span class="go">10, 10, 10, True</span>
+<span class="go">20, 20, 20, True</span>
+<span class="go">30, 30, 30, False</span>
+<span class="go">50, 50, 50, True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">peaks</span><span class="o">.</span><span class="n">set_peak</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="p">[</span><span class="mi">40</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">40</span><span class="p">],</span> <span class="n">flagged_only</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+<span class="go">mz, intensity, snr, flags</span>
+<span class="go">10, 10, 10, True</span>
+<span class="go">20, 20, 20, True</span>
+<span class="go">40, 40, 40, False</span>
+<span class="go">50, 50, 50, True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="dimspy.models.peaklist.PeakList.get_peak">
+<code class="descname">get_peak</code><span class="sig-paren">(</span><em>peak_index</em>, <em>flagged_only=True</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.models.peaklist.PeakList.get_peak" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets values of a peak.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>peak_index</strong> – the index of the peak to get values</li>
+<li><strong>flagged_only</strong> – whether the values are taken from the index of flagged peaks or all peaks. Default = True</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">numpy array</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="dimspy.models.peaklist.PeakList.insert_peak">
+<code class="descname">insert_peak</code><span class="sig-paren">(</span><em>peak_value</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.models.peaklist.PeakList.insert_peak" title="Permalink to this definition">¶</a></dt>
+<dd><p>Insert a new peak.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>peak_value</strong> – the values of the new peak. Must contain values for all the attributes. It’s position depends
+on the mz value, i.e., the 1st value of the input</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">PeakList object (self)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="dimspy.models.peaklist.PeakList.remove_peak">
+<code class="descname">remove_peak</code><span class="sig-paren">(</span><em>peak_index</em>, <em>flagged_only=True</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.models.peaklist.PeakList.remove_peak" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove an existing peak.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>peak_index</strong> – the index of the peak to remove</li>
+<li><strong>flagged_only</strong> – whether the index is for flagged peaks or all peaks. Default = True</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">PeakList object (self)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="dimspy.models.peaklist.PeakList.cleanup_unflagged_peaks">
+<code class="descname">cleanup_unflagged_peaks</code><span class="sig-paren">(</span><em>flag_name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.models.peaklist.PeakList.cleanup_unflagged_peaks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove unflagged peaks.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>flag_name</strong> – remove peaks unflagged by this flag attribute. Setting None means to remove peaks unflagged by
+the overall flags. Default = None</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">PeakList object (self)</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">peaks</span>
+<span class="go">mz, intensity, intensity_flag, snr, snr_flag, flags</span>
+<span class="go">10, 70, True, 10, False, False</span>
+<span class="go">20, 60, True, 20, True, True</span>
+<span class="go">30, 50, False, 30, True, False</span>
+<span class="go">40, 40, False, 40, True, False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">peaks</span><span class="o">.</span><span class="n">cleanup_unflagged_peaks</span><span class="p">(</span><span class="s1">&#39;snr_flag&#39;</span><span class="p">)</span>
+<span class="go">mz, intensity, intensity_flag, snr, snr_flag, flags</span>
+<span class="go">20, 60, True, 20, True, True</span>
+<span class="go">30, 50, False, 30, True, False</span>
+<span class="go">40, 40, False, 40, True, False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">peaks</span><span class="o">.</span><span class="n">cleanup_unflagged_peaks</span><span class="p">()</span>
+<span class="go">mz, intensity, intensity_flag, snr, snr_flag, flags</span>
+<span class="go">20, 60, True, 20, True, True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="dimspy.models.peaklist.PeakList.to_list">
+<code class="descname">to_list</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.models.peaklist.PeakList.to_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exports peaklist attribute table to a list, including the flags.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">list</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="dimspy.models.peaklist.PeakList.to_dict">
+<code class="descname">to_dict</code><span class="sig-paren">(</span><em>dict_type=&lt;class 'collections.OrderedDict'&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.models.peaklist.PeakList.to_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exports peaklist attribute table to a dictionary (mappable object), including the flags.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>dict_type</strong> – result dictionary type, Default = OrderedDict</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="dimspy.models.peaklist.PeakList.to_str">
+<code class="descname">to_str</code><span class="sig-paren">(</span><em>delimiter='</em>, <em>'</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.models.peaklist.PeakList.to_str" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exports peaklist attribute table to a string, including the flags. It can also be used inexplicitly.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="dimspy.models.peaklist.PeakList.copy">
+<code class="descname">copy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.models.peaklist.PeakList.copy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a deep copy of the peaklist.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">PeakList object</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-dimspy.models.peaklist_metadata">
+<span id="dimspy-models-peaklist-metadata-module"></span><h2>dimspy.models.peaklist_metadata module<a class="headerlink" href="#module-dimspy.models.peaklist_metadata" title="Permalink to this headline">¶</a></h2>
+<p>The PeakList metadata class.</p>
+<div class="versionadded">
+<p><span class="versionmodified">New in version 0.1.</span></p>
+</div>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">This class is designed for PeakList internal use only.</p>
+</div>
+<dl class="class">
+<dt id="dimspy.models.peaklist_metadata.PeakList_Metadata">
+<em class="property">class </em><code class="descclassname">dimspy.models.peaklist_metadata.</code><code class="descname">PeakList_Metadata</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.models.peaklist_metadata.PeakList_Metadata" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">dict</span></code></p>
+<p>The PeakList_Metadata class.</p>
+<p>Dictionary-like container for PeakList metadata storage.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>args</strong> – iterable object of key-value pairs</li>
+<li><strong>kwargs</strong> – metadata key-value pairs</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">PeakList_Metadata</span><span class="p">([(</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s1">&#39;sample_1&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;qc&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">PeakList_Metadata</span><span class="p">(</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;sample_1&#39;</span><span class="p">,</span> <span class="n">qc</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>metadata attributes can be accessed in both dictionary-like and property-like manners.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">meta</span> <span class="o">=</span> <span class="n">PeakList_Metadata</span><span class="p">(</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;sample_1&#39;</span><span class="p">,</span> <span class="n">qc</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">meta</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span>
+<span class="go">sample_1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">meta</span><span class="o">.</span><span class="n">qc</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">del</span> <span class="n">meta</span><span class="o">.</span><span class="n">qc</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">meta</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="s1">&#39;qc&#39;</span><span class="p">)</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">The <em>__getattr__</em>, <em>__setattr__</em>, and <em>__delattr__</em> methods are overrided. <strong>DO NOT</strong> assign a metadata object
+to another metadata object, e.g., metadata.metadata.attr = value.</p>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="module-dimspy.models.peaklist_tags">
+<span id="dimspy-models-peaklist-tags-module"></span><h2>dimspy.models.peaklist_tags module<a class="headerlink" href="#module-dimspy.models.peaklist_tags" title="Permalink to this headline">¶</a></h2>
+<p>The PeakList tags class.</p>
+<div class="versionadded">
+<p><span class="versionmodified">New in version 0.1.</span></p>
+</div>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">This class is designed for PeakList and PeakMatrix internal use only.</p>
+</div>
+<dl class="class">
+<dt id="dimspy.models.peaklist_tags.PeakList_Tags">
+<em class="property">class </em><code class="descclassname">dimspy.models.peaklist_tags.</code><code class="descname">PeakList_Tags</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.models.peaklist_tags.PeakList_Tags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>The PeakList_Tags class.</p>
+<p>Container for both typed and untyped tags. This class is mainly used in PeakList and PeakMatrix classes for sample filtering.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>args</strong> – list of untyped tags</li>
+<li><strong>kwargs</strong> – list of typed tags. Only one tag value can be assigned to a specific tag type</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">PeakList_Tags</span><span class="p">(</span><span class="s1">&#39;untyped_tag1&#39;</span><span class="p">,</span> <span class="s1">&#39;untyped_tag2&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">PeakList_Tags</span><span class="p">(</span><span class="n">tag_type1</span> <span class="o">=</span> <span class="s1">&#39;tag_value1&#39;</span><span class="p">,</span> <span class="n">tag_type2</span> <span class="o">=</span> <span class="s1">&#39;tag_value2&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="attribute">
+<dt id="dimspy.models.peaklist_tags.PeakList_Tags.tag_types">
+<code class="descname">tag_types</code><a class="headerlink" href="#dimspy.models.peaklist_tags.PeakList_Tags.tag_types" title="Permalink to this definition">¶</a></dt>
+<dd><p>Property of included tag types.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">returns a tuple containing all the tag types of the typed tags</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">tuple</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dimspy.models.peaklist_tags.PeakList_Tags.tag_values">
+<code class="descname">tag_values</code><a class="headerlink" href="#dimspy.models.peaklist_tags.PeakList_Tags.tag_values" title="Permalink to this definition">¶</a></dt>
+<dd><p>Property of included tag values.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">returns a tuple containing all the tag values, both typed and untyped tags</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">tuple</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dimspy.models.peaklist_tags.PeakList_Tags.typed_tags">
+<code class="descname">typed_tags</code><a class="headerlink" href="#dimspy.models.peaklist_tags.PeakList_Tags.typed_tags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Property of included typed tags.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">returns a tuple containing all the typed tags, each in the format of (tag_type, tag_value)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">tuple</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dimspy.models.peaklist_tags.PeakList_Tags.untyped_tags">
+<code class="descname">untyped_tags</code><a class="headerlink" href="#dimspy.models.peaklist_tags.PeakList_Tags.untyped_tags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Property of included untyped tags.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">returns a tuple containing all the untyped tags</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">tuple</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="dimspy.models.peaklist_tags.PeakList_Tags.has_tag_type">
+<code class="descname">has_tag_type</code><span class="sig-paren">(</span><em>tag_type</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.models.peaklist_tags.PeakList_Tags.has_tag_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks whether there exists a specific tag type.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>tag_type</strong> – the tag type for checking</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">bool</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="dimspy.models.peaklist_tags.PeakList_Tags.has_tag">
+<code class="descname">has_tag</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.models.peaklist_tags.PeakList_Tags.has_tag" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks whether there exists a specific tag.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>args</strong> – <strong>one</strong> tag value, either typed or untyped</li>
+<li><strong>kwargs</strong> – <strong>one</strong> tag_type = tag_value</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">bool</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">tags</span> <span class="o">=</span> <span class="n">PeakList_Tags</span><span class="p">(</span><span class="s1">&#39;untyped_tag1&#39;</span><span class="p">,</span> <span class="n">tag_type1</span> <span class="o">=</span> <span class="s1">&#39;tag_value1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tags</span><span class="o">.</span><span class="n">has_tag</span><span class="p">(</span><span class="s1">&#39;untyped_tag1&#39;</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tags</span><span class="o">.</span><span class="n">has_tag</span><span class="p">(</span><span class="n">tag_type1</span> <span class="o">=</span> <span class="s1">&#39;untyped_tag1&#39;</span><span class="p">)</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tags</span><span class="o">.</span><span class="n">has_tag</span><span class="p">(</span><span class="s1">&#39;untyped_tag1&#39;</span><span class="p">,</span> <span class="s1">&#39;tag_value1&#39;</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="go">ValueError: searching multiple tags is not allowded</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="dimspy.models.peaklist_tags.PeakList_Tags.tag_of">
+<code class="descname">tag_of</code><span class="sig-paren">(</span><em>tag_type=None</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.models.peaklist_tags.PeakList_Tags.tag_of" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns tag value of the given tag type, or tuple of untyped tags if tag_type is None.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>tag_type</strong> – valid tag type, or None for untyped tags</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">same as tag_value (tag_type is not None), or tupe (tag_type is None)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="dimspy.models.peaklist_tags.PeakList_Tags.add_tags">
+<code class="descname">add_tags</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.models.peaklist_tags.PeakList_Tags.add_tags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds multiple typed and untyped tags.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>args</strong> – list of untyped tags</li>
+<li><strong>kwargs</strong> – list of typed tags. Only one tag value can be assigned to a specific tag type</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">PeakList_Tags</span><span class="p">(</span><span class="s1">&#39;untyped_tag1&#39;</span><span class="p">,</span> <span class="n">tag_type1</span> <span class="o">=</span> <span class="s1">&#39;tag_value1&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="dimspy.models.peaklist_tags.PeakList_Tags.drop_tags">
+<code class="descname">drop_tags</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.models.peaklist_tags.PeakList_Tags.drop_tags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Drops multiple typed and untyped tags.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>args</strong> – list of tag values, both typed and untyped</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">tags</span> <span class="o">=</span> <span class="n">PeakList_Tags</span><span class="p">(</span><span class="s1">&#39;untyped_tag1&#39;</span><span class="p">,</span> <span class="n">tag_type1</span> <span class="o">=</span> <span class="s1">&#39;tag_value1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tags</span><span class="o">.</span><span class="n">drop_tags</span><span class="p">(</span><span class="s1">&#39;tag_value1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">tags</span>
+<span class="go">untyped_tag1</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="dimspy.models.peaklist_tags.PeakList_Tags.drop_tag_types">
+<code class="descname">drop_tag_types</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.models.peaklist_tags.PeakList_Tags.drop_tag_types" title="Permalink to this definition">¶</a></dt>
+<dd><p>Drops multiple tag types and their tag values.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>args</strong> – list of tag types</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="dimspy.models.peaklist_tags.PeakList_Tags.drop_all_tags">
+<code class="descname">drop_all_tags</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.models.peaklist_tags.PeakList_Tags.drop_all_tags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Drops all tags, both typed and untyped.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dimspy.models.peaklist_tags.PeakList_Tags.to_list">
+<code class="descname">to_list</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.models.peaklist_tags.PeakList_Tags.to_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exports tags to a list.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">list</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="dimspy.models.peaklist_tags.PeakList_Tags.to_str">
+<code class="descname">to_str</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dimspy.models.peaklist_tags.PeakList_Tags.to_str" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exports tags to a string. It can also be used inexplicitly as</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">tags</span> <span class="o">=</span> <span class="n">PeakList_Tags</span><span class="p">(</span><span class="s1">&#39;untyped_tag1&#39;</span><span class="p">,</span> <span class="n">tag_type1</span> <span class="o">=</span> <span class="s1">&#39;tag_value1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">tags</span>
+<span class="go">untyped_tag1, tag_type1:tag_value1</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-dimspy.models">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-dimspy.models" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="dimspy.portals.html" class="btn btn-neutral float-right" title="dimspy.portals package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="dimspy.html" class="btn btn-neutral" title="dimspy package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Ralf Weber, Jiarui (Albert) Zhou.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

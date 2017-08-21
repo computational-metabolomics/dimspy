@@ -1,0 +1,12 @@
+language: python
+python:
+  - "2.7"
+cache: pip
+before_install:
+  - sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-key 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF
+  - echo "deb http://download.mono-project.com/repo/debian wheezy/snapshots/4.8.1.0 main" | sudo tee /etc/apt/sources.list.d/mono-xamarin.list
+  - sudo apt-get -qq update
+  - sudo apt-get -y install --no-install-recommends libglib2.0-dev mono-complete
+install:
+  - pip install .
+
