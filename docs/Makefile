@@ -10,10 +10,9 @@ BUILDDIR      = _build
 # Internal variables.
 PAPEROPT_a4     = -D latex_elements.papersize=a4
 PAPEROPT_letter = -D latex_elements.papersize=letter
-ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
+ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) source
 # the i18n builder cannot share the environment and doctrees with the others
-I18NSPHINXOPTS  = $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
-
+I18NSPHINXOPTS  = $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) source
 .PHONY: help
 help:
 	@echo "Please use \`make <target>' where <target> is one of"

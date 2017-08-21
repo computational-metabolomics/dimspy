@@ -18,8 +18,7 @@
 #
 import os
 import sys
-sys.path.insert(0, u'/Users/albert/Repository/Shoukaku/DIMSPy/')
-
+sys.path.insert(0, os.path.abspath('dimspy'))
 
 # -- General configuration ------------------------------------------------
 
