@@ -394,6 +394,40 @@ class PeakMatrix(object):
         """                   
         return self.attr_mean_vector('intensity')
 
+    def rsd(self, *args, **kwargs):
+        """
+        Calculates relative standard deviation (RSD) array.
+
+        :param args: untyped tag label for RSD calculation, no value = calculate over all samples
+        :param kwargs: typed tag label for RSD calculation, , no value = calculate over all samples
+        :param flagged_only: whether to calculate on flagged peaks only. Default = True
+        :type: numpy array
+
+        The RSD is calculated as:
+
+        >>> rsd = std(pm.intensity_matrix, axis = 0, ddof = 1) / mean(pm.intensity_matrix, axis = 0) * 100
+
+        Noting that the means delta degrees of freedom (ddof) is set to 1 for standard deviation calculation.
+        Moreover, only the "present" peaks will be used for calculation. If a column has less than 2 peaks, the
+        corresponding rsd value will be set to np.nan.
+
+        """
+        flagged_only = kwargs.pop('flagged_only') if kwargs.has_key('flagged_only') else True
+
+        if self.shape[0] < 2:
+            # logging.warning('calculating RSD on less than 2 samples')
+            return np.ones(self.shape[1] if flagged_only else self.full_shape[1]) * np.nan
+
+        with (unmask_all_peakmatrix(self) if len(args) + len(kwargs) == 0 else
+              unmask_peakmatrix(self, *args, **kwargs)) as m:
+            if m.shape[0] == 0: raise AttributeError('peak matrix does not have label(s) [%s]' %
+                                                     join(map(lambda x: str(x)[1:-1], (args, kwargs)), ', '))
+            ints = m.attr_matrix('intensity', flagged_only)
+            rsd = m._present_std(ints, 0, flagged_only) / m._present_mean(ints, 0, flagged_only) * 100
+
+        rsd[np.where(map(lambda x: len(set(x[np.nonzero(x)])) == 1, ints.T))] = np.nan  # only one valid value
+        return rsd
+
     # publics
     # tags and mask
     def tags_of(self, tag_type=None):
@@ -680,7 +714,7 @@ class PeakMatrix(object):
         pl.add_attribute('purity', self.purity[presids])
         return pl
 
-    def to_str(self, attr_name='intensity', delimiter='\t', transpose=False, comprehensive=True):
+    def to_str(self, attr_name='intensity', delimiter='\t', transpose=False, comprehensive=True, rsd_tags=()):
         """
         Exports the peak matrix to a string.
 
@@ -688,6 +722,7 @@ class PeakMatrix(object):
         :param delimiter: delimiter to separate the matrix. Default = '\t', i.e., TSV format
         :param transpose: whether to transpose the matrix. Default = False
         :param comprehensive: whether to include comprehensive info, e.g., mask, flags, present, rsd etc. Default = True
+        :param rsd_tags: peaklist tags for RSD calculation. Default = (), indicating only the overall RSD is included
         :rtype: str
 
         """
@@ -708,9 +743,11 @@ class PeakMatrix(object):
             prelst = ['present']    + ([''] * (tnum + 2)) + map(str, self.property('present', flagged_only = False))
             ocrlst = ['occurrence'] + ([''] * (tnum + 2)) + map(str, self.property('occurrence', flagged_only = False))
             puplst = ['purity']     + ([''] * (tnum + 2)) + map(str, self.property('purity', flagged_only = False))
+            rsdmtx = [['rsd_' + rt] + ([''] * (tnum + 2)) + map(str, self.rsd(rt, flagged_only = False)) for rt in rsd_tags]
+            rsdlst = ['rsd_all']    + ([''] * (tnum + 2)) + map(str, self.rsd(flagged_only = False))
             flgmtx = [[fn] + ([''] * (tnum + 2)) + map(str, self.flag_values(fn).astype(int)) for fn in self.flag_names]
             flglst = ['flags']      + ([''] * (tnum + 2)) + map(str, self.flags.astype(int))
-            dm = zip(*([prelst, ocrlst, puplst] + flgmtx + [flglst] + zip(*dm)))
+            dm = zip(*([prelst, ocrlst, puplst] + rsdmtx + [rsdlst] + flgmtx + [flglst] + zip(*dm)))
 
         lm = [hd] + zip(*dm)
         return join(map(lambda x: join(x, delimiter), zip(*lm) if transpose else lm), '\n')
@@ -852,38 +889,3 @@ class unmask_all_peakmatrix:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self._pm.mask = [self._oldmask[i] for i in self._pm._pids]
 
-
-# RSD calculation
-def peak_matrix_rsd(pm, *args, **kwargs):
-    """
-    Calculate the QC samples' relative standard deviation (RSD) array for PeakMatrix.
-
-    :param pm: target peak matrix object
-    :param args: untyped tag label for RSD calculation, no value = calculate over all samples
-    :param kwargs: typed tag label for RSD calculation, , no value = calculate over all samples
-    :param flagged_only: whether to calculate on flagged peaks only. Default = True
-    :type: numpy array
-
-    The RSD is calculated as:
-
-    >>> rsd = std(pm.intensity_matrix, axis = 0, ddof = 1) / mean(pm.intensity_matrix, axis = 0) * 100
-
-    Noting that the means delta degrees of freedom (ddof) is set to 1 for standard deviation calculation.
-    Moreover, only the "present" peaks will be used for calculation. If a column has less than 2 peaks, the
-    corresponding rsd value will be set to np.nan.
-
-    """
-    flagged_only = kwargs.pop('flagged_only') if kwargs.has_key('flagged_only') else True
-
-    if pm.shape[0] < 2:
-        # logging.warning('calculating RSD on less than 2 samples')
-        return np.ones(pm.shape[1] if flagged_only else pm.full_shape[1]) * np.nan
-
-    with (unmask_all_peakmatrix(pm) if len(args) + len(kwargs) == 0 else unmask_peakmatrix(pm, *args, **kwargs)) as m:
-        if m.shape[0] == 0:
-            raise AttributeError('peak matrix does not have label(s) [%s]' % join(map(lambda x: str(x)[1:-1], (args,kwargs)), ', '))
-        ints = m.attr_matrix('intensity', flagged_only)
-        rsd = m._present_std(ints, 0, flagged_only) / m._present_mean(ints, 0, flagged_only) * 100
-
-    rsd[np.where(map(lambda x: len(set(x[np.nonzero(x)])) == 1, ints.T))] = np.nan # only one valid value
-    return rsd

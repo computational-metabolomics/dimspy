@@ -12,7 +12,6 @@ from itertools import combinations
 import zipfile
 from models.peaklist import PeakList
 from models.peak_matrix import PeakMatrix
-from models.peak_matrix import peak_matrix_rsd
 from portals import hdf5_portal
 from portals import txt_portal
 from portals.paths import check_paths
@@ -187,7 +186,7 @@ def replicate_filter(source, ppm, replicates, min_peaks, rsd_thres=None, filelis
             if "snr" in pm.attributes:
                 pl.add_attribute("snr", pm.attr_mean_vector("snr"), on_index=2)
 
-            pl.add_attribute("rsd", peak_matrix_rsd(pm), on_index=5)
+            pl.add_attribute("rsd", pm.rsd(), on_index=5)
 
             pl.tags.add_tags(*pls_comb[0].tags.tag_of(None), **{t: pls_comb[0].tags.tag_of(t) for t in pls_comb[0].tags.tag_types})
             pl.add_attribute("present_flag", pm.present >= min_peaks, is_flag=True)

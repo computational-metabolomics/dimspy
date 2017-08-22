@@ -54,11 +54,13 @@ class TxtPortalsTestCase(unittest.TestCase):
         pm.add_flag('odd_flag', ([0, 1] * int(pm.shape[1]/2+1))[:pm.shape[1]])
         pm.add_flag('qua_flag', ([0, 0, 1, 1] * int(pm.shape[1]/4+1))[:pm.shape[1]])
 
-        save_peak_matrix_as_txt(pm, '.test_peak_matrix.txt', transpose = True, comprehensive = True)
+        save_peak_matrix_as_txt(pm, '.test_peak_matrix.txt', transpose = True, comprehensive = True, rsd_tags = ('qc', 'compound_1', 'compound_2'))
         npm = load_peak_matrix_from_txt('.test_peak_matrix.txt', transposed = True, comprehensive = True)
 
         self.assertEqual(pm.shape, npm.shape)
         self.assertEqual(pm.full_shape, npm.full_shape)
+        self.assertTrue(np.all(pm.flags == npm.flags))
+        self.assertTrue(np.all(pm.flag_names == npm.flag_names))
         self.assertTrue(np.allclose(pm.intensity_matrix, npm.intensity_matrix))
         self.assertTupleEqual(pm.peaklist_tag_types, npm.peaklist_tag_types)
         self.assertTupleEqual(pm.peaklist_tag_values, npm.peaklist_tag_values)

@@ -121,17 +121,19 @@ def load_peak_matrix_from_txt(file_name, delimiter='\t', transposed=False, compr
         raise IOError('data matrix size not match')
 
     if not transposed: dlns = zip(*dlns)
+    rdlns = zip(*dlns)
+    rsdrow = filter(lambda x: x[1][0] == 'rsd_all', enumerate(rdlns))[0][0]
 
     def _parseflags():
         fgs = []
-        for l, ln in enumerate(zip(*dlns)[5:]):
+        for l, ln in enumerate(rdlns[rsdrow+1:]):
             if ln[0] == 'flags': break
             fgs += [(ln[0], map(eval, filter(lambda x: x != '', ln[1:])))]
         return fgs
     flgs = _parseflags() if comprehensive else []
 
     # must refactor if PeakMatrix.to_str changed
-    pcol = 6+len(flgs) if comprehensive else 1
+    pcol = rsdrow + len(flgs) + 2 if comprehensive else 1
     pids = dlns[0][pcol:]
 
     def _parsetags(tgs):

@@ -14,7 +14,7 @@ import unittest
 import numpy as np
 import cPickle as cp
 from dimspy.models.peaklist_tags import PeakList_Tags
-from dimspy.models.peak_matrix import PeakMatrix, peak_matrix_rsd
+from dimspy.models.peak_matrix import PeakMatrix
 from dimspy.models.peak_matrix import mask_peakmatrix, unmask_peakmatrix, mask_all_peakmatrix, unmask_all_peakmatrix
 
 
@@ -185,19 +185,19 @@ class PeakListTestCase(unittest.TestCase):
                                     [101.0, 301.0, 501.0, 701.0, 901.0]))
         self.assertTrue(np.allclose(*map(np.nan_to_num, (pm.attr_mean_vector('mz', flagged_only = False),
                                     [1.0, 101.0, np.nan, 301.0, 401.0, 501.0, 601.0, 701.0, 801.0, 901.0]))))
-        self.assertTrue(np.allclose((lambda x: x[~np.isnan(x)])(peak_matrix_rsd(pm, 'qc')),
+        self.assertTrue(np.allclose((lambda x: x[~np.isnan(x)])(pm.rsd('qc')),
                                     [58.92556509, 55.82421956, 50.50762722, 48.21182598]))
-        self.assertTrue(np.allclose((lambda x: x[~np.isnan(x)])(peak_matrix_rsd(pm)),
+        self.assertTrue(np.allclose((lambda x: x[~np.isnan(x)])(pm.rsd()),
                                     [66.32891055, 76.80163464, 63.24555320, 58.46339666, 55.02437333]))
 
         pm.remove_peaks((0, 1), flagged_only = False)
-        self.assertTrue(np.allclose((lambda x: x[~np.isnan(x)])(peak_matrix_rsd(pm, 'qc')),
+        self.assertTrue(np.allclose((lambda x: x[~np.isnan(x)])(pm.rsd('qc')),
                                     [55.82421956, 50.50762722, 48.21182598]))
         pm.remove_peaks((0, 1), flagged_only = True)
-        self.assertTrue(np.allclose(peak_matrix_rsd(pm, 'qc'),
+        self.assertTrue(np.allclose(pm.rsd('qc'),
                                     [50.50762722, 48.21182598]))
 
-        self.assertRaises(AttributeError, lambda: peak_matrix_rsd(pm, 'no_such_tag'))
+        self.assertRaises(AttributeError, lambda: pm.rsd('no_such_tag'))
 
         with mask_peakmatrix(pm, 'sample', plate = 1):
             pm.remove_samples((0, 1))
@@ -226,7 +226,7 @@ class PeakListTestCase(unittest.TestCase):
         self.assertTrue(np.allclose(pkl.mz, [1.0, 101.0, 301.0, 401.0, 501.0, 601.0, 701.0, 801.0, 901.0]))
 
         try:
-            pm.to_str(comprehensive = True)
+            pm.to_str(comprehensive = True, rsd_tags = ('compound_1', 'compound_2', 'qc'))
         except Exception, e:
             self.fail('PeakMatrix to_str() method failed: ' + str(e))
 
