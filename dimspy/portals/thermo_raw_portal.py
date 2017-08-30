@@ -38,7 +38,7 @@ class ThermoRaw:
     def peaklist(self, scan_id, mode_noise="noise_packets"):  # generator
         assert mode_noise in ["noise_packets", "mean", "median", "mad"], "select a method that is available [noise_packets, mean, median, mad]"
 
-        scan = self.run.GetCentroidStream(scan_id, True)
+        scan = self.run.GetCentroidStream(scan_id, False)
 
         mz_ibn = zip(scan.Masses, scan.Intensities, scan.Baselines, scan.Noises)  # SignalToNoise not available
         mz_ibn.sort()
