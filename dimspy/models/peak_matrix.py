@@ -740,6 +740,8 @@ class PeakMatrix(object):
                  [map(lambda x: join(map(str, x.tag_of(None)), ';'), self.peaklist_tags)] + \
                  dm[1:]
 
+            rsd_tags = tuple(rsd_tags) if isinstance(rsd_tags, Iterable) else (rsd_tags,)
+
             prelst = ['present']    + ([''] * (tnum + 2)) + map(str, self.property('present', flagged_only = False))
             ocrlst = ['occurrence'] + ([''] * (tnum + 2)) + map(str, self.property('occurrence', flagged_only = False))
             puplst = ['purity']     + ([''] * (tnum + 2)) + map(str, self.property('purity', flagged_only = False))
