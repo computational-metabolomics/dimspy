@@ -28,13 +28,13 @@ def _eval(v):
 # peaklists portals
 def save_peaklists_as_hdf5(pkls, filename):
     """
-    Saves multiple peaklists in HDF5 file.
+    Saves multiple peaklists in a HDF5 file.
 
     :param pkls: the target list of peaklist objects
-    :param filename: name of the file to export data
+    :param filename: path to a new HDF5 file
 
     To incorporate with different dtypes in the attribute matrix, this portal converts all the arribute values
-    into fix-lenght strings for HDF5 data tables storage. The order of the peaklists will be retained.
+    into fix-length strings for HDF5 data tables storage. The order of the peaklists will be retained.
 
     """
     if os.path.isfile(filename):
@@ -62,14 +62,13 @@ def save_peaklists_as_hdf5(pkls, filename):
 
 
 def load_peaklists_from_hdf5(filename):
-
     """
-    Loads a list of peaklists from HDF5 file.
+    Loads a list of peaklist objects from a HDF5 file.
 
-    :param filename: name of the file to import data
+    :param filename: path to an existing HDF5 file
     :rtype: list
 
-    The values in HDF5 data tables are automatically converted to their original dtypes before loading in the the peaklist.
+    The values in HDF5 data tables are automatically converted to their original dtypes before loading in the peaklist.
 
     """
     if not os.path.isfile(filename):
@@ -105,10 +104,10 @@ def load_peaklists_from_hdf5(filename):
 # peak matrix portals
 def save_peak_matrix_as_hdf5(pm, filename):
     """
-    Saves a peak matrix in HDF5 file.
+    Saves a peak matrix object to a HDF5 file.
 
     :param pm: the target peak matrix object
-    :param filename: name of the file to export data
+    :param filename: path to a new HDF5 file
 
     The order of the attributes and flags will be retained.
 
@@ -151,9 +150,9 @@ def save_peak_matrix_as_hdf5(pm, filename):
 
 def load_peak_matrix_from_hdf5(filename):
     """
-    Loads a peak matrix from HDF5 file.
+    Loads a peak matrix from a HDF5 file.
 
-    :param filename: name of the file to import data
+    :param filename: path to an existing HDF5 file
     :rtype: PeakMatrix object
 
     """
