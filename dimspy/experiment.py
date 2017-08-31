@@ -126,14 +126,17 @@ def check_metadata(fn_tsv):
     for k in fm.dtype.names:
         fm_dict[k] = list(fm[k])
 
+    if "filename" not in fm_dict:
+        raise IOError("Column 'filename' missing.")
+
     unique, counts = np.unique(fm_dict["filename"], return_counts=True)
     if len(unique) != sum(counts):
-        raise ValueError("Duplicate filenames in filelist")
+        raise ValueError("Duplicate filename in list")
 
     if "replicate" in fm.dtype.names:
 
         if 0 in fm["replicate"]:
-            raise IOError("Incorrect replicate number in filelist. Row {}".format(list(fm["replicate"]).index(0)))
+            raise IOError("Incorrect replicate number in list. Row {}".format(list(fm["replicate"]).index(0)))
 
         idxs_replicates = idxs_reps_from_filelist(fm["replicate"])
         counts = {}
@@ -154,20 +157,20 @@ def check_metadata(fn_tsv):
     else:
         print "Column for batch number missing. Not required."
 
-    if "order" in fm.dtype.names:
-        assert np.array_equal(fm["order"], sorted(fm["order"])), "Check the order column - samples not in order"
+    if "injectionOrder" in fm.dtype.names:
+        assert np.array_equal(fm["injectionOrder"], sorted(fm["injectionOrder"])), "Check the injectionOrder column - samples not in order"
     else:
-        print "Column for sample order missing. Not required."
+        print "Column for sample injection order missing. Not required."
 
-    if "class" in fm.dtype.names:
+    if "classLabel" in fm.dtype.names:
         if "replicate" in fm.dtype.names:
             for i in range(len(idxs_replicates)):
-                assert len(np.unique(fm["class"][min(idxs_replicates[i]):max(idxs_replicates[i])+1])) == 1, "class names do not match with number of replicates"
-        unique, counts = np.unique(fm["class"], return_counts=True)
+                assert len(np.unique(fm["classLabel"][min(idxs_replicates[i]):max(idxs_replicates[i])+1])) == 1, "class names do not match with number of replicates"
+        unique, counts = np.unique(fm["classLabel"], return_counts=True)
         cls = dict(zip(unique, counts))
         print "Classes:", cls
     else:
-        warnings.warn("Column 'class' for class labels missing.")
+        warnings.warn("Column 'classLabel' for class labels missing. Not required.")
 
     return fm_dict
 
@@ -179,10 +182,14 @@ def update_metadata(peaklists, fl):
             assert pl.ID in fl[fl.keys()[0]], "filelist and peaklist do not match {}".format(pl.ID)
             index = fl[fl.keys()[0]].index(pl.ID)
             pl.metadata[k] = fl[k][index]
-            if "class" in fl.keys():
+            if "classLabel" in fl.keys():
                 if pl.tags.has_tag_type("class_label"):
                     pl.tags.drop_tag_types("class_label")
-                pl.tags.add_tags(class_label=fl["class"][index])
+                pl.tags.add_tags(class_label=fl["classLabel"][index])
+            if "batch" in fl.keys():
+                if pl.tags.has_tag_type("batch"):
+                    pl.tags.drop_tag_types("batch")
+                pl.tags.add_tags(batch=fl["batch"][index])
     return peaklists
 
 
@@ -209,12 +216,12 @@ def update_class_labels(pm, fn_tsv):
         fm = np.array([fm])
 
     assert "sample_id" == fm.dtype.names[0] or "filename" == fm.dtype.names[0], "Column for class labels not available"
-    assert "class" in fm.dtype.names, "Column for class label (class) not available"
+    assert "classLabel" in fm.dtype.names, "Column for class label (classLabel) not available"
     assert (fm[fm.dtype.names[0]] == pm.peaklist_ids).all(), "Sample ids do not match {}".format(np.setdiff1d(fm[fm.dtype.names[0]], pm.peaklist_ids))
-    # TODO: class_labels
-    for i in range(len(fm["class"])):
+
+    for i in range(len(fm["classLabel"])):
         if pm.peaklist_tags[i].has_tag_type("class_label"):
             pm.peaklist_tags[i].drop_tag_types("class_label")
-            pm.peaklist_tags[i].add_tags(class_label=fm["class"][i])
+            pm.peaklist_tags[i].add_tags(class_label=fm["classLabel"][i])
     return pm
 

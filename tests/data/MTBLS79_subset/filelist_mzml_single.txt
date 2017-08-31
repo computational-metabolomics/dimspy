@@ -1,2 +1,2 @@
-filename	replicate	class
+filename	replicate	classLabel
 batch04_QC17_rep01_262.mzML	1	sample

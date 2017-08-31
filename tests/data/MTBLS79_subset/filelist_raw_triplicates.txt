@@ -1,5 +1,4 @@
-filename	replicate
-batch04_QC17_rep01_262.RAW	1
-batch04_QC17_rep02_263.RAW	2
-batch04_QC17_rep03_264.RAW	3
-
+filename	replicate	batch	injectionOrder	classLabel
+batch04_QC17_rep01_262.RAW	1	1	1	QC
+batch04_QC17_rep02_263.RAW	2	1	2	QC
+batch04_QC17_rep03_264.RAW	3	1	3	QC

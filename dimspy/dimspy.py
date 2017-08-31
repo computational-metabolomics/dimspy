@@ -17,40 +17,16 @@ def main():
 
     subparsers = parser.add_subparsers(dest='step')
 
-    parser_cf = subparsers.add_parser('check-filelist', help='Validate samplelist (filename, replicates, order, batch, class, qc, blank).')
-    parser_ps = subparsers.add_parser('process-scans', help='Process scans and/or stitch windows within MS data file.')
+    parser_ps = subparsers.add_parser('process-scans', help='Process scans and/or stitch windows within a MS data file.')
     parser_rf = subparsers.add_parser('replicate-filter', help='Filter irreproducible peaks from technical replicate peaklists.')
-    parser_as = subparsers.add_parser('align-samples', help='Align mass spectra across samples.')
+    parser_as = subparsers.add_parser('align-samples', help='Align peaklists across samples.')
     parser_bf = subparsers.add_parser('blank-filter', help='Filter peaks present in the blank samples.')
     parser_sf = subparsers.add_parser('sample-filter', help='Filter peaks based on certain reproducibility and sample class criteria.')
     parser_mp = subparsers.add_parser('merge-peaklists', help='Merge peaklists from multiple lists of peaklists or peak matrices.')
-    parser_gp = subparsers.add_parser('get-peaklists', help='Get peklists from a peak matrix object.')
+    parser_gp = subparsers.add_parser('get-peaklists', help='Get peaklists from a peak matrix object.')
     parser_gap = subparsers.add_parser('get-average-peaklist', help='Get an average peaklist from a peak matrix object.')
     parser_ht = subparsers.add_parser('hdf5-to-txt', help='Write HDF5 output to text format.')
-
-    parser_cf.add_argument('-l', '--filelist',
-                           type=str, required=True,
-                           help="Tab-delimited file that list all the MS data files (*.raw, *.mzml or tab-delimited files) and associated meta data (e.g. replicate, order, batch, class, qc, blank).")
-
-    parser_cf.add_argument('-i', '--input',
-                           type=str, required=True,
-                           help="Directory (*.raw, *.mzml or tab-delimited peaklist files) or zip archive (*.mzml or tab-delimited peaklist files)")
-
-    parser_cf.add_argument('-r', '--replicates',
-                           type=int, required=False,
-                           help="Number of technical replicates for each sample.")
-
-    parser_cf.add_argument('-a', '--batches',
-                           type=int, required=False,
-                           help="Number of batches")
-
-    parser_cf.add_argument('-q', '--name-QC',
-                           type=str,  required=False,
-                           help="Only required when QCs are not marked in the filelist (i.e. QC column).")
-
-    parser_cf.add_argument('-b', '--name-blank',
-                           type=str, required=False,
-                           help="Only required when 'blanks' are not marked in the filelist (i.e. blank column).")
+    parser_csl = subparsers.add_parser('create-sample-list', help='Create a sample list from a peak matrix object or list of peaklist objects.')
 
     #################################
     # PROCESS SCANS
@@ -311,7 +287,7 @@ def main():
 
     parser_ht.add_argument('-i', '--input',
                            type=str, required=True,
-                           help="HDF5 file that contains peaklists or a peak matrix from one of the processing steps.")
+                           help="HDF5 file that contains peaklist objects or a peak matrix object from one of the processing steps.")
 
     parser_ht.add_argument('-o', '--output',
                            type=str, required=True,
@@ -323,7 +299,7 @@ def main():
 
     parser_ht.add_argument('-s', '--separator',
                            default="tab", choices=["tab", "comma"],
-                           help="Format of the file for further data processing or data analysis.")
+                           help="The field separator character. Values on each line of the file are separated by this character.")
 
     parser_ht.add_argument('-t', '--transpose',
                            action='store_true', required=False,
@@ -332,6 +308,23 @@ def main():
     parser_ht.add_argument('-c', '--comprehensive',
                            action='store_true', required=False,
                            help="Comprehensive output of the peak matrix")
+
+
+    #################################
+    # Create Sample List
+    #################################
+
+    parser_csl.add_argument('-i', '--input',
+                           type=str, required=True,
+                           help="HDF5 file that contains peaklist objects or a peak matrix object from one of the processing steps.")
+
+    parser_csl.add_argument('-o', '--output',
+                           type=str, required=True,
+                           help="Text file to write to.")
+
+    parser_csl.add_argument('-s', '--separator',
+                           default="tab", choices=["tab", "comma"],
+                           help="The field separator character. Values on each line of the file are separated by this character.")
 
     args = parser.parse_args()
     print args
@@ -422,26 +415,53 @@ def main():
     elif args.step == "get-peaklists":
         pls = []
         for s in args.input:
+
             if not os.path.isfile(s):
                 raise OSError('HDF5 database [{}] not exists'.format(s))
             if not h5py.is_hdf5(s):
                 raise OSError('input file [{}] is not a valid HDF5 database'.format(s))
+
             pm = hdf5_portal.load_peak_matrix_from_hdf5(s)
             pls.extend(pm.extract_peaklists())
         hdf5_portal.save_peaklists_as_hdf5(pls, args.output)
 
     elif args.step == "get-average-peaklist":
+
         if not os.path.isfile(args.input):
             raise OSError('HDF5 database [{}] not exists'.format(args.input))
         if not h5py.is_hdf5(args.input):
             raise OSError('input file [{}] is not a valid HDF5 database'.format(args.input))
+
         pls = [hdf5_portal.load_peak_matrix_from_hdf5(args.input).to_peaklist(ID=args.name_peaklist)]
         hdf5_portal.save_peaklists_as_hdf5(pls, args.output)
 
     elif args.step == "hdf5-to-txt":
+
+        seps = {"comma": ",", "tab": "\t"}
+        if args.separator in seps:
+            separator = seps[args.separator]
+        else:
+            separator = args.separator
+
         workflow.hdf5_to_txt(args.input,
                              path_out=args.output,
                              attr_name=args.attribute_name,
-                             separator=args.separator,
+                             separator=separator,
                              transpose=args.transpose,
                              comprehensive=args.comprehensive)
+
+    elif args.step == "create-sample-list":
+
+        if not os.path.isfile(args.input):
+            raise IOError('HDF5 database [%s] not exists' % args.input)
+        if not h5py.is_hdf5(args.input):
+            raise IOError('input file [%s] is not a valid HDF5 database' % args.input)
+
+        seps = {"comma": ",", "tab": "\t"}
+        if args.separator in seps:
+            separator = seps[args.separator]
+        else:
+            separator = args.separator
+
+        pls = hdf5_portal.load_peaklists_from_hdf5(args.input)
+        workflow.create_sample_list(pls, args.output, separator=separator)

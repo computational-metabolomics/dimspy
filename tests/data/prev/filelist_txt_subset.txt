@@ -1,7 +1,0 @@
-filename	replicate
-peaklist_01_01.txt	1
-peaklist_01_02.txt	2
-peaklist_01_03.txt	3
-peaklist_02_01.txt	1
-peaklist_02_02.txt	2
-peaklist_02_03.txt	3

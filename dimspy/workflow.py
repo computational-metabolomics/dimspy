@@ -105,8 +105,10 @@ def process_scans(source, function_noise, snr_thres, ppm, min_fraction=None, rsd
 
         if not skip_stitching:
             pl = join_peaklists(os.path.basename(filenames[i]), pls_avg)
-            if "class" in fl:
-                pl.tags.add_tags(class_label=fl["class"][i])
+            if "classLabel" in fl:
+                pl.tags.add_tags(class_label=fl["classLabel"][i])
+            if "batch" in fl:
+                pl.tags.add_tags(batch=fl["batch"][i])
             for k in fl.keys():
                 pl.metadata[k] = fl[k][i]
             pls.append(pl)
@@ -270,23 +272,23 @@ def sample_filter(peak_matrix, min_fraction, within=False, rsd=None, qc_label=No
 
 
 def hdf5_to_txt(fname, path_out, attr_name="intensity", separator="\t", transpose=False, comprehensive=False):
-    assert os.path.isfile(fname), 'HDF5 database [%s] not exists' % fname
-    assert h5py.is_hdf5(fname), 'input file [%s] is not a valid HDF5 database' % fname
-    seps = {"comma": ",", "tab": "\t"}
-    if separator in seps:
-        separator = seps[separator]
-    assert separator in [",", "\t"], "Incorrect separator ('tab', 'comma', ',', '\t')"
+
+    if not os.path.isfile(fname):
+        raise IOError('HDF5 database [%s] not exists' % fname)
+    if not h5py.is_hdf5(fname):
+        raise IOError('input file [%s] is not a valid HDF5 database' % fname)
+
     f = h5py.File(fname, 'r')
 
     if "mz" in f:
         obj = hdf5_portal.load_peak_matrix_from_hdf5(fname)
-        assert isinstance(obj, PeakMatrix)
         with open(os.path.join(path_out), "w") as pk_out:
             pk_out.write(obj.to_str(attr_name=attr_name, delimiter=separator, transpose=transpose, comprehensive=comprehensive))
     else:
-        assert os.path.isdir(path_out), "File or Directory does not exist:".format(path_out)
+        if not os.path.isdir(path_out):
+            raise IOError("File or Directory does not exist:".format(path_out))
+
         obj = hdf5_portal.load_peaklists_from_hdf5(fname)
-        assert isinstance(obj[0], PeakList), "Incorrect Objects in list. Peaklist Object required."
         if "#" in obj[0].ID:
             fns = set([pl.ID.split("#")[0] for pl in obj])
             sub_ids = [pl.ID.split("#")[1] for pl in obj]
@@ -366,3 +368,43 @@ def load_peaklists(source):
         raise IOError("Inccorrect input: list with peaklist objects or path")
 
     return peaklists
+
+
+def create_sample_list(peaklists, path_out, separator="\t", qc_label="QC"):
+    if isinstance(peaklists, list) or isinstance(peaklists, tuple):
+        if isinstance(peaklists[0], PeakList):
+            header = ["filename", "batch", "injectionOrder", "classLabel", "sampleType"]
+            if "replicate" in peaklists[0].metadata:
+                header.insert(1, "replicate")
+
+            for h in header[1:]:
+                if h not in peaklists[0].metadata and h.lower() not in peaklists[0].metadata:
+                    logging.warning("Metadata for '{}' not available.".format(str(h)))
+
+            with open(path_out, "w") as out:
+                out.write("{}".format(separator).join(map(str, header)) + "\n")
+                for pl in peaklists:
+                    row = [pl.ID]
+                    for h in header[1:]:
+                        if h == "sampleType":
+                            if "sampleType" not in pl.metadata and "classLabel" in pl.metadata:
+                                if pl.metadata["classLabel"] == qc_label:
+                                    row.append("QC")
+                                else:
+                                    row.append("sample")
+                            elif "sampleType" in pl.metadata:
+                                row.append(pl.metadata["sampleType"])
+                            elif "sampleType" not in pl.metadata and "classLabel" not in pl.metadata:
+                                row.append("NA")
+                        else:
+                            if h.lower() in pl.metadata or h in pl.metadata:
+                                row.append(pl.metadata[h])
+                            else:
+                                row.append("NA")
+                    out.write("{}".format(separator).join(map(str, row)) + "\n")
+        else:
+            raise IOError("Incorrect Object in list. Peaklist Object expected.")
+    else:
+        raise IOError("Incorrect Object. Peaklist Object expected.")
+
+    return

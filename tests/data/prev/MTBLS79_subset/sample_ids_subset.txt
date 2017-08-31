@@ -1,4 +1,0 @@
-sample_id	class
-batch04_S03_rep01_232_2_233_3_234	sheep
-batch04_QC16_rep01_244_2_245_3_246	QC
-batch04_B02_rep01_301_2_302_3_303	blank
