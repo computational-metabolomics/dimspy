@@ -31,10 +31,10 @@ def _evalv(vect):
 # peaklist portals
 def save_peaklist_as_txt(pkl, filename, *args, **kwargs):
     """
-    Saves a peaklist in plain text file.
+    Saves a peaklist object to a plain text file.
 
     :param pkl: the target peaklist object
-    :param filename: name of the file to export data
+    :param filename: path to a new text file
     :param args: arguments to be passed to PeakList.to_str
     :param kwargs: keyword arguments to be passed to PeakList.to_str
 
@@ -48,8 +48,8 @@ def load_peaklist_from_txt(filename, ID, delimiter=',', flag_names='auto', has_f
     """
     Loads a peaklist from plain text file.
 
-    :param filename: name of the file to import data
-    :param ID: ID of the loaded peaklist
+    :param filename: path to an exiting text-based peaklist file
+    :param ID: ID of the peaklist
     :param delimiter: delimiter of the text lines. Default = ',', i.e., CSV format
     :param flag_names: names of the flag attributes. Default = 'auto', indicating all the attribute names ends
         with "_flag" will be treated as flag attibute. Provide None to indicate no flag attributes
@@ -89,7 +89,7 @@ def save_peak_matrix_as_txt(pm, filename, *args, **kwargs):
     Saves a peak matrix in plain text file.
 
     :param pm: the target peak matrix object
-    :param filename: name of the file to export data
+    :param filename: path to a new text file
     :param args: arguments to be passed to PeakMatrix.to_str
     :param kwargs: keyword arguments to be passed to PeakMatrix.to_str
 
@@ -104,10 +104,10 @@ def load_peak_matrix_from_txt(filename, delimiter='\t', transposed=False, compre
     """
     Loads a peak matrix from plain text file.
 
-    :param filename: name of the file to import data
+    :param filename: path to an exiting text-based peak matrix file
     :param delimiter: delimiter of the text lines. Default = '\t', i.e., TSV format
-    :param transposed: whether the attribute matrix has been transposed during the export. Default = False
-    :param comprehensive: whether the comprehensive information has been included during the export. Default = False
+    :param transposed: whether to transpose the peak matrix or not. Default = False
+    :param comprehensive: whether the input is a 'comprehensive' or 'simple' version of the matrix. Default = False
     :rtype: PeakMatrix object
 
     """

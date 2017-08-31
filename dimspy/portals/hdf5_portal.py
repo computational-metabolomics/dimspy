@@ -65,7 +65,7 @@ def load_peaklists_from_hdf5(filename):
     """
     Loads a list of peaklist objects from a HDF5 file.
 
-    :param filename: path to an existing HDF5 file
+    :param filename: path to a HDF5 file
     :rtype: list
 
     The values in HDF5 data tables are automatically converted to their original dtypes before loading in the peaklist.

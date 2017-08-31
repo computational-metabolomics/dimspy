@@ -1,5 +1,14 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+
+"""
+
+.. moduleauthor:: Albert Zhou, Ralf Weber
+
+.. versionadded:: 1.0.0
+
+"""
+
 import sys
 import os
 import re
@@ -15,28 +24,51 @@ import ThermoFisher.CommonCore.RawFileReader as RawFileReader
 
 
 def mz_range_from_header(h):
+    """
+    Extract a list of headers / .
+    :rtype: list
+    """
     return [float(m) for m in re.findall(r'([\w\.-]+)-([\w\.-]+)', h)[0]]
 
 
 class ThermoRaw:
+    """
+    Extract a list of headers / .
+    :rtype: list
+    """
     def __init__(self, filename):
         self.run = RawFileReader.RawFileReaderAdapter.FileFactory(filename)
         self.run.SelectInstrument(Business.Device.MS, 1)
 
     def headers(self):
+        """
+        Extract a list of headers / .
+        :rtype: list
+        """
         headers = []
         for scan_id in range(self.run.RunHeaderEx.FirstSpectrum, self.run.RunHeaderEx.LastSpectrum + 1):
             headers.append(str(self.run.GetFilterForScanNumber(scan_id).Filter))
         return headers
 
     def headers_scan_ids(self):
+        """
+        Extract a particular scan from a *.raw file and return a PeakList objects
+        :rtype: dict
+        """
         sids = collections.OrderedDict()
         for scan_id in range(self.run.RunHeaderEx.FirstSpectrum, self.run.RunHeaderEx.LastSpectrum + 1):
             sids.setdefault(str(self.run.GetFilterForScanNumber(scan_id).Filter), []).append(scan_id)
         return sids
 
-    def peaklist(self, scan_id, mode_noise="noise_packets"):  # generator
-        assert mode_noise in ["noise_packets", "mean", "median", "mad"], "select a method that is available [noise_packets, mean, median, mad]"
+    def peaklist(self, scan_id, function_noise="noise_packets"):
+        """
+        Extract a particular scan from a *.raw file and return a PeakList objects
+
+        :param scan_ids:
+        :rtype: list
+        """
+        if function_noise not in ["noise_packets", "mean", "median", "mad"]:
+            raise ValueError("select a function that is available [noise_packets, mean, median, mad]")
 
         scan = self.run.GetCentroidStream(scan_id, False)
 
@@ -44,13 +76,13 @@ class ThermoRaw:
         mz_ibn.sort()
         mzs, ints, baseline, noise = zip(*mz_ibn)
 
-        if mode_noise == "noise_packets":
+        if function_noise == "noise_packets":
             snr = [p.SignalToNoise for p in scan.GetCentroids()]
-        elif mode_noise == "median":
+        elif function_noise == "median":
             snr = ints / np.median(ints)
-        elif mode_noise == "mean":
+        elif function_noise == "mean":
             snr = ints / np.mean(ints)
-        elif mode_noise == "mad":
+        elif function_noise == "mad":
             snr = ints / np.median(np.abs(np.subtract(ints, np.median(ints))))
 
         scan_stats = self.run.GetScanStatsForScanNumber(scan_id)
@@ -83,20 +115,22 @@ class ThermoRaw:
                       scan_time=scan_time,
                       tic=tic,
                       segment=segment,
-                      mode_noise=mode_noise)
+                      function_noise=function_noise)
 
         pl.add_attribute('snr', snr)
         pl.add_attribute('noise', noise)
         pl.add_attribute('baseline', baseline)
         return pl
 
-    def peaklists(self, scan_ids, mode_noise="noise_packets"):
-        assert mode_noise in ["noise_packets", "mean", "median", "mad"], "select a method that is available [noise_packets, mean, median, mad]"
-        return [self.peaklist(scan_id, mode_noise=mode_noise) for scan_id in scan_ids]
+    def peaklists(self, scan_ids, function_noise="noise_packets"):
+        """
+        Extract the scans from a *.raw file and return a list of PeakList objects
 
-    def close(self):
-        self.run.Close
+        :param scan_ids:
+        :rtype: list
 
-# testing
-if __name__ == '__main__':
-    TR = ThermoRaw("../../tests/data/raw/batch04_QC17_rep01_262.RAW")
+        """
+        if function_noise not in ["noise_packets", "mean", "median", "mad"]:
+            raise ValueError("select a function that is available [noise_packets, mean, median, mad]")
+
+        return [self.peaklist(scan_id, function_noise=function_noise) for scan_id in scan_ids]

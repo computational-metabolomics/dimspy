@@ -1,6 +1,14 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+"""
+
+.. moduleauthor:: Albert Zhou, Ralf Weber
+
+.. versionadded:: 1.0.0
+
+"""
+
 import os
 import collections
 import pymzml
@@ -31,9 +39,11 @@ class Mzml:
     def headers(self):
         return list(set([scan['MS:1000512'] for scan in self.run() if 'MS:1000512' in scan]))
 
-    def peaklist(self, scan_id, mode_noise="median"):
+    def peaklist(self, scan_id, function_noise="median"):
 
-        assert mode_noise in ["mean", "median", "mad"], "select a method that is available [mean, median, mad]"
+        if function_noise not in ["mean", "median", "mad"]:
+            raise ValueError("select a function that is available [mean, median, mad]")
+
         for scan in self.run():
             if scan["id"] == scan_id:
 
@@ -54,19 +64,21 @@ class Mzml:
                               ion_injection_time=ion_injection_time,
                               scan_time=scan_time,
                               tic=tic,
-                              mode_noise=mode_noise)
+                              function_noise=function_noise)
 
-                snr = np.divide(ints, scan.estimatedNoiseLevel(mode=mode_noise))
+                snr = np.divide(ints, scan.estimatedNoiseLevel(mode=function_noise))
                 pl.add_attribute('snr', snr)
                 return pl
         return None
 
-    def peaklists(self, scan_ids, mode="median"):  # generator
+    def peaklists(self, scan_ids, function_noise="median"):  # generator
 
-        assert mode in ["mean", "median", "mad"], "select a method that is available"
+        if function_noise not in ["mean", "median", "mad"]:
+            raise ValueError("select a function that is available [mean, median, mad]")
+
         # somehow i can not access the scans directly when run() uses an open archive object
         # print self.run()[2] fails ... strange
-        return [self.peaklist(scan["id"], mode) for scan in self.run() if scan["id"] in scan_ids]
+        return [self.peaklist(scan["id"], function_noise) for scan in self.run() if scan["id"] in scan_ids]
 
     def headers_scan_ids(self, n=None):
         h_sids = collections.OrderedDict()

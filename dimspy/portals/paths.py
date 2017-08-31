@@ -1,6 +1,14 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+"""
+
+.. moduleauthor:: Albert Zhou, Ralf Weber
+
+.. versionadded:: 1.0.0
+
+"""
+
 import os
 import numpy as np
 import zipfile
