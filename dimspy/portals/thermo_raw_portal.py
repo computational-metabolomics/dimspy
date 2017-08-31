@@ -99,14 +99,4 @@ class ThermoRaw:
 
 # testing
 if __name__ == '__main__':
-    TR = ThermoRaw("../../tests/data/raw/centroid.raw")
-    with open("../../tests/data/raw/centroid_scan_03.txt", "w") as out:
-        out.write(TR.peaklist(3).to_str("\t"))
-    with open("../../tests/data/raw/centroid_scan_43.txt", "w") as out:
-        out.write(TR.peaklist(43).to_str("\t"))
-
-    TR = ThermoRaw("../../tests/data/raw/profile.raw")
-    with open("../../tests/data/raw/profile_scan_03.txt", "w") as out:
-        out.write(TR.peaklist(3).to_str("\t"))
-    with open("../../tests/data/raw/profile_scan_43.txt", "w") as out:
-        out.write(TR.peaklist(43).to_str("\t"))
+    TR = ThermoRaw("../../tests/data/raw/batch04_QC17_rep01_262.RAW")
