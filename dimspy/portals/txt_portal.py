@@ -29,26 +29,26 @@ def _evalv(vect):
 
 
 # peaklist portals
-def save_peaklist_as_txt(pkl, file_name, *args, **kwargs):
+def save_peaklist_as_txt(pkl, filename, *args, **kwargs):
     """
     Saves a peaklist in plain text file.
 
     :param pkl: the target peaklist object
-    :param file_name: name of the file to export data
+    :param filename: name of the file to export data
     :param args: arguments to be passed to PeakList.to_str
     :param kwargs: keyword arguments to be passed to PeakList.to_str
 
     """
-    if os.path.isfile(file_name):
-        logging.warning('plain text file [%s] already exists, override' % file_name)
-    with open(file_name, 'w') as f: f.write(pkl.to_str(*args, **kwargs))
+    if os.path.isfile(filename):
+        logging.warning('plain text file [%s] already exists, override' % filename)
+    with open(filename, 'w') as f: f.write(pkl.to_str(*args, **kwargs))
 
 
-def load_peaklist_from_txt(file_name, ID, delimiter=',', flag_names='auto', has_flag_col=True):
+def load_peaklist_from_txt(filename, ID, delimiter=',', flag_names='auto', has_flag_col=True):
     """
     Loads a peaklist from plain text file.
 
-    :param file_name: name of the file to import data
+    :param filename: name of the file to import data
     :param ID: ID of the loaded peaklist
     :param delimiter: delimiter of the text lines. Default = ',', i.e., CSV format
     :param flag_names: names of the flag attributes. Default = 'auto', indicating all the attribute names ends
@@ -58,9 +58,9 @@ def load_peaklist_from_txt(file_name, ID, delimiter=',', flag_names='auto', has_
     :rtype: PeakList object
 
     """
-    if not os.path.isfile(file_name):
-        raise IOError('plain text file [%s] does not exist' % file_name)
-    with open(file_name, 'rU') as f:
+    if not os.path.isfile(filename):
+        raise IOError('plain text file [%s] does not exist' % filename)
+    with open(filename, 'rU') as f:
         rlns = filter(lambda x: x != '', map(strip, f.readlines()))
 
     dlns = map(lambda x: map(strip, x.split(delimiter)), rlns)
@@ -84,36 +84,36 @@ def load_peaklist_from_txt(file_name, ID, delimiter=',', flag_names='auto', has_
 
 
 # peak matrix portals
-def save_peak_matrix_as_txt(pm, file_name, *args, **kwargs):
+def save_peak_matrix_as_txt(pm, filename, *args, **kwargs):
     """
     Saves a peak matrix in plain text file.
 
     :param pm: the target peak matrix object
-    :param file_name: name of the file to export data
+    :param filename: name of the file to export data
     :param args: arguments to be passed to PeakMatrix.to_str
     :param kwargs: keyword arguments to be passed to PeakMatrix.to_str
 
     """
-    if os.path.isfile(file_name):
-        logging.warning('plain text file [%s] already exists, override' % file_name)
-    with open(file_name, 'w') as f:
+    if os.path.isfile(filename):
+        logging.warning('plain text file [%s] already exists, override' % filename)
+    with open(filename, 'w') as f:
         with unmask_all_peakmatrix(pm) as m: f.write(m.to_str(*args, **kwargs))
 
 
-def load_peak_matrix_from_txt(file_name, delimiter='\t', transposed=False, comprehensive=False):
+def load_peak_matrix_from_txt(filename, delimiter='\t', transposed=False, comprehensive=False):
     """
     Loads a peak matrix from plain text file.
 
-    :param file_name: name of the file to import data
+    :param filename: name of the file to import data
     :param delimiter: delimiter of the text lines. Default = '\t', i.e., TSV format
     :param transposed: whether the attribute matrix has been transposed during the export. Default = False
     :param comprehensive: whether the comprehensive information has been included during the export. Default = False
     :rtype: PeakMatrix object
 
     """
-    if not os.path.isfile(file_name):
-        raise IOError('plain text file [%s] does not exist' % file_name)
-    with open(file_name, 'rU') as f:
+    if not os.path.isfile(filename):
+        raise IOError('plain text file [%s] does not exist' % filename)
+    with open(filename, 'rU') as f:
         rlns = filter(lambda x: x != '', f.readlines())
 
     dlns = map(lambda x: map(strip, x.split(delimiter)), rlns)

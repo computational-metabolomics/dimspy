@@ -26,20 +26,20 @@ def _eval(v):
 
 
 # peaklists portals
-def save_peaklists_as_hdf5(pkls, file_name):
+def save_peaklists_as_hdf5(pkls, filename):
     """
     Saves multiple peaklists in HDF5 file.
 
     :param pkls: the target list of peaklist objects
-    :param file_name: name of the file to export data
+    :param filename: name of the file to export data
 
     To incorporate with different dtypes in the attribute matrix, this portal converts all the arribute values
     into fix-lenght strings for HDF5 data tables storage. The order of the peaklists will be retained.
 
     """
-    if os.path.isfile(file_name):
-        logging.warning('HDF5 database [%s] already exists and override' % file_name)
-    f = h5py.File(file_name, 'w')
+    if os.path.isfile(filename):
+        logging.warning('HDF5 database [%s] already exists and override' % filename)
+    f = h5py.File(filename, 'w')
 
     def _savepkl(i, pkl):
         if pkl.ID in f.keys():
@@ -61,22 +61,22 @@ def save_peaklists_as_hdf5(pkls, file_name):
     map(lambda x: _savepkl(*x), enumerate(pkls))
 
 
-def load_peaklists_from_hdf5(file_name):
+def load_peaklists_from_hdf5(filename):
 
     """
     Loads a list of peaklists from HDF5 file.
 
-    :param file_name: name of the file to import data
+    :param filename: name of the file to import data
     :rtype: list
 
     The values in HDF5 data tables are automatically converted to their original dtypes before loading in the the peaklist.
 
     """
-    if not os.path.isfile(file_name):
-        raise IOError('HDF5 database [%s] does not exist' % file_name)
-    if not h5py.is_hdf5(file_name):
-        raise IOError('input file [%s] is not a valid HDF5 database' % file_name)
-    f = h5py.File(file_name, 'r')
+    if not os.path.isfile(filename):
+        raise IOError('HDF5 database [%s] does not exist' % filename)
+    if not h5py.is_hdf5(filename):
+        raise IOError('input file [%s] is not a valid HDF5 database' % filename)
+    f = h5py.File(filename, 'r')
 
     def _loadpkl(ID):
         dset = f[ID]
@@ -103,19 +103,19 @@ def load_peaklists_from_hdf5(file_name):
 
 
 # peak matrix portals
-def save_peak_matrix_as_hdf5(pm, file_name):
+def save_peak_matrix_as_hdf5(pm, filename):
     """
     Saves a peak matrix in HDF5 file.
 
     :param pm: the target peak matrix object
-    :param file_name: name of the file to export data
+    :param filename: name of the file to export data
 
     The order of the attributes and flags will be retained.
 
     """
-    if os.path.isfile(file_name):
-        logging.warning('HDF5 database [%s] already exists and override' % file_name)
-    f = h5py.File(file_name, 'w')
+    if os.path.isfile(filename):
+        logging.warning('HDF5 database [%s] already exists and override' % filename)
+    f = h5py.File(filename, 'w')
 
     def _saveattr(attr):
         if attr in f.keys():
@@ -149,19 +149,19 @@ def save_peak_matrix_as_hdf5(pm, file_name):
             dset.attrs[fn] = pm.flag_values(fn)
 
 
-def load_peak_matrix_from_hdf5(file_name):
+def load_peak_matrix_from_hdf5(filename):
     """
     Loads a peak matrix from HDF5 file.
 
-    :param file_name: name of the file to import data
+    :param filename: name of the file to import data
     :rtype: PeakMatrix object
 
     """
-    if not os.path.isfile(file_name):
-        raise IOError('HDF5 database [%s] does not exist' % file_name)
-    if not h5py.is_hdf5(file_name):
-        raise IOError('input file [%s] is not a valid HDF5 database' % file_name)
-    f = h5py.File(file_name, 'r')
+    if not os.path.isfile(filename):
+        raise IOError('HDF5 database [%s] does not exist' % filename)
+    if not h5py.is_hdf5(filename):
+        raise IOError('input file [%s] is not a valid HDF5 database' % filename)
+    f = h5py.File(filename, 'r')
 
     if 'mz' not in f:
         raise IOError('input database missing crucial attribute [mz]')
