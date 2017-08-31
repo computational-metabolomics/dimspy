@@ -59,7 +59,7 @@ def load_peaklist_from_txt(file_name, ID, delimiter=',', flag_names='auto', has_
 
     """
     if not os.path.isfile(file_name):
-        raise IOError('plain text file [%s] not exists' % file_name)
+        raise IOError('plain text file [%s] does not exist' % file_name)
     with open(file_name, 'rU') as f:
         rlns = filter(lambda x: x != '', map(strip, f.readlines()))
 
@@ -112,7 +112,7 @@ def load_peak_matrix_from_txt(file_name, delimiter='\t', transposed=False, compr
 
     """
     if not os.path.isfile(file_name):
-        raise IOError('plain text file [%s] not exists' % file_name)
+        raise IOError('plain text file [%s] does not exist' % file_name)
     with open(file_name, 'rU') as f:
         rlns = filter(lambda x: x != '', f.readlines())
 

@@ -395,7 +395,7 @@ class PeakList(object):
         if attr_name in ('mz', 'intensity', 'flags'):
             raise AttributeError('cannot drop reserved attribute [%s]' % attr_name)
         if not self.has_attribute(attr_name):
-            raise AttributeError('attribute [%s] not exists' % attr_name)
+            raise AttributeError('attribute [%s] does not exist' % attr_name)
 
         self._dtable = self._dtable[list(filter(lambda x: x != attr_name, self.attributes))]
 
@@ -422,7 +422,7 @@ class PeakList(object):
         if attr_name == 'flags':
             raise AttributeError('cannot assign read-only attribute [flag]')
         if not self.has_attribute(attr_name):
-            raise AttributeError('attribute [%s] not exists' % attr_name)
+            raise AttributeError('attribute [%s] does not exist' % attr_name)
         if attr_name == 'mz' and not (unsorted_mz or self._is_ordered(attr_value)):
             raise ValueError('attribute [mz] not in ascending order')
         if attr_name != 'mz' and unsorted_mz == True:

@@ -73,7 +73,7 @@ def load_peaklists_from_hdf5(file_name):
 
     """
     if not os.path.isfile(file_name):
-        raise IOError('HDF5 database [%s] not exists' % file_name)
+        raise IOError('HDF5 database [%s] does not exist' % file_name)
     if not h5py.is_hdf5(file_name):
         raise IOError('input file [%s] is not a valid HDF5 database' % file_name)
     f = h5py.File(file_name, 'r')
@@ -158,7 +158,7 @@ def load_peak_matrix_from_hdf5(file_name):
 
     """
     if not os.path.isfile(file_name):
-        raise IOError('HDF5 database [%s] not exists' % file_name)
+        raise IOError('HDF5 database [%s] does not exist' % file_name)
     if not h5py.is_hdf5(file_name):
         raise IOError('input file [%s] is not a valid HDF5 database' % file_name)
     f = h5py.File(file_name, 'r')

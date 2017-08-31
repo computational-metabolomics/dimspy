@@ -530,7 +530,7 @@ class PeakMatrix(object):
         if flag_name == 'flags':
             raise KeyError('reserved flag name [flags] cannot be droppped')
         if not self._flags_dict.has_key(flag_name):
-            raise KeyError('flag name [%s] not exists' % flag_name)
+            raise KeyError('flag name [%s] does not exist' % flag_name)
         del self._flags_dict[flag_name]
 
     def flag_values(self, flag_name):
@@ -544,7 +544,7 @@ class PeakMatrix(object):
         if flag_name == 'flags':
             raise KeyError('use PeakMatrix.flags to access reserved flag name [flags]')
         if not self._flags_dict.has_key(flag_name):
-            raise KeyError('flag name [%s] not exists' % flag_name)
+            raise KeyError('flag name [%s] does not exist' % flag_name)
         return self._flags_dict[flag_name]
 
     # access

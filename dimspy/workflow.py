@@ -271,38 +271,44 @@ def sample_filter(peak_matrix, min_fraction, within=False, rsd=None, qc_label=No
     return peak_matrix
 
 
-def hdf5_to_txt(fname, path_out, attr_name="intensity", separator="\t", transpose=False, comprehensive=False):
+def hdf5_peak_matrix_to_txt(fname, path_out, attr_name="intensity", rsd_tags=(), separator="\t", transpose=False, comprehensive=False):
 
     if not os.path.isfile(fname):
-        raise IOError('HDF5 database [%s] not exists' % fname)
+        raise IOError('HDF5 database [%s] does not exist' % fname)
     if not h5py.is_hdf5(fname):
         raise IOError('input file [%s] is not a valid HDF5 database' % fname)
 
-    f = h5py.File(fname, 'r')
+    obj = hdf5_portal.load_peak_matrix_from_hdf5(fname)
+    with open(os.path.join(path_out), "w") as pk_out:
+        pk_out.write(obj.to_str(attr_name=attr_name, delimiter=separator, transpose=transpose, rsd_tags=rsd_tags, comprehensive=comprehensive))
+    return
 
-    if "mz" in f:
-        obj = hdf5_portal.load_peak_matrix_from_hdf5(fname)
-        with open(os.path.join(path_out), "w") as pk_out:
-            pk_out.write(obj.to_str(attr_name=attr_name, delimiter=separator, transpose=transpose, comprehensive=comprehensive))
+
+def hdf5_peaklists_to_txt(fname, path_out, separator="\t"):
+
+    if not os.path.isfile(fname):
+        raise IOError('HDF5 database [%s] does not exist' % fname)
+    if not h5py.is_hdf5(fname):
+        raise IOError('input file [%s] is not a valid HDF5 database' % fname)
+
+    if not os.path.isdir(path_out):
+        raise IOError("File or Directory does not exist:".format(path_out))
+
+    obj = hdf5_portal.load_peaklists_from_hdf5(fname)
+    if "#" in obj[0].ID:
+        fns = set([pl.ID.split("#")[0] for pl in obj])
+        sub_ids = [pl.ID.split("#")[1] for pl in obj]
+        for fn in fns:
+            with open(os.path.join(path_out, os.path.splitext(fn)[0] + ".txt"), "w") as pk_out:
+                for i, pl in enumerate(obj):
+                    if fn in pl.ID:
+                        pl.add_attribute("window", pl.full_shape[0] * [sub_ids[i]], flagged_only=False, on_index=3)
+                        pk_out.write(pl.to_str(delimiter=separator))
+                        pl.drop_attribute("window")
     else:
-        if not os.path.isdir(path_out):
-            raise IOError("File or Directory does not exist:".format(path_out))
-
-        obj = hdf5_portal.load_peaklists_from_hdf5(fname)
-        if "#" in obj[0].ID:
-            fns = set([pl.ID.split("#")[0] for pl in obj])
-            sub_ids = [pl.ID.split("#")[1] for pl in obj]
-            for fn in fns:
-                with open(os.path.join(path_out, os.path.splitext(fn)[0] + ".txt"), "w") as pk_out:
-                    for i, pl in enumerate(obj):
-                        if fn in pl.ID:
-                            pl.add_attribute("window", pl.full_shape[0] * [sub_ids[i]], flagged_only=False, on_index=3)
-                            pk_out.write(pl.to_str(delimiter=separator))
-                            pl.drop_attribute("window")
-        else:
-            for pl in obj:
-                with open(os.path.join(path_out, os.path.splitext(pl.ID)[0] + ".txt"), "w") as pk_out:
-                    pk_out.write(pl.to_str(delimiter=separator))
+        for pl in obj:
+            with open(os.path.join(path_out, os.path.splitext(pl.ID)[0] + ".txt"), "w") as pk_out:
+                pk_out.write(pl.to_str(delimiter=separator))
     return
 
 

@@ -139,6 +139,25 @@ class WorkflowTestCase(unittest.TestCase):
         pls_comp = load_peaklists_from_hdf5(to_test_data("MTBLS79__01_262_02_263.hdf5"))
         self.assertEqual([pl.to_str() for pl in pls_merged], [pl.to_str() for pl in pls_comp])
 
+    def test_hdf5_peaklists_to_txt(self):
+        hdf5_peaklists_to_txt(to_test_data("MTBLS79_mzml_triplicates.hdf5"), to_test_result(""), separator="\t")
+        for fn in ["batch04_QC17_rep01_262.txt", "batch04_QC17_rep02_263.txt", "batch04_QC17_rep03_264.txt"]:
+            with open(to_test_result(fn), "r") as test_result:
+                with open(to_test_data(fn), "r") as comp:
+                    self.assertEqual(test_result.read(), comp.read())
+
+    def test_hdf5_peak_matrix_to_txt(self):
+        hdf5_peak_matrix_to_txt(to_test_data("MTBLS79_mzml_peak_matrix.hdf5"), to_test_result("pm_mzml_triplicates_comprehensive.txt"),
+                                attr_name="intensity", rsd_tags=(), separator="\t", transpose=False, comprehensive=False)
+        hdf5_peak_matrix_to_txt(to_test_data("MTBLS79_mzml_peak_matrix.hdf5"), to_test_result("pm_mzml_triplicates.txt"),
+                                attr_name="intensity", rsd_tags=("QC",), separator="\t", transpose=False, comprehensive=True)
+        hdf5_peak_matrix_to_txt(to_test_data("MTBLS79_mzml_peak_matrix.hdf5"), to_test_result("pm_mzml_triplicates_T.txt"),
+                                attr_name="intensity", rsd_tags=("QC",), separator="\t", transpose=True, comprehensive=True)
+        for fn in ["pm_mzml_triplicates.txt", "pm_mzml_triplicates_comprehensive.txt", "pm_mzml_triplicates_T.txt"]:
+            with open(to_test_result(fn), "r") as test_result:
+                with open(to_test_data(fn), "r") as comp:
+                    self.assertEqual(test_result.read(), comp.read())
+
     def test_create_sample_list(self):
         pls = load_peaklists_from_hdf5(to_test_data("MTBLS79_mzml_triplicates.hdf5"))
         create_sample_list(pls, to_test_result("filelist_mzml_triplicates_test_result.txt"))
