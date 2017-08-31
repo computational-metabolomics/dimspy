@@ -19,8 +19,8 @@ def mz_range_from_header(h):
 
 
 class ThermoRaw:
-    def __init__(self, fname):
-        self.run = RawFileReader.RawFileReaderAdapter.FileFactory(fname)
+    def __init__(self, filename):
+        self.run = RawFileReader.RawFileReaderAdapter.FileFactory(filename)
         self.run.SelectInstrument(Business.Device.MS, 1)
 
     def headers(self):

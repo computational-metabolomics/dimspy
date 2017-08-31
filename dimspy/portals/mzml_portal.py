@@ -11,20 +11,20 @@ from dimspy.experiment import mz_range_from_header
 
 
 class Mzml:
-    def __init__(self, fname="", archive=None):
-        self.fname = fname
+    def __init__(self, filename="", archive=None):
+        self.filename = filename
         self.archive = archive
 
     def run(self):
-        assert self.fname.lower().endswith(".mzml") or self.fname.lower().endswith(".mzml.gz") or self.fname.lower().endswith(".zip"), "Incorrect format for mzml parser"
+        assert self.filename.lower().endswith(".mzml") or self.filename.lower().endswith(".mzml.gz") or self.filename.lower().endswith(".zip"), "Incorrect format for mzml parser"
         if self.archive is not None:
             assert zipfile.is_zipfile(self.archive), 'Input file [%s] is not a valid zip archive' % self.archive
             zf = zipfile.ZipFile(self.archive, 'r')
-            assert self.fname in zf.namelist(), "{} does not exist in zip file".format(self.fname)
-            return pymzml.run.Reader('', file_object=zf.open(self.fname))
-        elif self.fname.lower().endswith(".mzml") or self.fname.lower().endswith(".mzml.gz"):
-            assert os.path.isfile(self.fname), "{} does not exist".format(self.fname)
-            return pymzml.run.Reader(self.fname)
+            assert self.filename in zf.namelist(), "{} does not exist in zip file".format(self.filename)
+            return pymzml.run.Reader('', file_object=zf.open(self.filename))
+        elif self.filename.lower().endswith(".mzml") or self.filename.lower().endswith(".mzml.gz"):
+            assert os.path.isfile(self.filename), "{} does not exist".format(self.filename)
+            return pymzml.run.Reader(self.filename)
         else:
             return None
 

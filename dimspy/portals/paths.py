@@ -56,15 +56,15 @@ def check_paths(tsv, source):
         filenames = []
         if type(source) == list or type(source) == tuple:
             if isinstance(source[0], PeakList):
-                for fname in fm[fm.dtype.names[0]]:
-                    if fname in [pl.ID for pl in source]:
-                        filenames.append(fname)
+                for filename in fm[fm.dtype.names[0]]:
+                    if filename in [pl.ID for pl in source]:
+                        filenames.append(filename)
                     else:
-                        raise IOError("{} does not exist in list with Peaklist objects".format(fname))
+                        raise IOError("{} does not exist in list with Peaklist objects".format(filename))
             else:
-                for fname in fm[fm.dtype.names[0]]:
-                    if fname not in [os.path.basename(fn) for fn in source]:
-                        raise IOError("{} (row {}) does not exist in source provided".format(fname, list(fm[fm.dtype.names[0]]).index(fname)+1))
+                for filename in fm[fm.dtype.names[0]]:
+                    if filename not in [os.path.basename(fn) for fn in source]:
+                        raise IOError("{} (row {}) does not exist in source provided".format(filename, list(fm[fm.dtype.names[0]]).index(filename)+1))
                 for fn in source:
                     if os.path.isfile(fn):
                         filenames.append(fn)
