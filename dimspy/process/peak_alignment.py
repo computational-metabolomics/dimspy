@@ -6,7 +6,7 @@ Cluster and align peaklists into peak matrix.
 
 .. moduleauthor:: Albert Zhou, Ralf Weber
 
-.. versionadded:: 0.1
+.. versionadded:: 1.0.0
 
 """
 

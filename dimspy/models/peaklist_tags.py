@@ -6,7 +6,7 @@ The PeakList tags class.
 
 .. moduleauthor:: Albert Zhou, Ralf Weber
 
-.. versionadded:: 0.1
+.. versionadded:: 1.0.0
 
 .. warning::
     This class is designed for PeakList and PeakMatrix internal use only.

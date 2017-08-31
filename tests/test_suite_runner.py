@@ -4,7 +4,7 @@
 """
 test_suite_runner: provide functions to run test suites
 
-author(s): Albert
+author(s): Albert Zhou, Ralf Weber
 origin: 04-29-2017
 
 """
