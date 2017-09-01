@@ -260,10 +260,11 @@ def main():
                            help="Multiple HDF5 files that contain peaklists or peak matrix from one of the processing steps.")
     parser_mp.add_argument('-o', '--output',
                            required=True, type=str,
-                           help="HDF5 file to save the merged peaklist objects.")
+                           help="Directory (if using multiList column in filelist) or HDF5 file to write to.")
     parser_mp.add_argument('-l', '--filelist',
                            type=str, required=False,
-                           help="Tab-delimited file that list all the data files (*.raw or *.mzml) and meta data (filename, technical replicate, class, batch).")
+                           help="Tab-delimited file that list all the data files (*.raw or *.mzml) and meta data "
+                                "(filename, technical replicate, class, batch, multiList).")
 
     #################################
     # Get peaklists
@@ -441,8 +442,15 @@ def main():
         hdf5_portal.save_peak_matrix_as_hdf5(pm_sf, args.output)
 
     elif args.step == "merge-peaklists":
+
         pls_merged = workflow.merge_peaklists(source=args.input, filelist=args.filelist)
-        hdf5_portal.save_peaklists_as_hdf5(pls_merged, args.output)
+
+        # if a list of lists, save each as separate list of peaklists
+        if any(isinstance(l, list) for l in pls_merged):
+            for i in range(len(pls_merged)):
+                hdf5_portal.save_peaklists_as_hdf5(pls_merged[i], os.path.join(args.output, 'merged_{}.hdf5'.format(i)))
+        else:
+            hdf5_portal.save_peaklists_as_hdf5(pls_merged, args.output)
 
     elif args.step == "get-peaklists":
         pls = []

@@ -345,14 +345,14 @@ def merge_peaklists(source, filelist=None):
 
         if 'multi_list' in fl.keys():
             # make sure the peaklists are in the correct order (needs to be numpy array for this)
-            order_indx = np.argsort(fl['multi_list'])
-            nlists = np.array(fl['multi_list'])[order_indx]
+            order_indx = np.argsort(fl['multilist'])
+            nlists = np.array(fl['multilist'])[order_indx]
             pls_merged = np.array(pls_merged)[order_indx]
 
             # get the index of the different lists to join together
             join_indx = np.cumsum(np.unique(nlists, return_counts=True)[1])
 
-            # split them into a list of lists (don't need to last index as it will just make a en empty lists, thats
+            # split them into a list of lists (don't need the last index as it will just make a en empty lists, thats
             # why we use indxs[:-1].copy() )
             sublists = np.split(pls_merged, join_indx[:-1].copy())
 
