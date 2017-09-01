@@ -722,13 +722,13 @@ class PeakMatrix(object):
         pl.add_attribute('purity', self.purity[presids])
         return pl
 
-    def to_str(self, attr_name='intensity', delimiter='\t', sampleInRows=True, comprehensive=True, rsd_tags=()):
+    def to_str(self, attr_name='intensity', delimiter='\t', samples_in_rows=True, comprehensive=True, rsd_tags=()):
         """
         Exports the peak matrix to a string.
 
         :param attr_name: name of the attribute matrix for exporting. Default = 'intensity'
         :param delimiter: delimiter to separate the matrix. Default = '\t', i.e., TSV format
-        :param sampleInRows: whether or not the samples are stored in rows. Default = True
+        :param samples_in_rows: whether or not the samples are stored in rows. Default = True
         :param comprehensive: whether to include comprehensive info, e.g., mask, flags, present, rsd etc. Default = True
         :param rsd_tags: peaklist tags for RSD calculation. Default = (), indicating only the overall RSD is included
         :rtype: str
@@ -760,7 +760,7 @@ class PeakMatrix(object):
             dm = zip(*([prelst, ocrlst, puplst] + rsdmtx + [rsdlst] + flgmtx + [flglst] + zip(*dm)))
 
         lm = [hd] + zip(*dm)
-        return join(map(lambda x: join(x, delimiter), lm if sampleInRows else zip(*lm)), '\n')
+        return join(map(lambda x: join(x, delimiter), lm if samples_in_rows else zip(*lm)), '\n')
 
 
 # with statements

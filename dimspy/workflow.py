@@ -279,7 +279,7 @@ def sample_filter(peak_matrix, min_fraction, within=False, rsd=None, qc_label=No
     return peak_matrix
 
 
-def hdf5_peak_matrix_to_txt(filename, path_out, attr_name="intensity", rsd_tags=(), delimiter="\t", transpose=False, comprehensive=False):
+def hdf5_peak_matrix_to_txt(filename, path_out, attr_name="intensity", rsd_tags=(), delimiter="\t", samples_in_rows=True, comprehensive=False):
 
     if not os.path.isfile(filename):
         raise IOError('HDF5 database [%s] does not exist' % filename)
@@ -288,7 +288,7 @@ def hdf5_peak_matrix_to_txt(filename, path_out, attr_name="intensity", rsd_tags=
 
     obj = hdf5_portal.load_peak_matrix_from_hdf5(filename)
     with open(os.path.join(path_out), "w") as pk_out:
-        pk_out.write(obj.to_str(attr_name=attr_name, delimiter=delimiter, transpose=transpose, rsd_tags=rsd_tags, comprehensive=comprehensive))
+        pk_out.write(obj.to_str(attr_name=attr_name, delimiter=delimiter, samples_in_rows=samples_in_rows, rsd_tags=rsd_tags, comprehensive=comprehensive))
     return
 
 
