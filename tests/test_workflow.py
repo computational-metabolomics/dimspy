@@ -149,18 +149,28 @@ class WorkflowTestCase(unittest.TestCase):
     def test_hdf5_peak_matrix_to_txt(self):
         hdf5_peak_matrix_to_txt(to_test_data("MTBLS79_mzml_peak_matrix.hdf5"), to_test_result("pm_mzml_triplicates.txt"),
                                 attr_name="intensity", rsd_tags=(), delimiter="\t", samples_in_rows=True, comprehensive=False)
+        with open(to_test_result("pm_mzml_triplicates.txt"), "rU") as test_result:
+            with open(to_test_data("pm_mzml_triplicates_comprehensive.txt"), "rU") as comp:
+                self.assertEquals(test_result.readline().split("\t")[0:5],
+                                  ['m/z', '74.0166655257', '74.0198337519', '74.0200238089', '74.0202012645'])
+
         hdf5_peak_matrix_to_txt(to_test_data("MTBLS79_mzml_peak_matrix.hdf5"), to_test_result("pm_mzml_triplicates_comprehensive.txt"),
                                 attr_name="intensity", rsd_tags=("QC",), delimiter="\t", samples_in_rows=True, comprehensive=True)
+        with open(to_test_result("pm_mzml_triplicates_comprehensive.txt"), "rU") as test_result:
+            with open(to_test_data("pm_mzml_triplicates_comprehensive.txt"), "rU") as comp:
+                self.assertEquals(test_result.readline().split("\t")[0:5],
+                                  ["m/z", "missing values", "tags_class_label", "tags_untyped", "74.0166655257"])
+
         hdf5_peak_matrix_to_txt(to_test_data("MTBLS79_mzml_peak_matrix.hdf5"), to_test_result("pm_mzml_triplicates_comprehensive_T.txt"),
                                 attr_name="intensity", rsd_tags=("QC",), delimiter="\t", samples_in_rows=False, comprehensive=True)
-        for fn in ["pm_mzml_triplicates.txt", "pm_mzml_triplicates_comprehensive.txt", "pm_mzml_triplicates_comprehensive_T.txt"]:
-            with open(to_test_result(fn), "r") as test_result:
-                with open(to_test_data(fn), "r") as comp:
-                    self.assertEqual(test_result.read(), comp.read())
+        with open(to_test_result("pm_mzml_triplicates_comprehensive_T.txt"), "rU") as test_result:
+            with open(to_test_data("pm_mzml_triplicates_comprehensive_T.txt"), "rU") as comp:
+                self.assertEquals(test_result.readline().split("\t")[0:5],
+                                  ['m/z', 'present', 'occurrence', 'purity', 'rsd_QC'])
 
     def test_create_sample_list(self):
         pls = load_peaklists_from_hdf5(to_test_data("MTBLS79_mzml_triplicates.hdf5"))
         create_sample_list(pls, to_test_result("filelist_mzml_triplicates_test_result.txt"))
-        with open(to_test_result("filelist_mzml_triplicates_test_result.txt"), "r") as test_result:
-            with open(to_test_data("filelist_mzml_triplicates_comp.txt"), "r") as comp:
+        with open(to_test_result("filelist_mzml_triplicates_test_result.txt"), "rU") as test_result:
+            with open(to_test_data("filelist_mzml_triplicates_comp.txt"), "rU") as comp:
                 self.assertEqual(test_result.read(), comp.read())
