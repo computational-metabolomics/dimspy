@@ -34,7 +34,13 @@ def main():
           "Topic :: Utilities",
           "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
           "Operating System :: OS Independent",
-        ])
+        ],
+        entry_points={
+         'console_scripts': [
+             'dimspy = dimspy.__main__:main'
+         ]
+        }
+    )
 
 
 if __name__ == "__main__":
