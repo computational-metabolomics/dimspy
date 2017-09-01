@@ -271,7 +271,7 @@ def sample_filter(peak_matrix, min_fraction, within=False, rsd=None, qc_label=No
     return peak_matrix
 
 
-def hdf5_peak_matrix_to_txt(filename, path_out, attr_name="intensity", rsd_tags=(), separator="\t", transpose=False, comprehensive=False):
+def hdf5_peak_matrix_to_txt(filename, path_out, attr_name="intensity", rsd_tags=(), delimiter="\t", transpose=False, comprehensive=False):
 
     if not os.path.isfile(filename):
         raise IOError('HDF5 database [%s] does not exist' % filename)
@@ -280,11 +280,11 @@ def hdf5_peak_matrix_to_txt(filename, path_out, attr_name="intensity", rsd_tags=
 
     obj = hdf5_portal.load_peak_matrix_from_hdf5(filename)
     with open(os.path.join(path_out), "w") as pk_out:
-        pk_out.write(obj.to_str(attr_name=attr_name, delimiter=separator, transpose=transpose, rsd_tags=rsd_tags, comprehensive=comprehensive))
+        pk_out.write(obj.to_str(attr_name=attr_name, delimiter=delimiter, transpose=transpose, rsd_tags=rsd_tags, comprehensive=comprehensive))
     return
 
 
-def hdf5_peaklists_to_txt(filename, path_out, separator="\t"):
+def hdf5_peaklists_to_txt(filename, path_out, delimiter="\t"):
 
     if not os.path.isfile(filename):
         raise IOError('HDF5 database [%s] does not exist' % filename)
@@ -303,12 +303,12 @@ def hdf5_peaklists_to_txt(filename, path_out, separator="\t"):
                 for i, pl in enumerate(obj):
                     if fn in pl.ID:
                         pl.add_attribute("window", pl.full_shape[0] * [sub_ids[i]], flagged_only=False, on_index=3)
-                        pk_out.write(pl.to_str(delimiter=separator))
+                        pk_out.write(pl.to_str(delimiter=delimiter))
                         pl.drop_attribute("window")
     else:
         for pl in obj:
             with open(os.path.join(path_out, os.path.splitext(pl.ID)[0] + ".txt"), "w") as pk_out:
-                pk_out.write(pl.to_str(delimiter=separator))
+                pk_out.write(pl.to_str(delimiter=delimiter))
     return
 
 
@@ -376,7 +376,7 @@ def load_peaklists(source):
     return peaklists
 
 
-def create_sample_list(peaklists, path_out, separator="\t", qc_label="QC"):
+def create_sample_list(peaklists, path_out, delimiter="\t", qc_label="QC"):
     if isinstance(peaklists, list) or isinstance(peaklists, tuple):
         if isinstance(peaklists[0], PeakList):
             header = ["filename", "batch", "injectionOrder", "classLabel", "sampleType"]
@@ -388,7 +388,7 @@ def create_sample_list(peaklists, path_out, separator="\t", qc_label="QC"):
                     logging.warning("Metadata for '{}' not available.".format(str(h)))
 
             with open(path_out, "w") as out:
-                out.write("{}".format(separator).join(map(str, header)) + "\n")
+                out.write("{}".format(delimiter).join(map(str, header)) + "\n")
                 for pl in peaklists:
                     row = [pl.ID]
                     for h in header[1:]:
@@ -407,7 +407,7 @@ def create_sample_list(peaklists, path_out, separator="\t", qc_label="QC"):
                                 row.append(pl.metadata[h])
                             else:
                                 row.append("NA")
-                    out.write("{}".format(separator).join(map(str, row)) + "\n")
+                    out.write("{}".format(delimiter).join(map(str, row)) + "\n")
         else:
             raise IOError("Incorrect Object in list. Peaklist Object expected.")
     else:

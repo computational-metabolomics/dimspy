@@ -9,12 +9,12 @@ from portals import hdf5_portal
 from . import __version__
 
 
-def map_separator(separator):
+def map_delimiter(delimiter):
     seps = {"comma": ",", "tab": "\t"}
-    if separator in seps:
-        return seps[separator]
+    if delimiter in seps:
+        return seps[delimiter]
     else:
-        return separator
+        return delimiter
 
 
 def main():
@@ -51,7 +51,7 @@ def main():
 
     parser_ps.add_argument('-l', '--filelist',
                            type=str, required=False,
-                           help="Tab-separated file that include the name of the data files (*.raw or *.mzml) and meta data. "
+                           help="Tab-delimited file that include the name of the data files (*.raw or *.mzml) and meta data. "
                                 "Column names: filename, replicate, batch, injectionOrder, classLabel.")
 
     parser_ps.add_argument('-m', '--function-noise',
@@ -142,7 +142,7 @@ def main():
 
     parser_rf.add_argument('-l', '--filelist',
                            type=str, required=False,
-                           help="Tab-separated file that list all the data files (*.raw or *.mzml) and meta data (filename, technical replicate, class, batch).")
+                           help="Tab-delimited file that list all the data files (*.raw or *.mzml) and meta data (filename, technical replicate, class, batch).")
 
     parser_rf.add_argument('-b', '--block-size',
                            default=2000, type=int, required=False,
@@ -171,7 +171,7 @@ def main():
 
     parser_as.add_argument('-l', '--filelist',
                            type=str, required=False,
-                           help="Tab-separated file that include the name of the samples and meta data."
+                           help="Tab-delimited file that include the name of the samples and meta data."
                                 "Column names: filename, replicate, batch, injectionOrder, classLabel.")
 
     parser_as.add_argument('-b', '--block-size',
@@ -263,7 +263,7 @@ def main():
                            help="HDF5 file to save the merged peaklist objects.")
     parser_mp.add_argument('-l', '--filelist',
                            type=str, required=False,
-                           help="Tab-separated file that list all the data files (*.raw or *.mzml) and meta data (filename, technical replicate, class, batch).")
+                           help="Tab-delimited file that list all the data files (*.raw or *.mzml) and meta data (filename, technical replicate, class, batch).")
 
     #################################
     # Get peaklists
@@ -314,9 +314,9 @@ def main():
                              default=(),
                              help="Class label to select samples for RSD calculatons (e.g. QC).")
 
-    parser_hpmt.add_argument('-s', '--separator',
+    parser_hpmt.add_argument('-d', '--delimiter',
                              default="tab", choices=["tab", "comma"],
-                             help="The field separator character. Values on each line of the file are separated by this character.")
+                             help="Values on each line of the file are separated by this character.")
 
     parser_hpmt.add_argument('-t', '--transpose',
                              action='store_true', required=False,
@@ -338,9 +338,9 @@ def main():
                              type=str, required=True,
                              help="Directory to write to.")
 
-    parser_hplt.add_argument('-s', '--separator',
+    parser_hplt.add_argument('-d', '--delimiter',
                              default="tab", choices=["tab", "comma"],
-                             help="The field separator character. Values on each line of the file are separated by this character.")
+                             help="Values on each line of the file are separated by this character.")
 
     #################################
     # Create Sample List
@@ -354,9 +354,9 @@ def main():
                             type=str, required=True,
                             help="Text file to write to.")
 
-    parser_csl.add_argument('-s', '--separator',
+    parser_csl.add_argument('-d', '--delimiter',
                             default="tab", choices=["tab", "comma"],
-                            help="The field separator character. Values on each line of the file are separated by this character.")
+                            help="Values on each line of the file are separated by this character.")
 
     args = parser.parse_args()
     print args
@@ -477,7 +477,7 @@ def main():
         workflow.hdf5_peak_matrix_to_txt(args.input,
                                          path_out=args.output,
                                          attr_name=args.attribute_name,
-                                         separator=map_separator(args.separator),
+                                         delimiter=map_delimiter(args.delimiter),
                                          rsd_tags=args.class_label_rsd,
                                          transpose=args.transpose,
                                          comprehensive=args.comprehensive)
@@ -489,7 +489,7 @@ def main():
         if not h5py.is_hdf5(args.input):
             raise IOError('input file [%s] is not a valid HDF5 database' % args.input)
 
-        workflow.hdf5_peaklists_to_txt(args.input, path_out=args.output, separator=map_separator(args.separator))
+        workflow.hdf5_peaklists_to_txt(args.input, path_out=args.output, delimiter=map_delimiter(args.delimiter))
 
     elif args.step == "create-sample-list":
 
@@ -499,4 +499,4 @@ def main():
             raise IOError('input file [%s] is not a valid HDF5 database' % args.input)
 
         pls = hdf5_portal.load_peaklists_from_hdf5(args.input)
-        workflow.create_sample_list(pls, args.output, separator=map_separator(args.separator))
+        workflow.create_sample_list(pls, args.output, delimiter=map_delimiter(args.delimiter))

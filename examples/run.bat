@@ -36,9 +36,9 @@ python -m dimspy sample-filter^
 python -m dimspy hdf5-to-txt^
  --input tests/test_results/peaklists_rf.hdf5^
  --output tests/test_results^
- --separator tab
+ --delimiter tab
 
 python -m dimspy hdf5-to-txt^
  --input tests/test_results/pm_a_bf_sf.hdf5^
  --output tests/test_results/pm_a_bf_sf.txt^
- --separator tab
+ --delimiter tab

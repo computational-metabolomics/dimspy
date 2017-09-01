@@ -140,7 +140,7 @@ class WorkflowTestCase(unittest.TestCase):
         self.assertEqual([pl.to_str() for pl in pls_merged], [pl.to_str() for pl in pls_comp])
 
     def test_hdf5_peaklists_to_txt(self):
-        hdf5_peaklists_to_txt(to_test_data("MTBLS79_mzml_triplicates.hdf5"), to_test_result(""), separator="\t")
+        hdf5_peaklists_to_txt(to_test_data("MTBLS79_mzml_triplicates.hdf5"), to_test_result(""), delimiter="\t")
         for fn in ["batch04_QC17_rep01_262.txt", "batch04_QC17_rep02_263.txt", "batch04_QC17_rep03_264.txt"]:
             with open(to_test_result(fn), "r") as test_result:
                 with open(to_test_data(fn), "r") as comp:
@@ -148,11 +148,11 @@ class WorkflowTestCase(unittest.TestCase):
 
     def test_hdf5_peak_matrix_to_txt(self):
         hdf5_peak_matrix_to_txt(to_test_data("MTBLS79_mzml_peak_matrix.hdf5"), to_test_result("pm_mzml_triplicates_comprehensive.txt"),
-                                attr_name="intensity", rsd_tags=(), separator="\t", transpose=False, comprehensive=False)
+                                attr_name="intensity", rsd_tags=(), delimiter="\t", transpose=False, comprehensive=False)
         hdf5_peak_matrix_to_txt(to_test_data("MTBLS79_mzml_peak_matrix.hdf5"), to_test_result("pm_mzml_triplicates.txt"),
-                                attr_name="intensity", rsd_tags=("QC",), separator="\t", transpose=False, comprehensive=True)
+                                attr_name="intensity", rsd_tags=("QC",), delimiter="\t", transpose=False, comprehensive=True)
         hdf5_peak_matrix_to_txt(to_test_data("MTBLS79_mzml_peak_matrix.hdf5"), to_test_result("pm_mzml_triplicates_T.txt"),
-                                attr_name="intensity", rsd_tags=("QC",), separator="\t", transpose=True, comprehensive=True)
+                                attr_name="intensity", rsd_tags=("QC",), delimiter="\t", transpose=True, comprehensive=True)
         for fn in ["pm_mzml_triplicates.txt", "pm_mzml_triplicates_comprehensive.txt", "pm_mzml_triplicates_T.txt"]:
             with open(to_test_result(fn), "r") as test_result:
                 with open(to_test_data(fn), "r") as comp:
