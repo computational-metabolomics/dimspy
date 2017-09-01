@@ -703,6 +703,14 @@ class PeakMatrix(object):
         Only the "present" peaks will be included in the result peaklist. The new peaklist will only contain the
         following attributes: mz, intensity, present, fraction, rsd, occurence, and purity.
 
+        Use unmask statement to calculate the peaklist for a particular group of samples:
+
+        >>> with unmask_peakmatrix(pm, 'Sample') as m: pkl = m.to_peaklist('averaged_peaklist')
+
+        Or use mask statement to exclude a particular group of samples:
+
+        >>> with mask_peakmatrix(pm, 'QC') as m: pkl = m.to_peaklist('averaged_peaklist')
+
         """
         presids = self.present > 0 # presented peaks only
         if False in presids:
@@ -714,13 +722,13 @@ class PeakMatrix(object):
         pl.add_attribute('purity', self.purity[presids])
         return pl
 
-    def to_str(self, attr_name='intensity', delimiter='\t', transpose=False, comprehensive=True, rsd_tags=()):
+    def to_str(self, attr_name='intensity', delimiter='\t', sampleInRows=True, comprehensive=True, rsd_tags=()):
         """
         Exports the peak matrix to a string.
 
         :param attr_name: name of the attribute matrix for exporting. Default = 'intensity'
         :param delimiter: delimiter to separate the matrix. Default = '\t', i.e., TSV format
-        :param transpose: whether to transpose the matrix. Default = False
+        :param sampleInRows: whether or not the samples are stored in rows. Default = True
         :param comprehensive: whether to include comprehensive info, e.g., mask, flags, present, rsd etc. Default = True
         :param rsd_tags: peaklist tags for RSD calculation. Default = (), indicating only the overall RSD is included
         :rtype: str
@@ -752,7 +760,7 @@ class PeakMatrix(object):
             dm = zip(*([prelst, ocrlst, puplst] + rsdmtx + [rsdlst] + flgmtx + [flglst] + zip(*dm)))
 
         lm = [hd] + zip(*dm)
-        return join(map(lambda x: join(x, delimiter), zip(*lm) if transpose else lm), '\n')
+        return join(map(lambda x: join(x, delimiter), lm if sampleInRows else zip(*lm)), '\n')
 
 
 # with statements

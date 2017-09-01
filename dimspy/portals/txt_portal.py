@@ -100,14 +100,14 @@ def save_peak_matrix_as_txt(pm, filename, *args, **kwargs):
         with unmask_all_peakmatrix(pm) as m: f.write(m.to_str(*args, **kwargs))
 
 
-def load_peak_matrix_from_txt(filename, delimiter='\t', transposed=False, comprehensive=False):
+def load_peak_matrix_from_txt(filename, delimiter='\t', sampleInRows=True, comprehensive='auto'):
     """
     Loads a peak matrix from plain text file.
 
     :param filename: path to an exiting text-based peak matrix file
     :param delimiter: delimiter of the text lines. Default = '\t', i.e., TSV format
-    :param transposed: whether to transpose the peak matrix or not. Default = False
-    :param comprehensive: whether the input is a 'comprehensive' or 'simple' version of the matrix. Default = False
+    :param sampleInRows: whether or not the samples are stored in rows. Default = True
+    :param comprehensive: whether the input is a 'comprehensive' or 'simple' version of the matrix. Default = 'auto', i.e., auto detect
     :rtype: PeakMatrix object
 
     """
@@ -120,7 +120,8 @@ def load_peak_matrix_from_txt(filename, delimiter='\t', transposed=False, compre
     if any(map(lambda x: len(x) != len(dlns[0]), dlns[1:])):
         raise IOError('data matrix size not match')
 
-    if not transposed: dlns = zip(*dlns)
+    if sampleInRows: dlns = zip(*dlns)
+    if comprehensive == 'auto': comprehensive = ('flags' in dlns[0])
     rdlns = zip(*dlns)
     rsdrow = filter(lambda x: x[1][0] == 'rsd_all', enumerate(rdlns))[0][0]
 
