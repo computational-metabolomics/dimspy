@@ -3,7 +3,7 @@
 
 """
 
-.. moduleauthor:: Albert Zhou, Ralf Weber
+.. moduleauthor:: Ralf Weber, Albert Zhou
 
 .. versionadded:: 1.0.0
 
@@ -42,22 +42,22 @@ class ThermoRaw:
 
     def headers(self):
         """
-        Extract a list of headers / .
-        :rtype: list
-        """
-        headers = []
-        for scan_id in range(self.run.RunHeaderEx.FirstSpectrum, self.run.RunHeaderEx.LastSpectrum + 1):
-            headers.append(str(self.run.GetFilterForScanNumber(scan_id).Filter))
-        return headers
-
-    def headers_scan_ids(self):
-        """
         Extract a particular scan from a *.raw file and return a PeakList objects
         :rtype: dict
         """
         sids = collections.OrderedDict()
         for scan_id in range(self.run.RunHeaderEx.FirstSpectrum, self.run.RunHeaderEx.LastSpectrum + 1):
             sids.setdefault(str(self.run.GetFilterForScanNumber(scan_id).Filter), []).append(scan_id)
+        return sids
+
+    def scan_ids(self):
+        """
+        Extract a particular scan from a *.raw file and return a PeakList objects
+        :rtype: dict
+        """
+        sids = collections.OrderedDict()
+        for scan_id in range(self.run.RunHeaderEx.FirstSpectrum, self.run.RunHeaderEx.LastSpectrum + 1):
+            sids[scan_id] = str(self.run.GetFilterForScanNumber(scan_id).Filter)
         return sids
 
     def peaklist(self, scan_id, function_noise="noise_packets"):
@@ -106,15 +106,17 @@ class ThermoRaw:
         tic = scan_stats.TIC
         segment = scan_stats.SegmentNumber
         header = str(self.run.GetScanEventStringForScanNumber(scan_id))
+        ms_level = header.count("@") + 1
 
         pl = PeakList(ID=scan_id, mz=mzs, intensity=ints,
                       mz_range=mz_range_from_header(header),
                       header=header,
+                      ms_level=ms_level,
                       micro_scans=micro_scans,
+                      segment=segment,
                       ion_injection_time=ion_injection_time,
                       scan_time=scan_time,
                       tic=tic,
-                      segment=segment,
                       function_noise=function_noise)
 
         pl.add_attribute('snr', snr)
@@ -134,3 +136,12 @@ class ThermoRaw:
             raise ValueError("select a function that is available [noise_packets, mean, median, mad]")
 
         return [self.peaklist(scan_id, function_noise=function_noise) for scan_id in scan_ids]
+
+    def tics(self):
+        # somehow i can not access the scans directly when run() uses an open archive object
+        # print self.run()[2]
+        tics = []
+        for scan_id in range(self.run.RunHeaderEx.FirstSpectrum, self.run.RunHeaderEx.LastSpectrum + 1):
+            scan_stats = self.run.GetScanStatsForScanNumber(scan_id)
+            tics.append(scan_stats.TIC)
+        return tics

@@ -147,13 +147,13 @@ class WorkflowTestCase(unittest.TestCase):
                     self.assertEqual(test_result.read(), comp.read())
 
     def test_hdf5_peak_matrix_to_txt(self):
-        hdf5_peak_matrix_to_txt(to_test_data("MTBLS79_mzml_peak_matrix.hdf5"), to_test_result("pm_mzml_triplicates_comprehensive.txt"),
-                                attr_name="intensity", rsd_tags=(), delimiter="\t", transpose=False, comprehensive=False)
         hdf5_peak_matrix_to_txt(to_test_data("MTBLS79_mzml_peak_matrix.hdf5"), to_test_result("pm_mzml_triplicates.txt"),
+                                attr_name="intensity", rsd_tags=(), delimiter="\t", transpose=False, comprehensive=False)
+        hdf5_peak_matrix_to_txt(to_test_data("MTBLS79_mzml_peak_matrix.hdf5"), to_test_result("pm_mzml_triplicates_comprehensive.txt"),
                                 attr_name="intensity", rsd_tags=("QC",), delimiter="\t", transpose=False, comprehensive=True)
-        hdf5_peak_matrix_to_txt(to_test_data("MTBLS79_mzml_peak_matrix.hdf5"), to_test_result("pm_mzml_triplicates_T.txt"),
+        hdf5_peak_matrix_to_txt(to_test_data("MTBLS79_mzml_peak_matrix.hdf5"), to_test_result("pm_mzml_triplicates_comprehensive_T.txt"),
                                 attr_name="intensity", rsd_tags=("QC",), delimiter="\t", transpose=True, comprehensive=True)
-        for fn in ["pm_mzml_triplicates.txt", "pm_mzml_triplicates_comprehensive.txt", "pm_mzml_triplicates_T.txt"]:
+        for fn in ["pm_mzml_triplicates.txt", "pm_mzml_triplicates_comprehensive.txt", "pm_mzml_triplicates_comprehensive_T.txt"]:
             with open(to_test_result(fn), "r") as test_result:
                 with open(to_test_data(fn), "r") as comp:
                     self.assertEqual(test_result.read(), comp.read())

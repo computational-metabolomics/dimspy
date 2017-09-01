@@ -3,6 +3,7 @@
 
 import os
 import argparse
+import logging
 import h5py
 import workflow
 from portals import hdf5_portal
@@ -22,6 +23,9 @@ def main():
     print("Executing dimspy version %s." % __version__)
 
     parser = argparse.ArgumentParser(description='Python package to process DIMS data', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+
+    parser.add_argument('--debug', help='Print debug information', action='store_true')
+    parser.add_argument('--log', help='Log file to write to', default=None)
 
     subparsers = parser.add_subparsers(dest='step')
 
@@ -359,6 +363,9 @@ def main():
                             help="Values on each line of the file are separated by this character.")
 
     args = parser.parse_args()
+
+    logging.set_logging(level=(logging.DEBUG if args.debug else logging.INFO), logFile=args.log, logMode='w')
+
     print args
 
     if args.step == "process-scans":

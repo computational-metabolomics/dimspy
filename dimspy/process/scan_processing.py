@@ -52,7 +52,6 @@ def remove_edges(pls_sd):
 
 def read_scans(fn, source, function_noise, min_scans=1, filter_scan_events=None):
 
-    # assert os.path.isfile(fn), "File does not exist"
     if filter_scan_events is None:
         filter_scan_events = {}
     if not fn.lower().endswith(".mzml") and not fn.lower().endswith(".raw"):
@@ -76,7 +75,7 @@ def read_scans(fn, source, function_noise, min_scans=1, filter_scan_events=None)
         else:
             raise IOError("Incorrect format: {}".format(os.path.basename(fn)))
 
-    h_sids = run.headers_scan_ids()
+    h_sids = run.headers()
 
     if type(filter_scan_events) is dict and len(filter_scan_events) > 0:
 
@@ -116,8 +115,9 @@ def read_scans(fn, source, function_noise, min_scans=1, filter_scan_events=None)
         if len(sids) >= min_scans:
             scans[h] = run.peaklists(sids, function_noise)
         else:
-            logging.warning('Not enough scans for [{}] [{} < {}]. Event {} has been removed.'.format(h, len(scans), min_scans, h))
+            logging.warning('Not enough scans for [{}] [{} < {}]. Scan event {} has been removed.'.format(h, len(scans), min_scans, h))
     return scans
+
 
 def average_replicate_scans(ID, pls, ppm=2.0, min_fraction=0.8, rsd_thres=30.0, block_size=2000, ncpus=None):
 
@@ -143,7 +143,7 @@ def average_replicate_scans(ID, pls, ppm=2.0, min_fraction=0.8, rsd_thres=30.0, 
     pl_avg.add_attribute("snr", pm.attr_mean_vector('snr'), on_index=2)
     pl_avg.add_attribute("snr_flag", np.ones(pl_avg.full_size), flagged_only=False, is_flag=True)
 
-    pl_avg.add_attribute("rsd", pm.rsd(), on_index=5)
+    pl_avg.add_attribute("rsd", pm.rsd(flagged_only=False), on_index=5)
 
     if min_fraction is not None:
         pl_avg.add_attribute("fraction_flag", (pm.present / float(pm.shape[0])) >= min_fraction, flagged_only=False, is_flag=True)
