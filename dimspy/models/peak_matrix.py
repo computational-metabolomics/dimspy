@@ -703,6 +703,14 @@ class PeakMatrix(object):
         Only the "present" peaks will be included in the result peaklist. The new peaklist will only contain the
         following attributes: mz, intensity, present, fraction, rsd, occurence, and purity.
 
+        Use unmask statement to calculate the peaklist for a particular group of samples:
+
+        >>> with unmask_peakmatrix(pm, 'Sample') as m: pkl = m.to_peaklist('averaged_peaklist')
+
+        Or use mask statement to exclude a particular group of samples:
+
+        >>> with mask_peakmatrix(pm, 'QC') as m: pkl = m.to_peaklist('averaged_peaklist')
+
         """
         presids = self.present > 0 # presented peaks only
         if False in presids:
