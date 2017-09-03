@@ -142,8 +142,8 @@ class WorkflowTestCase(unittest.TestCase):
     def test_hdf5_peaklists_to_txt(self):
         hdf5_peaklists_to_txt(to_test_data("MTBLS79_mzml_triplicates.hdf5"), to_test_result(""), delimiter="\t")
         for fn in ["batch04_QC17_rep01_262.txt", "batch04_QC17_rep02_263.txt", "batch04_QC17_rep03_264.txt"]:
-            with open(to_test_result(fn), "r") as test_result:
-                with open(to_test_data(fn), "r") as comp:
+            with open(to_test_result(fn), "rU") as test_result:
+                with open(to_test_data(fn), "rU") as comp:
                     self.assertEqual(test_result.read(), comp.read())
 
     def test_hdf5_peak_matrix_to_txt(self):
