@@ -145,3 +145,13 @@ class ThermoRaw:
             scan_stats = self.run.GetScanStatsForScanNumber(scan_id)
             tics.append(scan_stats.TIC)
         return tics
+
+    def scan_dependents(self):
+        l = []
+        for scan_id in range(self.run.RunHeaderEx.FirstSpectrum, self.run.RunHeaderEx.LastSpectrum + 1):
+            gsd = self.run.GetScanDependents(scan_id, 5)
+            if gsd is not None:
+                for i, d in enumerate(gsd.ScanDependentDetailArray):
+                    print scan_id, self.run.GetFilterForScanNumber(scan_id).Filter, d.ScanIndex, d.FilterString
+                    l.append([scan_id, d.ScanIndex])
+        return l

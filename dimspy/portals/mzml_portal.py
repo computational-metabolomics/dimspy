@@ -25,7 +25,7 @@ class Mzml:
 
     def run(self):
         if not self.filename.lower().endswith(".mzml") and not self.filename.lower().endswith(".mzml.gz") and not self.filename.lower().endswith(".zip"):
-            raise IOError('Incorrect format for mzml parser')
+            raise IOError('Incorrect file format for mzML parser')
         if self.archive is not None:
             if not zipfile.is_zipfile(self.archive):
                 raise IOError('Input file [%s] is not a valid zip archive' % self.archive)
@@ -47,7 +47,7 @@ class Mzml:
                 h_sids.setdefault(scan['MS:1000512'], []).append(scan['id'])
         return h_sids
 
-    def scan_ids(self, n=None):
+    def scan_ids(self):
         h_sids = collections.OrderedDict()
         for scan in self.run():
             if 'MS:1000512' in scan:
@@ -101,6 +101,21 @@ class Mzml:
         # print self.run()[2]
         for scan in self.run():
             if scan["id"] == "TIC":
-                return zip(*scan.peaks)
-        return None
+                tics = zip(*scan.peaks)[1]
+                return tics
+        return
 
+    def scan_dependents(self):
+        l = []
+        for scan in self.run():
+            if type(scan["id"]) == int:
+                scan_id = scan["id"]
+                if "precursors" in scan.keys():
+                    spectrum_ref = None
+                    for element in scan.xmlTree:
+                        for e in element.items():
+                            if e[0] == 'spectrumRef':
+                                spectrum_ref = int(e[1].split("scan=")[1])
+                    if spectrum_ref is not None:
+                        l.append([spectrum_ref, scan_id])
+        return l
