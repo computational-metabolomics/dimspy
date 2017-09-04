@@ -139,6 +139,22 @@ class WorkflowTestCase(unittest.TestCase):
         pls_comp = load_peaklists_from_hdf5(to_test_data("MTBLS79__01_262_02_263.hdf5"))
         self.assertEqual([pl.to_str() for pl in pls_merged], [pl.to_str() for pl in pls_comp])
 
+    def test_merge_peaklist_multilist(self):
+        pls_01 = load_peaklists_from_hdf5(to_test_data("batch04_QC17_rep01_262.hdf5"))
+        pls_02 = load_peaklists_from_hdf5(to_test_data("batch04_QC17_rep02_263.hdf5"))
+        pls_03 = load_peaklists_from_hdf5(to_test_data("batch04_QC17_rep03_264.hdf5"))
+
+        merged_peaklists = merge_peaklists([pls_01, pls_02, pls_03], to_test_data("filelist_multi.txt"))
+
+        merged_comp_01 = load_peaklists_from_hdf5(to_test_data("merged_01.hdf5"))
+        merged_comp_02 = load_peaklists_from_hdf5(to_test_data("merged_02.hdf5"))
+
+        self.assertEqual(len([pl.to_str() for pl in merged_peaklists[0]]), 2)
+        self.assertEqual(len([pl.to_str() for pl in merged_peaklists[1]]), 1)
+        self.assertEqual([pl.to_str() for pl in merged_peaklists[0]], [pl.to_str() for pl in merged_comp_01])
+        self.assertEqual([pl.to_str() for pl in merged_peaklists[1]], [pl.to_str() for pl in merged_comp_02])
+
+
     def test_hdf5_peaklists_to_txt(self):
         hdf5_peaklists_to_txt(to_test_data("MTBLS79_mzml_triplicates.hdf5"), to_test_result(""), delimiter="\t")
         for fn in ["batch04_QC17_rep01_262.txt", "batch04_QC17_rep02_263.txt", "batch04_QC17_rep03_264.txt"]:
