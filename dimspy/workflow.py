@@ -343,7 +343,7 @@ def merge_peaklists(source, filelist=None):
         fl = check_metadata(filelist)
         pls_merged = update_metadata(pls_merged, fl)
 
-        if 'multi_list' in fl.keys():
+        if 'multilist' in fl.keys():
             # make sure the peaklists are in the correct order (needs to be numpy array for this)
             order_indx = np.argsort(fl['multilist'])
             nlists = np.array(fl['multilist'])[order_indx]

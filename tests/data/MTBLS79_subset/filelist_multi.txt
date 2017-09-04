@@ -1,0 +1,4 @@
+filename	class	multilist
+batch04_QC17_rep01_262.RAW	blank	1
+batch04_QC17_rep02_263.RAW	sample	1
+batch04_QC17_rep03_264.mzML	sample	2
