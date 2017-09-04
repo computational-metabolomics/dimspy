@@ -3,6 +3,7 @@
 
 import os
 import argparse
+import logging
 import h5py
 import workflow
 from portals import hdf5_portal
@@ -22,6 +23,9 @@ def main():
     print("Executing dimspy version %s." % __version__)
 
     parser = argparse.ArgumentParser(description='Python package to process DIMS data', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+
+    parser.add_argument('--debug', help='Print debug information', action='store_true')
+    parser.add_argument('--log', help='Log file to write to', default=None)
 
     subparsers = parser.add_subparsers(dest='step')
 
@@ -319,9 +323,9 @@ def main():
                              default="tab", choices=["tab", "comma"],
                              help="Values on each line of the file are separated by this character.")
 
-    parser_hpmt.add_argument('-t', '--transpose',
+    parser_hpmt.add_argument('-s', '--samples-in-rows',
                              action='store_true', required=False,
-                             help="Transpose peak matrix")
+                             help="Peak matrix with the samples present in the first column.")
 
     parser_hpmt.add_argument('-c', '--comprehensive',
                              action='store_true', required=False,
@@ -360,6 +364,9 @@ def main():
                             help="Values on each line of the file are separated by this character.")
 
     args = parser.parse_args()
+
+    logging.set_logging(level=(logging.DEBUG if args.debug else logging.INFO), logFile=args.log, logMode='w')
+
     print args
 
     if args.step == "process-scans":
@@ -487,7 +494,7 @@ def main():
                                          attr_name=args.attribute_name,
                                          delimiter=map_delimiter(args.delimiter),
                                          rsd_tags=args.class_label_rsd,
-                                         transpose=args.transpose,
+                                         samples_in_rows=args.samples_in_rows,
                                          comprehensive=args.comprehensive)
 
     elif args.step == "hdf5-pls-to-txt":

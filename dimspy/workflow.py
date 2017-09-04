@@ -162,22 +162,27 @@ def replicate_filter(source, ppm, replicates, min_peaks, rsd_thres=None, filelis
     if sum(counts) != len(peaklists):
         raise ValueError("Replicates incorrectly labeled")
 
-    if len([True for idxs_pls in idxs_peaklists if len(idxs_pls) >= replicates]) == len(idxs_peaklists):
-        print
-        print "All combinations (n={}) for each each set of replicates will be " \
-              "processed to calculate the most reproducible set".format(replicates)
-        print
-        print "rank\tID\tpeaks\tmedian_rsd({}/{})".format(replicates, replicates)
+    reps_each_sample = [len(idxs_pls) for idxs_pls in idxs_peaklists]
+    if min(reps_each_sample) >= replicates:
+
+        if max(reps_each_sample) > replicates:
+            print "All combinations (n={}) for each each set of replicates are " \
+                  "processed to calculate the most reproducible set".format(replicates)
+            print
+            print "set\tcombination\tname\tpeaks_filtered\tpeaks_{}_out_{}\tmedian_rsd_{}_out_{}".format(replicates, replicates, replicates, replicates)
+        else:
+            print "name\tpeaks_filtered\tpeaks_{}_out_of_{}\tmedian_rsd".format(replicates, replicates)
+
     else:
-        raise ValueError("Not enough (technical) replicates available for each sample {}.")
+        raise ValueError("Not enough (technical) replicates available for each sample.")
 
     pls_rep_filt = []
 
-    for idxs_pls in idxs_peaklists:
+    for idxs_pls in range(len(idxs_peaklists)):
 
         temp = []
 
-        for j, pls_comb in enumerate(combinations(peaklists[idxs_pls[0]:idxs_pls[-1] + 1], replicates)):
+        for j, pls_comb in enumerate(combinations(peaklists[idxs_peaklists[idxs_pls][0]:idxs_peaklists[idxs_pls][-1] + 1], replicates)):
 
             pm = align_peaks(pls_comb, ppm, block_size, ncpus=ncpus)
 
@@ -188,24 +193,27 @@ def replicate_filter(source, ppm, replicates, min_peaks, rsd_thres=None, filelis
             if "snr" in pm.attributes:
                 pl.add_attribute("snr", pm.attr_mean_vector("snr"), on_index=2)
 
-            pl.add_attribute("rsd", pm.rsd(), on_index=5)
+            pl.add_attribute("rsd", pm.rsd(flagged_only=False), on_index=5)
 
             pl.tags.add_tags(*pls_comb[0].tags.tag_of(None), **{t: pls_comb[0].tags.tag_of(t) for t in pls_comb[0].tags.tag_types})
             pl.add_attribute("present_flag", pm.present >= min_peaks, is_flag=True)
 
             if rsd_thres is not None:
-                rsd_flag = map(lambda x: not np.isnan(x) and x < rsd_thres, pl.rsd)
+                rsd_flag = map(lambda x: not np.isnan(x) and x < rsd_thres, pl.get_attribute("rsd", flagged_only=False))
                 pl.add_attribute("rsd_flag", rsd_flag, flagged_only=False, is_flag=True)
 
             pl_filt = filter_attr(pl.copy(), attr_name="present", min_threshold=replicates, flag_name="pres_rsd")
-            temp.append([pl, pl_filt.shape[0], np.median(pl.rsd)])
+            median_rsd = np.median(pl_filt.get_attribute("rsd", flagged_only=True))
+            temp.append([pl, pl.shape[0], pl_filt.shape[0], median_rsd])
 
-        temp.sort(key=operator.itemgetter(2, 1))
-        pls_rep_filt.append(temp[0][0])  # Most reproducible set of replicates
+        temp.sort(key=operator.itemgetter(1, 2), reverse=True)
+        pls_rep_filt.append(temp[0][0])
 
         for p in range(0, len(temp)):
-            print "{}\t{}\t{}\t{}\t".format(p+1, temp[p][0].ID, temp[p][1], temp[p][2])
-        print
+            if max(reps_each_sample) > replicates:
+                print "{}\t{}\t{}\t{}\t{}\t{}\t".format(idxs_pls+1, p+1, temp[p][0].ID, temp[p][1], temp[p][2], temp[p][3])
+            else:
+                print "{}\t{}\t{}\t{}\t".format(temp[p][0].ID, temp[p][1], temp[p][2], temp[p][3])
 
     return pls_rep_filt
 
@@ -271,7 +279,7 @@ def sample_filter(peak_matrix, min_fraction, within=False, rsd=None, qc_label=No
     return peak_matrix
 
 
-def hdf5_peak_matrix_to_txt(filename, path_out, attr_name="intensity", rsd_tags=(), delimiter="\t", transpose=False, comprehensive=False):
+def hdf5_peak_matrix_to_txt(filename, path_out, attr_name="intensity", rsd_tags=(), delimiter="\t", samples_in_rows=True, comprehensive=False):
 
     if not os.path.isfile(filename):
         raise IOError('HDF5 database [%s] does not exist' % filename)
@@ -280,7 +288,7 @@ def hdf5_peak_matrix_to_txt(filename, path_out, attr_name="intensity", rsd_tags=
 
     obj = hdf5_portal.load_peak_matrix_from_hdf5(filename)
     with open(os.path.join(path_out), "w") as pk_out:
-        pk_out.write(obj.to_str(attr_name=attr_name, delimiter=delimiter, transpose=transpose, rsd_tags=rsd_tags, comprehensive=comprehensive))
+        pk_out.write(obj.to_str(attr_name=attr_name, delimiter=delimiter, samples_in_rows=samples_in_rows, rsd_tags=rsd_tags, comprehensive=comprehensive))
     return
 
 
@@ -392,7 +400,7 @@ def load_peaklists(source):
     return peaklists
 
 
-def create_sample_list(peaklists, path_out, delimiter="\t", qc_label="QC"):
+def create_sample_list(peaklists, path_out, separator="\t", qc_label="QC"):
     if isinstance(peaklists, list) or isinstance(peaklists, tuple):
         if isinstance(peaklists[0], PeakList):
             header = ["filename", "batch", "injectionOrder", "classLabel", "sampleType"]
@@ -404,7 +412,7 @@ def create_sample_list(peaklists, path_out, delimiter="\t", qc_label="QC"):
                     logging.warning("Metadata for '{}' not available.".format(str(h)))
 
             with open(path_out, "w") as out:
-                out.write("{}".format(delimiter).join(map(str, header)) + "\n")
+                out.write("{}".format(separator).join(map(str, header)) + "\n")
                 for pl in peaklists:
                     row = [pl.ID]
                     for h in header[1:]:
@@ -423,7 +431,7 @@ def create_sample_list(peaklists, path_out, delimiter="\t", qc_label="QC"):
                                 row.append(pl.metadata[h])
                             else:
                                 row.append("NA")
-                    out.write("{}".format(delimiter).join(map(str, row)) + "\n")
+                    out.write("{}".format(separator).join(map(str, row)) + "\n")
         else:
             raise IOError("Incorrect Object in list. Peaklist Object expected.")
     else:
