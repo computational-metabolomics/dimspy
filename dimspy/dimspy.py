@@ -264,7 +264,7 @@ def main():
                            help="Multiple HDF5 files that contain peaklists or peak matrix from one of the processing steps.")
     parser_mp.add_argument('-o', '--output',
                            required=True, type=str,
-                           help="Directory (if using multiList column in filelist) or HDF5 file to write to.")
+                           help="Directory (if using multilist column in filelist) or HDF5 file to write to.")
     parser_mp.add_argument('-l', '--filelist',
                            type=str, required=False,
                            help="Tab-delimited file that list all the data files (*.raw or *.mzml) and meta data "
