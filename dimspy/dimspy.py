@@ -364,9 +364,7 @@ def main():
                             help="Values on each line of the file are separated by this character.")
 
     args = parser.parse_args()
-
-    logging.set_logging(level=(logging.DEBUG if args.debug else logging.INFO), logFile=args.log, logMode='w')
-
+    
     print args
 
     if args.step == "process-scans":
