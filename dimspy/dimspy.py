@@ -38,7 +38,7 @@ def main():
     parser_gp = subparsers.add_parser('get-peaklists', help='Get peaklists from a peak matrix object.')
     parser_gap = subparsers.add_parser('get-average-peaklist', help='Get an average peaklist from a peak matrix object.')
     parser_hpmt = subparsers.add_parser('hdf5-pm-to-txt', help='Write HDF5 output (peak matrix) to text format.')
-    parser_hplt = subparsers.add_parser('hdf5-pl-to-txt', help='Write HDF5 output (peak lists) to text format.')
+    parser_hplt = subparsers.add_parser('hdf5-pls-to-txt', help='Write HDF5 output (peak lists) to text format.')
     parser_csl = subparsers.add_parser('create-sample-list', help='Create a sample list from a peak matrix object or list of peaklist objects.')
 
     #################################
