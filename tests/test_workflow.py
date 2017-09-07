@@ -146,8 +146,11 @@ class WorkflowTestCase(unittest.TestCase):
 
         merged_peaklists = merge_peaklists([pls_01, pls_02, pls_03], to_test_data("filelist_multi.txt"))
 
-        merged_comp_01 = load_peaklists_from_hdf5(to_test_data("merged_01.hdf5"))
-        merged_comp_02 = load_peaklists_from_hdf5(to_test_data("merged_02.hdf5"))
+        # for i in range(len(merged_peaklists)):
+        #     hdf5_portal.save_peaklists_as_hdf5(merged_peaklists[i], 'merged_{}.hdf5'.format(i))
+
+        merged_comp_01 = load_peaklists_from_hdf5(to_test_data("merged_0.hdf5"))
+        merged_comp_02 = load_peaklists_from_hdf5(to_test_data("merged_1.hdf5"))
 
         self.assertEqual(len([pl.to_str() for pl in merged_peaklists[0]]), 2)
         self.assertEqual(len([pl.to_str() for pl in merged_peaklists[1]]), 1)
