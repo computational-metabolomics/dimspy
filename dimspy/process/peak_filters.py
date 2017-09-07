@@ -166,7 +166,7 @@ def filter_blank_peaks(pm, blank_label, fraction_threshold=1, fold_threshold=1, 
         raise ValueError('filter method must be mean, median or max')
 
     with unmask_peakmatrix(pm, blank_label) as m:
-        ints = m.intensity_matrix if m.shape[0] == 1 else \
+        ints = m.intensity_matrix[0] if m.shape[0] == 1 else \
                np.max(m.intensity_matrix, axis=0) if method == 'max' else \
                np.array(map(lambda x: getattr(np, method)(x), m.intensity_matrix.T))
         ints *= fold_threshold
