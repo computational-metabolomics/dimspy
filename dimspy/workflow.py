@@ -352,14 +352,15 @@ def merge_peaklists(source, filelist=None):
         pls_merged = update_metadata(pls_merged, fl)
 
         if 'multilist' in fl.keys():
-            # make sure the peaklists are in the correct order
-            order_indx = np.argsort(fl['multilist'])
-            nlists = np.array(fl['multilist'])[order_indx]
+            # make sure the peaklists are in the correct order (need to be sorted ascending)
+            order_indx = np.argsort([i.metadata['multilist'] for i in pls_merged])
+            nlists = [fl['multilist'][i] for i in order_indx]
             pls_merged = [pls_merged[i] for i in order_indx]
 
             # get the break points of the different lists to join together
             bp = list(np.cumsum(np.unique(nlists, return_counts=True)[1]))
             bp = bp[:-1]
+            print bp
 
             # break up the list into a list of lists
             pls_merged = partition(pls_merged, bp)
@@ -368,6 +369,7 @@ def merge_peaklists(source, filelist=None):
 
 
 def partition(alist, indices):
+    # return alist
     return [alist[i:j] for i, j in zip([0] + indices, indices + [None])]
 
 def load_peaklists(source):
