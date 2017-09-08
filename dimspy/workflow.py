@@ -41,7 +41,9 @@ def process_scans(source, function_noise, snr_thres, ppm, min_fraction=None, rsd
         filter_scan_events = {}
     if remove_mz_range is None:
         remove_mz_range = []
+
     filenames = check_paths(filelist, source)
+
     if len([fn for fn in filenames if not fn.lower().endswith(".mzml") or not fn.lower().endswith(".raw")]) == 0:
         raise IOError("Incorrect file format. Provide .mzML and .raw files")
 
@@ -103,7 +105,7 @@ def process_scans(source, function_noise, snr_thres, ppm, min_fraction=None, rsd
         if len(pls_avg) == 0:
             raise IOError("No peaks remaining after filtering. Remove MS data file / sample.")
 
-        if not skip_stitching:
+        if not skip_stitching or len(pls_scans.keys()) == 1:
             pl = join_peaklists(os.path.basename(filenames[i]), pls_avg)
             if "classLabel" in fl:
                 pl.tags.add_tags(class_label=fl["classLabel"][i])
