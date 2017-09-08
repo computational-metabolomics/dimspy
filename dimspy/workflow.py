@@ -360,7 +360,7 @@ def merge_peaklists(source, filelist=None):
             # get the break points of the different lists to join together
             bp = list(np.cumsum(np.unique(nlists, return_counts=True)[1]))
             bp = bp[:-1]
-            
+
             # break up the list into a list of lists
             pls_merged = partition(pls_merged, bp)
 
