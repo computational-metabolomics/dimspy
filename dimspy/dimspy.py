@@ -453,7 +453,16 @@ def main():
         # if a list of lists, save each as separate list of peaklists
         if any(isinstance(l, list) for l in pls_merged):
             for i in range(len(pls_merged)):
-                hdf5_portal.save_peaklists_as_hdf5(pls_merged[i], os.path.join(args.output, 'merged_{}.hdf5'.format(i)))
+                if 'multilistLabel' in pls_merged[i][0].metadata.keys():
+                    m_label = pls_merged[i][0].metadata['multilistLabel']
+                    hdf5_portal.save_peaklists_as_hdf5(pls_merged[i],
+                                                       os.path.join(args.output, '{}.hdf5'.format(m_label)))
+                else:
+                    m_nm = pls_merged[i][0].metadata['multilist']
+                    hdf5_portal.save_peaklists_as_hdf5(pls_merged[i],
+                                                       os.path.join(args.output,
+                                                                    'merged_peaklist_{:03}.hdf5'.format(m_nm)))
+
         else:
             hdf5_portal.save_peaklists_as_hdf5(pls_merged, args.output)
 
