@@ -403,7 +403,7 @@ def load_peaklists(source):
     return peaklists
 
 
-def create_sample_list(peaklists, path_out, separator="\t", qc_label="QC"):
+def create_sample_list(peaklists, path_out, delimiter="\t", qc_label="QC"):
     if isinstance(peaklists, list) or isinstance(peaklists, tuple):
         if isinstance(peaklists[0], PeakList):
             header = ["filename", "batch", "injectionOrder", "classLabel", "sampleType"]
@@ -415,7 +415,7 @@ def create_sample_list(peaklists, path_out, separator="\t", qc_label="QC"):
                     logging.warning("Metadata for '{}' not available.".format(str(h)))
 
             with open(path_out, "w") as out:
-                out.write("{}".format(separator).join(map(str, header)) + "\n")
+                out.write("{}".format(delimiter).join(map(str, header)) + "\n")
                 for pl in peaklists:
                     row = [pl.ID]
                     for h in header[1:]:
@@ -434,7 +434,7 @@ def create_sample_list(peaklists, path_out, separator="\t", qc_label="QC"):
                                 row.append(pl.metadata[h])
                             else:
                                 row.append("NA")
-                    out.write("{}".format(separator).join(map(str, row)) + "\n")
+                    out.write("{}".format(delimiter).join(map(str, row)) + "\n")
         else:
             raise IOError("Incorrect Object in list. Peaklist Object expected.")
     else:
