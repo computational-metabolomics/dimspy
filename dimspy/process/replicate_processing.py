@@ -123,13 +123,10 @@ def average_replicate_scans(ID, pls, ppm=2.0, min_fraction=0.8, rsd_thres=30.0, 
 
     emlst = np.array(map(lambda x: x.size == 0, pls))
     if np.sum(emlst) > 0:
-        logging.warning('droping empty peaklist(s) [%s]' % join(map(str, [p.ID for e, p in zip(emlst,  pls) if e]), ','))
+        logging.warning('No scan data available for [%s]' % join(map(str, [p.ID for e, p in zip(emlst,  pls) if e]), ','))
         pls = [p for e, p in zip(emlst,  pls) if not e]
 
     pm = align_peaks(pls, ppm=ppm, block_size=block_size, ncpus=ncpus)
-    # TODO: remove clusters that have a higher number of peaks than samples
-    # OR we can take the most accurate group of peaks and remove remaining peaks
-    # Better to first remove clusters of higher number of peaks and log it
 
     pl_avg = pm.to_peaklist(ID=ID)
     # meta data
@@ -153,6 +150,27 @@ def average_replicate_scans(ID, pls, ppm=2.0, min_fraction=0.8, rsd_thres=30.0, 
         rsd_flag = map(lambda x: not np.isnan(x) and x < rsd_thres, pl_avg.get_attribute("rsd", flagged_only=False))
         pl_avg.add_attribute("rsd_flag", rsd_flag, flagged_only=False, is_flag=True)
     return pl_avg
+
+
+def average_replicate_peaklists(pls, ppm, min_peaks, rsd_thres, block_size=2000, ncpus=None):
+
+    pm = align_peaks(pls, ppm, block_size, ncpus)
+
+    prefix = os.path.commonprefix([p.ID for p in pls])
+    merged_id = "{}{}".format(prefix, "_".join(map(str, [p.ID.replace(prefix, "").split(".")[0] for p in pls])))
+
+    pl = pm.to_peaklist(ID=merged_id)
+    if "snr" in pm.attributes:
+        pl.add_attribute("snr", pm.attr_mean_vector("snr"), on_index=2)
+
+    pl.add_attribute("rsd", pm.rsd(flagged_only=False), on_index=5)
+    pl.add_attribute("present_flag", pm.present >= min_peaks, is_flag=True)
+
+    if rsd_thres is not None:
+        rsd_flag = map(lambda x: not np.isnan(x) and x < rsd_thres, pl.get_attribute("rsd", flagged_only=False))
+        pl.add_attribute("rsd_flag", rsd_flag, flagged_only=False, is_flag=True)
+
+    return pl
 
 
 def join_peaklists(ID, pls):

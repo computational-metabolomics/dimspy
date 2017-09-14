@@ -3,9 +3,8 @@
 
 import os
 import argparse
-import logging
 import h5py
-import workflow
+import tools
 from portals import hdf5_portal
 from . import __version__
 
@@ -34,7 +33,9 @@ def main():
     parser_as = subparsers.add_parser('align-samples', help='Align peaklists across samples.')
     parser_bf = subparsers.add_parser('blank-filter', help='Filter peaks across samples that are present in the blank samples.')
     parser_sf = subparsers.add_parser('sample-filter', help='Filter peaks based on certain reproducibility and sample class criteria.')
-    parser_mp = subparsers.add_parser('merge-peaklists', help='Merge peaklists from multiple lists of peaklists or peak matrices.')
+    parser_rs = subparsers.add_parser('remove-samples', help='Remove sample(s) from a peak matrix object or list of peaklist objects.')
+    parser_mvsf = subparsers.add_parser('mv-sample-filter', help='Filter samples based on the percentage of missing values.')
+    parser_mp = subparsers.add_parser('merge-peaklists', help='Merge peaklists from multiple lists of peaklist or peak matrix objects.')
     parser_gp = subparsers.add_parser('get-peaklists', help='Get peaklists from a peak matrix object.')
     parser_gap = subparsers.add_parser('get-average-peaklist', help='Get an average peaklist from a peak matrix object.')
     parser_hpmt = subparsers.add_parser('hdf5-pm-to-txt', help='Write HDF5 output (peak matrix) to text format.')
@@ -51,7 +52,7 @@ def main():
 
     parser_ps.add_argument('-o', '--output',
                            type=str, required=True,
-                           help="HDF5 file to save the peaklist objects.")
+                           help="HDF5 file to save the peaklist objects to.")
 
     parser_ps.add_argument('-l', '--filelist',
                            type=str, required=False,
@@ -122,7 +123,7 @@ def main():
 
     parser_rf.add_argument('-o', '--output',
                            type=str, required=False,
-                           help="HDF5 file to save the peaklist objects.")
+                           help="HDF5 file to save the peaklist objects to.")
 
     parser_rf.add_argument('-p', '--ppm',
                            default=2.0, type=float, required=False,
@@ -167,7 +168,7 @@ def main():
 
     parser_as.add_argument('-o', '--output',
                            type=str, required=False,
-                           help="HDF5 file to save the peak matrix object.")
+                           help="HDF5 file to save the peak matrix object to.")
 
     parser_as.add_argument('-p', '--ppm',
                            default=2.0, type=float, required=False,
@@ -196,7 +197,7 @@ def main():
 
     parser_bf.add_argument('-o', '--output',
                            type=str, required=False,
-                           help="HDF5 file to save the peak matrix object.")
+                           help="HDF5 file to save the peak matrix object to.")
 
     parser_bf.add_argument('-l', '--blank-label',
                            default="blank", type=str, required=True,
@@ -233,7 +234,7 @@ def main():
 
     parser_sf.add_argument('-o', '--output',
                            type=str, required=True,
-                           help="HDF5 file to save the peak matrix object.")
+                           help="HDF5 file to save the peak matrix object to.")
 
     parser_sf.add_argument('-p', '--min-fraction',
                            type=float, required=False,
@@ -254,6 +255,38 @@ def main():
     parser_sf.add_argument('-a', '--class-labels',
                            type=str, required=False,
                            help="Tab delimited file with at least two columns named 'filename' and 'classLabel'.")
+
+    #################################
+    # Missing Values Sample filter
+    #################################
+
+    parser_mvsf.add_argument('-i', '--input',
+                           type=str, required=False,
+                           help="HDF5 file file that contains a peak matrix object.")
+
+    parser_mvsf.add_argument('-o', '--output',
+                           type=str, required=True,
+                           help="HDF5 file to save the peak matrix object to.")
+
+    parser_mvsf.add_argument('-m', '--max-fraction',
+                             type=float, required=False,
+                             help="Maximum percentage of missing values allowed across a sample.")
+
+    #################################
+    # Remove Samples
+    #################################
+
+    parser_rs.add_argument('-i', '--input',
+                           type=str, action='append', required=True, metavar='source',
+                           help="HDF5 file that contains a peak matrix object or list of peaklist objects from one of the processing steps.")
+
+    parser_rs.add_argument('-o', '--output',
+                           type=str, required=True,
+                           help="HDF5 file to save the peak matrix object or peaklist objects to.")
+
+    parser_ps.add_argument('-s', '--sample-names',
+                           type=str, action='append', required=True,
+                           help="Sample name(s)")
 
     #################################
     # Merge peaklists
@@ -280,7 +313,7 @@ def main():
 
     parser_gp.add_argument('-o', '--output',
                            required=True, type=str,
-                           help="HDF5 file to save the peaklist objects.")
+                           help="HDF5 file to save the peaklist objects to.")
 
     #########################################
     # Get average peaklist from peak matrix
@@ -290,13 +323,13 @@ def main():
                             type=str, required=True,
                             help="Single or Multiple HDF5 files that contain a peak matrix object from one of the processing steps.")
 
-    parser_gap.add_argument('-n', '--name-peaklist',
-                            required=True, type=str,
-                            help="HDF5 file to save the peaklist objects.")
-
     parser_gap.add_argument('-o', '--output',
                             required=True, type=str,
-                            help="HDF5 file to save the peaklist objects.")
+                            help="HDF5 file to save the peaklist object to.")
+
+    parser_gap.add_argument('-n', '--name-peaklist',
+                            required=True, type=str,
+                            help="Name of the peaklist.")
 
     #################################
     # HDF5 peak matrix to text
@@ -304,7 +337,7 @@ def main():
 
     parser_hpmt.add_argument('-i', '--input',
                              type=str, required=True,
-                             help="HDF5 file that contains peaklist objects or a peak matrix object from one of the processing steps.")
+                             help="HDF5 file that contains a peak matrix object from one of the processing steps.")
 
     parser_hpmt.add_argument('-o', '--output',
                              type=str, required=True,
@@ -387,68 +420,79 @@ def main():
         if len(args.input) == 1:  # Directory / zipfile / single filename
             args.input = args.input[0]
 
-        peaklists = workflow.process_scans(source=args.input,
-                                           function_noise=args.function_noise,
-                                           snr_thres=args.snr_threshold,
-                                           ppm=args.ppm,
-                                           min_fraction=args.min_fraction,
-                                           rsd_thres=args.rsd_threshold,
-                                           min_scans=args.min_scans,
-                                           filelist=args.filelist,
-                                           skip_stitching=args.skip_stitching,
-                                           ringing_thres=args.ringing_threshold,
-                                           filter_scan_events=filter_scan_events,
-                                           remove_mz_range=remove_mz_range,
-                                           block_size=args.block_size,
-                                           ncpus=args.ncpus)
+        peaklists = tools.process_scans(source=args.input,
+                                        function_noise=args.function_noise,
+                                        snr_thres=args.snr_threshold,
+                                        ppm=args.ppm,
+                                        min_fraction=args.min_fraction,
+                                        rsd_thres=args.rsd_threshold,
+                                        min_scans=args.min_scans,
+                                        filelist=args.filelist,
+                                        skip_stitching=args.skip_stitching,
+                                        ringing_thres=args.ringing_threshold,
+                                        filter_scan_events=filter_scan_events,
+                                        remove_mz_range=remove_mz_range,
+                                        block_size=args.block_size,
+                                        ncpus=args.ncpus)
         hdf5_portal.save_peaklists_as_hdf5(peaklists, args.output)
 
-    elif args.step == "mass-calibrate":
-        # TODO implement mass calibration
-        # TODO methods available in python
-        print args.method
-
     elif args.step == "replicate-filter":
-        peaklists_rf = workflow.replicate_filter(source=args.input,
-                                                 ppm=args.ppm,
-                                                 replicates=args.replicates,
-                                                 min_peaks=args.min_peak_present,
-                                                 rsd_thres=args.rsd_threshold,
-                                                 filelist=args.filelist,
-                                                 block_size=args.block_size,
-                                                 ncpus=args.ncpus)
+        peaklists_rf = tools.replicate_filter(source=args.input,
+                                              ppm=args.ppm,
+                                              replicates=args.replicates,
+                                              min_peaks=args.min_peak_present,
+                                              rsd_thres=args.rsd_threshold,
+                                              filelist=args.filelist,
+                                              block_size=args.block_size,
+                                              ncpus=args.ncpus)
         hdf5_portal.save_peaklists_as_hdf5(peaklists_rf, args.output)
 
     elif args.step == "align-samples":
-        pm = workflow.align_samples(source=args.input,
-                                    ppm=args.ppm,
-                                    filelist=args.filelist,
-                                    block_size=args.block_size,
-                                    ncpus=args.ncpus)
+        pm = tools.align_samples(source=args.input,
+                                 ppm=args.ppm,
+                                 filelist=args.filelist,
+                                 block_size=args.block_size,
+                                 ncpus=args.ncpus)
         hdf5_portal.save_peak_matrix_as_hdf5(pm, args.output)
 
     elif args.step == "blank-filter":
-        pm_bf = workflow.blank_filter(peak_matrix=args.input,
-                                      blank_label=args.blank_label,
-                                      min_fraction=args.min_fraction,
-                                      min_fold_change=args.min_fold_change,
-                                      function=args.function,
-                                      rm_samples=args.remove_blank_samples,
-                                      class_labels=args.class_labels)
+        pm_bf = tools.blank_filter(peak_matrix=args.input,
+                                   blank_label=args.blank_label,
+                                   min_fraction=args.min_fraction,
+                                   min_fold_change=args.min_fold_change,
+                                   function=args.function,
+                                   rm_samples=args.remove_blank_samples,
+                                   class_labels=args.class_labels)
         hdf5_portal.save_peak_matrix_as_hdf5(pm_bf, args.output)
 
     elif args.step == "sample-filter":
-        pm_sf = workflow.sample_filter(peak_matrix=args.input,
-                                       min_fraction=args.min_fraction,
-                                       within=args.within,
-                                       rsd=args.rsd_threshold,
-                                       qc_label=args.qc_label,
-                                       class_labels=args.class_labels)
+        pm_sf = tools.sample_filter(peak_matrix=args.input,
+                                    min_fraction=args.min_fraction,
+                                    within=args.within,
+                                    rsd=args.rsd_threshold,
+                                    qc_label=args.qc_label,
+                                    class_labels=args.class_labels)
         hdf5_portal.save_peak_matrix_as_hdf5(pm_sf, args.output)
+
+    elif args.step == "missing-values-sample-filter":
+        pm = hdf5_portal.load_peak_matrix_from_hdf5(args.input)
+        pm_mvf = tools.missing_valuessample_filter(pm, args.max_fraction)
+        hdf5_portal.save_peak_matrix_as_hdf5(pm_mvf, args.output)
+
+    elif args.step == "remove-samples":
+        f = h5py.File(args.input, 'r')
+        if "mz" in f:
+            pm = hdf5_portal.load_peak_matrix_from_hdf5(args.input)
+            pm_rs = tools.remove_samples(pm, args.sample_names)
+            hdf5_portal.save_peak_matrix_as_hdf5(pm_rs, args.output)
+        else:
+            pls = hdf5_portal.load_peaklists_from_hdf5(args.input)
+            pls_rs = tools.remove_samples(pls, args.sample_names)
+            hdf5_portal.save_peak_matrix_as_hdf5(pls_rs, args.output)
 
     elif args.step == "merge-peaklists":
 
-        pls_merged = workflow.merge_peaklists(source=args.input, filelist=args.filelist)
+        pls_merged = tools.merge_peaklists(source=args.input, filelist=args.filelist)
 
         # if a list of lists, save each as separate list of peaklists
         if any(isinstance(l, list) for l in pls_merged):
@@ -461,64 +505,33 @@ def main():
                     m_nm = pls_merged[i][0].metadata['multilist']
                     hdf5_portal.save_peaklists_as_hdf5(pls_merged[i],
                                                        os.path.join(args.output,
-                                                                    'merged_peaklist_{:03}.hdf5'.format(m_nm)))
-
+                                                       'merged_peaklist_{:03}.hdf5'.format(m_nm)))
         else:
             hdf5_portal.save_peaklists_as_hdf5(pls_merged, args.output)
 
     elif args.step == "get-peaklists":
         pls = []
         for s in args.input:
-
-            if not os.path.isfile(s):
-                raise OSError('HDF5 database [{}] does not exist'.format(s))
-            if not h5py.is_hdf5(s):
-                raise OSError('input file [{}] is not a valid HDF5 database'.format(s))
-
             pm = hdf5_portal.load_peak_matrix_from_hdf5(s)
             pls.extend(pm.extract_peaklists())
         hdf5_portal.save_peaklists_as_hdf5(pls, args.output)
 
     elif args.step == "get-average-peaklist":
-
-        if not os.path.isfile(args.input):
-            raise OSError('HDF5 database [{}] does not exist'.format(args.input))
-        if not h5py.is_hdf5(args.input):
-            raise OSError('input file [{}] is not a valid HDF5 database'.format(args.input))
-
         pls = [hdf5_portal.load_peak_matrix_from_hdf5(args.input).to_peaklist(ID=args.name_peaklist)]
         hdf5_portal.save_peaklists_as_hdf5(pls, args.output)
 
     elif args.step == "hdf5-pm-to-txt":
-
-        if not os.path.isfile(args.input):
-            raise IOError('HDF5 database [%s] does not exist' % args.input)
-        if not h5py.is_hdf5(args.input):
-            raise IOError('input file [%s] is not a valid HDF5 database' % args.input)
-
-        workflow.hdf5_peak_matrix_to_txt(args.input,
-                                         path_out=args.output,
-                                         attr_name=args.attribute_name,
-                                         delimiter=map_delimiter(args.delimiter),
-                                         rsd_tags=args.class_label_rsd,
-                                         samples_in_rows=args.samples_in_rows,
-                                         comprehensive=args.comprehensive)
+        tools.hdf5_peak_matrix_to_txt(args.input,
+                                      path_out=args.output,
+                                      attr_name=args.attribute_name,
+                                      delimiter=map_delimiter(args.delimiter),
+                                      rsd_tags=args.class_label_rsd,
+                                      samples_in_rows=args.samples_in_rows,
+                                      comprehensive=args.comprehensive)
 
     elif args.step == "hdf5-pls-to-txt":
-
-        if not os.path.isfile(args.input):
-            raise IOError('HDF5 database [%s] does not exist' % args.input)
-        if not h5py.is_hdf5(args.input):
-            raise IOError('input file [%s] is not a valid HDF5 database' % args.input)
-
-        workflow.hdf5_peaklists_to_txt(args.input, path_out=args.output, delimiter=map_delimiter(args.delimiter))
+        tools.hdf5_peaklists_to_txt(args.input, path_out=args.output, delimiter=map_delimiter(args.delimiter))
 
     elif args.step == "create-sample-list":
-
-        if not os.path.isfile(args.input):
-            raise IOError('HDF5 database [%s] does not exist' % args.input)
-        if not h5py.is_hdf5(args.input):
-            raise IOError('input file [%s] is not a valid HDF5 database' % args.input)
-
         pls = hdf5_portal.load_peaklists_from_hdf5(args.input)
-        workflow.create_sample_list(pls, args.output, delimiter=map_delimiter(args.delimiter))
+        tools.create_sample_list(pls, args.output, delimiter=map_delimiter(args.delimiter))

@@ -3,6 +3,7 @@
 
 
 import os
+import copy
 import logging
 import operator
 import collections
@@ -28,10 +29,11 @@ from process.peak_filters import filter_rsd
 from process.peak_filters import filter_mz_ranges
 from process.peak_filters import filter_attr
 from process.peak_filters import filter_ringing
-from process.scan_processing import average_replicate_scans
-from process.scan_processing import join_peaklists
-from process.scan_processing import read_scans
-from process.scan_processing import remove_edges
+from process.replicate_processing import average_replicate_scans
+from process.replicate_processing import average_replicate_peaklists
+from process.replicate_processing import join_peaklists
+from process.replicate_processing import read_scans
+from process.replicate_processing import remove_edges
 
 
 def process_scans(source, function_noise, snr_thres, ppm, min_fraction=None, rsd_thres=None, min_scans=1, filelist=None,
@@ -99,44 +101,38 @@ def process_scans(source, function_noise, snr_thres, ppm, min_fraction=None, rsd
                     pls_avg.append(pl_avg)
                     print "{}\t{}\t{}".format(h, pl_avg.shape[0], np.nanmedian(pl_avg.rsd))
             else:
-                logging.warning("No scan data available for {}".format(h))
                 print "{}\t{}\t{}".format(h, 0, "na")
-        
+                logging.warning("No scan data available for {}".format(h))
+
         if len(pls_avg) == 0:
-            raise IOError("No peaks remaining after filtering. Remove MS data file / sample.")
+            raise IOError("No peaks remaining after filtering. Remove file from Study (filelist).")
 
         if not skip_stitching or len(pls_scans.keys()) == 1:
             pl = join_peaklists(os.path.basename(filenames[i]), pls_avg)
-            if "classLabel" in fl:
-                pl.tags.add_tags(class_label=fl["classLabel"][i])
-            if "batch" in fl:
-                pl.tags.add_tags(batch=fl["batch"][i])
-            for k in fl.keys():
-                pl.metadata[k] = fl[k][i]
-            pls.append(pl)
+            pl = update_metadata([pl], fl)
+            pls.extend(pl)
         else:
             for pl in pls_avg:
+                pl = update_metadata([pl], fl)
                 pl = join_peaklists("{}#{}".format(os.path.basename(filenames[i]), pl.metadata["header"][0]), [pl])
-                for k in fl.keys():
-                    pl.metadata[k] = fl[k][i]
-                pls.append(pl)
+                pls.extend(pl)
     return pls
 
 
 # placeholder (synonym)
-def stitch(source, function_noise, snr_thres, ppm, min_fraction=None, rsd_thres=None, min_scans=1, filelist=None,
-           skip_stitching=False, remove_mz_range=None, ringing_thres=None, filter_scan_events=None, block_size=2000, ncpus=None):
+def sim_stitch(source, function_noise, snr_thres, ppm, min_fraction=None, rsd_thres=None, min_scans=1, filelist=None,
+                  skip_stitching=False, remove_mz_range=None, ringing_thres=None, filter_scan_events=None, block_size=2000, ncpus=None):
 
     if filter_scan_events is None:
         filter_scan_events = {}
     if remove_mz_range is None:
         remove_mz_range = []
 
-    return process_scans(source, function_noise, snr_thres, min_scans, ppm, min_fraction, rsd_thres, filelist,
-                         skip_stitching, remove_mz_range, ringing_thres, filter_scan_events, block_size, ncpus)
+    return process_scans(source, function_noise, snr_thres, ppm, min_fraction, rsd_thres, min_scans, filelist,
+                  skip_stitching, remove_mz_range, ringing_thres, filter_scan_events, block_size, ncpus)
 
 
-def replicate_filter(source, ppm, replicates, min_peaks, rsd_thres=None, filelist=None, block_size=2000, ncpus=None):
+def replicate_filter(source, ppm, replicates, min_peaks, rsd_thres=None, quality_logfile=None, filelist=None, block_size=2000, ncpus=None):
 
     if replicates < min_peaks:
         raise IOError("Provide realistic values for the number of replicates and minimum number of peaks present (min_peaks)")
@@ -154,6 +150,9 @@ def replicate_filter(source, ppm, replicates, min_peaks, rsd_thres=None, filelis
     if not hasattr(peaklists[0].metadata, "replicate"):
         raise IOError("Provide a filelist and assign replicate numbers (columnname:replicate) to each filename/sample")
 
+    if quality_logfile is not None:
+        out = open(quality_logfile, "w")
+
     idxs_peaklists = idxs_reps_from_filelist([pl.metadata.replicate for pl in peaklists])
     unique, counts = np.unique([pl.metadata.replicate for pl in peaklists], return_counts=True)
 
@@ -165,57 +164,77 @@ def replicate_filter(source, ppm, replicates, min_peaks, rsd_thres=None, filelis
         raise ValueError("Replicates incorrectly labeled")
 
     reps_each_sample = [len(idxs_pls) for idxs_pls in idxs_peaklists]
-    if min(reps_each_sample) >= replicates:
-
-        if max(reps_each_sample) > replicates:
-            print "All combinations (n={}) for each each set of replicates are " \
-                  "processed to calculate the most reproducible set".format(replicates)
-            print
-            print "set\tcombination\tname\tpeaks_filtered\tpeaks_{}_out_{}\tmedian_rsd_{}_out_{}".format(replicates, replicates, replicates, replicates)
-        else:
-            print "name\tpeaks_filtered\tpeaks_{}_out_of_{}\tmedian_rsd".format(replicates, replicates)
-
-    else:
+    if min(reps_each_sample) < replicates:
         raise ValueError("Not enough (technical) replicates available for each sample.")
 
-    pls_rep_filt = []
+    if max(reps_each_sample) > replicates:
+        print "NOTE: All combinations (n={}) for each each set of replicates are " \
+              "processed to calculate the most reproducible set.".format(replicates)
+        if quality_logfile is not None:
+            if max(reps_each_sample) > replicates:
+                out.write("set\trank\tname\tpeak_count\tpeak_count_{}_out_{}\tmedian_rsd_{}_out_{}\tscore\n".format(replicates, replicates, replicates, replicates))
+            else:
+                out.write("name\tpeak_count\tpeak_count_{}_out_of_{}\tmedian_rsd_{}_out_{}\n".format(replicates, replicates, replicates, replicates))
 
+    pls_rep_filt = []
     for idxs_pls in range(len(idxs_peaklists)):
 
         temp = []
+        max_peak_count, max_peak_count_present = 0, 0
 
-        for j, pls_comb in enumerate(combinations(peaklists[idxs_peaklists[idxs_pls][0]:idxs_peaklists[idxs_pls][-1] + 1], replicates)):
+        for pls_comb in combinations(peaklists[idxs_peaklists[idxs_pls][0]:idxs_peaklists[idxs_pls][-1] + 1], replicates):
 
-            pm = align_peaks(pls_comb, ppm, block_size, ncpus=ncpus)
+            pl = average_replicate_peaklists(pls_comb, ppm, min_peaks, rsd_thres, block_size=2000, ncpus=None)
 
-            prefix = os.path.commonprefix([p.ID for p in pls_comb])
-            merged_id = "{}{}".format(prefix, "_".join(map(str, [p.ID.replace(prefix, "").split(".")[0] for p in pls_comb])))
-
-            pl = pm.to_peaklist(ID=merged_id)
-            if "snr" in pm.attributes:
-                pl.add_attribute("snr", pm.attr_mean_vector("snr"), on_index=2)
-
-            pl.add_attribute("rsd", pm.rsd(flagged_only=False), on_index=5)
-
-            pl.tags.add_tags(*pls_comb[0].tags.tag_of(None), **{t: pls_comb[0].tags.tag_of(t) for t in pls_comb[0].tags.tag_types})
-            pl.add_attribute("present_flag", pm.present >= min_peaks, is_flag=True)
-
-            if rsd_thres is not None:
-                rsd_flag = map(lambda x: not np.isnan(x) and x < rsd_thres, pl.get_attribute("rsd", flagged_only=False))
-                pl.add_attribute("rsd_flag", rsd_flag, flagged_only=False, is_flag=True)
+            if hasattr(pls_comb[0].metadata, "injectionOrder"):
+                pl.metadata["injectionOrder"] = pls_comb[0].metadata["injectionOrder"]
+            pl.metadata["replicate"] = [_pl.metadata["replicate"] for _pl in pls_comb]
+            pl.tags.add_tags(*pls_comb[0].tags.tag_of(None),
+                             **{t: pls_comb[0].tags.tag_of(t) for t in pls_comb[0].tags.tag_types})
 
             pl_filt = filter_attr(pl.copy(), attr_name="present", min_threshold=replicates, flag_name="pres_rsd")
             median_rsd = np.median(pl_filt.get_attribute("rsd", flagged_only=True))
+
             temp.append([pl, pl.shape[0], pl_filt.shape[0], median_rsd])
 
-        temp.sort(key=operator.itemgetter(1, 2), reverse=True)
+            if pl_filt.shape[0] > max_peak_count_present:
+                max_peak_count_present = pl_filt.shape[0]
+
+        # find the RSD category for the median RDS
+        bins = np.array(range(0, 55, 5))
+        rsd_scores = [0.1 * b for b in reversed(range(len(bins)))]
+        for i, comb in enumerate(temp):
+
+            if np.isnan(comb[3]):
+                rsd_score = 0.0
+            else:
+                inds = np.digitize([comb[3]], bins)
+                rsd_score = rsd_scores[inds[0]-1]
+
+            # score 1: peak count / peak count present in n-out-n (e.g. 3-out-of-3)
+            # score 2: peak count present in n-out-n (e.g. 3-out-of-3) / MAX peak count present in n-out-n across replicates
+            # score 3: RSD categories (0-5 (score=1.0), 5-10 (score=0.9), 10-15 (score=0.8), etc)
+            scores = [comb[2]/float(comb[1]), comb[2]/float(max_peak_count_present), rsd_score]
+            if np.isnan(sum(scores)):
+                scores.append(0)
+            else:
+                scores.append(sum(scores) / 3.0)
+            temp[i].extend(scores)
+
+        if sum([comb[-1] for comb in temp]) == 0.0:
+            logging.warning("insufficient data available to calculate scores for {}".format(str([comb[0].ID for comb in temp])))
+
+        # sort the scores from high to low
+        temp.sort(key=operator.itemgetter(-1), reverse=True)
+        # select the replicate filtered peaklist that is ranked first
         pls_rep_filt.append(temp[0][0])
 
-        for p in range(0, len(temp)):
-            if max(reps_each_sample) > replicates:
-                print "{}\t{}\t{}\t{}\t{}\t{}\t".format(idxs_pls+1, p+1, temp[p][0].ID, temp[p][1], temp[p][2], temp[p][3])
-            else:
-                print "{}\t{}\t{}\t{}\t".format(temp[p][0].ID, temp[p][1], temp[p][2], temp[p][3])
+        if quality_logfile is not None:
+            for p in range(0, len(temp)):
+                if max(reps_each_sample) > replicates:
+                    out.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(idxs_pls+1, p+1, temp[p][0].ID, temp[p][1], temp[p][2], temp[p][3], temp[p][-1]))
+                else:
+                    out.write("{}\t{}\t{}\t{}\n".format(temp[p][0].ID, temp[p][1], temp[p][2], temp[p][3]))
 
     return pls_rep_filt
 
@@ -279,6 +298,19 @@ def sample_filter(peak_matrix, min_fraction, within=False, rsd=None, qc_label=No
     if rsd is not None:
         peak_matrix = filter_rsd(peak_matrix, rsd, qc_label)
     return peak_matrix
+
+
+def missing_values_sample_filter(peak_matrix, max_fraction):
+    return peak_matrix.remove_samples(np.where(map(lambda x: (x / float(peak_matrix.shape[1]) >= max_fraction), peak_matrix.missing_values)))
+
+
+def remove_samples(obj, sample_names):
+    if isinstance(obj, PeakMatrix):
+        return obj.remove_samples(np.where(map(lambda x: (x in sample_names), obj.peaklist_ids)))
+    elif isinstance(obj[0], PeakList):
+        return [pl for pl in obj if pl.ID not in sample_names]
+    else:
+        raise IOError("Incorrect format - PeakMatrix object or list of PeakList objects")
 
 
 def hdf5_peak_matrix_to_txt(filename, path_out, attr_name="intensity", rsd_tags=(), delimiter="\t", samples_in_rows=True, comprehensive=False):
@@ -373,6 +405,7 @@ def partition(alist, indices):
     # return alist
     return [alist[i:j] for i, j in zip([0] + indices, indices + [None])]
 
+
 def load_peaklists(source):
 
     if type(source) == str:
@@ -403,41 +436,57 @@ def load_peaklists(source):
     return peaklists
 
 
-def create_sample_list(peaklists, path_out, delimiter="\t", qc_label="QC"):
-    if isinstance(peaklists, list) or isinstance(peaklists, tuple):
-        if isinstance(peaklists[0], PeakList):
-            header = ["filename", "batch", "injectionOrder", "classLabel", "sampleType"]
-            if "replicate" in peaklists[0].metadata:
-                header.insert(1, "replicate")
+def create_sample_list(peaklists, path_out, delimiter="\t", qc_label="QC", col_names_to_add=[]):
 
-            for h in header[1:]:
-                if h not in peaklists[0].metadata and h.lower() not in peaklists[0].metadata:
-                    logging.warning("Metadata for '{}' not available.".format(str(h)))
+    if not isinstance(peaklists, list) and not isinstance(peaklists, tuple):
+        raise IOError("")
+    if not isinstance(peaklists[0], PeakList):
+        raise IOError("")
 
-            with open(path_out, "w") as out:
-                out.write("{}".format(delimiter).join(map(str, header)) + "\n")
-                for pl in peaklists:
-                    row = [pl.ID]
-                    for h in header[1:]:
-                        if h == "sampleType":
-                            if "sampleType" not in pl.metadata and "classLabel" in pl.metadata:
-                                if pl.metadata["classLabel"] == qc_label:
-                                    row.append("QC")
-                                else:
-                                    row.append("sample")
-                            elif "sampleType" in pl.metadata:
-                                row.append(pl.metadata["sampleType"])
-                            elif "sampleType" not in pl.metadata and "classLabel" not in pl.metadata:
-                                row.append("NA")
-                        else:
-                            if h.lower() in pl.metadata or h in pl.metadata:
-                                row.append(pl.metadata[h])
-                            else:
-                                row.append("NA")
-                    out.write("{}".format(delimiter).join(map(str, row)) + "\n")
-        else:
-            raise IOError("Incorrect Object in list. Peaklist Object expected.")
-    else:
-        raise IOError("Incorrect Object. Peaklist Object expected.")
+    header = ["filename", "batch", "injectionOrder", "classLabel", "sampleType"]
 
+    if hasattr(peaklists[0].metadata, "replicate"):
+        header.insert(1, "replicate")
+
+    row = ["NA"] * len(header)
+    with open(path_out, "w") as out:
+
+        out.write("{}".format(delimiter).join(map(str, header)) + "\n")
+
+        for pl in peaklists:
+
+            row[0] = pl.ID
+
+            if pl.tags.has_tag_type("classLabel"):
+                row[header.index("classLabel")] = pl.tags.tag_of("classLabel")
+
+            if not pl.tags.has_tag_type("sampleType") and pl.tags.has_tag_type("classLabel"):
+                if pl.tags.tag_of("classLabel") == qc_label:
+                    row[header.index("sampleType")] = "QC"
+                else:
+                    row[header.index("sampleType")] = "sample"
+            elif pl.tags.has_tag_type("sampleType"):
+                row[header.index("sampleType")] = pl.tags.tag_of("sampleType")
+            elif "sampleType" not in pl.metadata and "classLabel" not in pl.metadata:
+                row[header.index("sampleType")] = "NA"
+
+            if pl.tags.has_tag_type("batch"):
+                row[header.index("batch")] = pl.tags.tag_of("batch")
+
+            if hasattr(pl.metadata, "replicate"):
+                row[header.index("replicate")] = pl.metadata.replicate
+
+            if hasattr(pl.metadata, "injectionOrder"):
+                row[header.index("injectionOrder")] = pl.metadata.injectionOrder
+            out.write("{}".format(delimiter).join(map(str, row)) + "\n")
+
+            for c in col_names_to_add:
+                if c not in header:
+                    header.append(c)
+                if pl.tags.has_tag_type(c):
+                    row[header.index(c)] = pl.tags.tag_of(c)
+                elif hasattr(pl.metadata, c):
+                    row[header.index(c)] = pl.metadata[c]
+                else:
+                    row[header.index(c)] = "NA"
     return

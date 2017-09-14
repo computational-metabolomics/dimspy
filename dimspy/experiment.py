@@ -22,7 +22,7 @@ def scan_type_from_header(h):
     elif " sim " in h.lower():
         return "SIM"
     else:
-        # Need to check if there are any other scan types (e.g. Thermo and Waters)
+        # Other scan types (e.g. Thermo and Waters)
         return None
 
 
@@ -176,21 +176,70 @@ def check_metadata(fn_tsv):
 
 
 def update_metadata(peaklists, fl):
-    assert isinstance(peaklists[0], PeakList), "PeakList object required"
-    for k in fl.keys():  # Update metadata
+
+    if not isinstance(peaklists[0], PeakList):
+        raise IOError("PeakList object required")
+
+    for k in fl.keys():
         for pl in peaklists:
-            assert pl.ID in fl[fl.keys()[0]], "filelist and peaklist do not match {}".format(pl.ID)
+            if pl.ID not in fl[fl.keys()[0]]:
+                raise IOError("filelist and peaklist do not match {}".format(pl.ID))
+
             index = fl[fl.keys()[0]].index(pl.ID)
             pl.metadata[k] = fl[k][index]
+            #pl.metadata["filelist"] = {k:fl[k][index] for k in fl.keys()}
+
             if "classLabel" in fl.keys():
-                if pl.tags.has_tag_type("class_label"):
-                    pl.tags.drop_tag_types("class_label")
-                pl.tags.add_tags(class_label=fl["classLabel"][index])
+                if pl.tags.has_tag_type("classLabel"):
+                    pl.tags.drop_tag_types("classLabel")
+                pl.tags.add_tags(classLabel=fl["classLabel"][index])
+
             if "batch" in fl.keys():
                 if pl.tags.has_tag_type("batch"):
                     pl.tags.drop_tag_types("batch")
                 pl.tags.add_tags(batch=fl["batch"][index])
+
     return peaklists
+
+
+def copy_metadata(peak_list, peak_list_out, labels=None):
+    if not isinstance(peak_list, PeakList) or not isinstance(peak_list_out, PeakList):
+        raise IOError("PeakList object required")
+    for k, v in peak_list.metadata.items():
+        if labels is None:
+            peak_list_out.metadata[k] = v
+        elif k in labels:
+            peak_list_out.metadata[k] = v
+
+    peak_list_out.tags.add_tags(*peak_list.tags.tag_of(None),
+                                **{t: peak_list.tags.tag_of(t) for t in peak_list.tags.tag_types})
+    return peak_list
+
+
+def update_class_labels(pm, fn_tsv):
+
+    assert os.path.isfile(fn_tsv.encode('string-escape')), "{} does not exist".format(fn_tsv)
+
+    fm = np.genfromtxt(fn_tsv.encode('string-escape'), dtype=None, delimiter="\t", names=True)
+    if len(fm.shape) == 0:
+        fm = np.array([fm])
+
+    assert "sample_id" == fm.dtype.names[0] or "filename" == fm.dtype.names[0], "Column for class labels not available"
+    assert "classLabel" in fm.dtype.names, "Column for class label (classLabel) not available"
+    assert (fm[fm.dtype.names[0]] == pm.peaklist_ids).all(), "Sample ids do not match {}".format(np.setdiff1d(fm[fm.dtype.names[0]], pm.peaklist_ids))
+
+    for i in range(len(fm["classLabel"])):
+        if pm.peaklist_tags[i].has_tag_type("classLabel"):
+            pm.peaklist_tags[i].drop_tag_types("classLabel")
+            pm.peaklist_tags[i].add_tags(classLabel=fm["classLabel"][i])
+
+    if "batch" in fm.keys():
+        for i in range(len(fm["batch"])):
+            if pm.peaklist_tags[i].has_tag_type("batch"):
+                pm.peaklist_tags[i].drop_tag_types("batch")
+                pm.peaklist_tags[i].add_tags(batch=fm["batch"][i])
+
+    return pm
 
 
 def idxs_reps_from_filelist(replicates):
@@ -207,21 +256,4 @@ def idxs_reps_from_filelist(replicates):
     return idxs
 
 
-def update_class_labels(pm, fn_tsv):
-
-    assert os.path.isfile(fn_tsv.encode('string-escape')), "{} does not exist".format(fn_tsv)
-
-    fm = np.genfromtxt(fn_tsv.encode('string-escape'), dtype=None, delimiter="\t", names=True)
-    if len(fm.shape) == 0:
-        fm = np.array([fm])
-
-    assert "sample_id" == fm.dtype.names[0] or "filename" == fm.dtype.names[0], "Column for class labels not available"
-    assert "classLabel" in fm.dtype.names, "Column for class label (classLabel) not available"
-    assert (fm[fm.dtype.names[0]] == pm.peaklist_ids).all(), "Sample ids do not match {}".format(np.setdiff1d(fm[fm.dtype.names[0]], pm.peaklist_ids))
-
-    for i in range(len(fm["classLabel"])):
-        if pm.peaklist_tags[i].has_tag_type("class_label"):
-            pm.peaklist_tags[i].drop_tag_types("class_label")
-            pm.peaklist_tags[i].add_tags(class_label=fm["classLabel"][i])
-    return pm
 
