@@ -118,11 +118,15 @@ def main():
     #################################
 
     parser_rf.add_argument('-i', '--input',
-                           type=str, required=False,
+                           type=str, required=True,
                            help="HDF5 file (Peaklist objects) from step 'process-scans' or directory path that contains tab-delimited peaklists.")
 
     parser_rf.add_argument('-o', '--output',
-                           type=str, required=False,
+                           type=str, required=True,
+                           help="HDF5 file to save the peaklist objects to.")
+
+    parser_rf.add_argument('-q', '--quality-logfile',
+                           type=str, required=False, default=None,
                            help="HDF5 file to save the peaklist objects to.")
 
     parser_rf.add_argument('-p', '--ppm',
@@ -162,12 +166,12 @@ def main():
     #################################
 
     parser_as.add_argument('-i', '--input',
-                           type=str, required=False,
+                           type=str, required=True,
                            help="HDF5 file (Peaklist objects) from step 'process-scans / replicate-filter' "
                                 "or directory path that contains tab-delimited peaklists.")
 
     parser_as.add_argument('-o', '--output',
-                           type=str, required=False,
+                           type=str, required=True,
                            help="HDF5 file to save the peak matrix object to.")
 
     parser_as.add_argument('-p', '--ppm',
@@ -192,11 +196,11 @@ def main():
     #################################
 
     parser_bf.add_argument('-i', '--input',
-                           type=str, required=False,
+                           type=str, required=True,
                            help="HDF5 file or tab-delimited file that contains a peak matrix (object).")
 
     parser_bf.add_argument('-o', '--output',
-                           type=str, required=False,
+                           type=str, required=True,
                            help="HDF5 file to save the peak matrix object to.")
 
     parser_bf.add_argument('-l', '--blank-label',
@@ -229,7 +233,7 @@ def main():
     #################################
 
     parser_sf.add_argument('-i', '--input',
-                           type=str, required=False,
+                           type=str, required=True,
                            help="HDF5 file or tab-delimited file that contains a peak matrix.")
 
     parser_sf.add_argument('-o', '--output',
@@ -237,7 +241,7 @@ def main():
                            help="HDF5 file to save the peak matrix object to.")
 
     parser_sf.add_argument('-p', '--min-fraction',
-                           type=float, required=False,
+                           type=float, required=False, default=0.5,
                            help="Minimum percentage of samples a peak has to be present.")
 
     parser_sf.add_argument('-w', '--within',
@@ -261,7 +265,7 @@ def main():
     #################################
 
     parser_mvsf.add_argument('-i', '--input',
-                           type=str, required=False,
+                           type=str, required=True,
                            help="HDF5 file file that contains a peak matrix object.")
 
     parser_mvsf.add_argument('-o', '--output',
@@ -296,7 +300,7 @@ def main():
                            required=True, default=[], action='append',
                            help="Multiple HDF5 files that contain peaklists or peak matrix from one of the processing steps.")
     parser_mp.add_argument('-o', '--output',
-                           required=True, type=str,
+                           type=str, required=True,
                            help="Directory (if using multilist column in filelist) or HDF5 file to write to.")
     parser_mp.add_argument('-l', '--filelist',
                            type=str, required=False,
@@ -312,7 +316,7 @@ def main():
                            help="Single or Multiple HDF5 files that contain a peak matrix object from one of the processing steps.")
 
     parser_gp.add_argument('-o', '--output',
-                           required=True, type=str,
+                           type=str, required=True,
                            help="HDF5 file to save the peaklist objects to.")
 
     #########################################
@@ -324,11 +328,11 @@ def main():
                             help="Single or Multiple HDF5 files that contain a peak matrix object from one of the processing steps.")
 
     parser_gap.add_argument('-o', '--output',
-                            required=True, type=str,
+                            type=str, required=True,
                             help="HDF5 file to save the peaklist object to.")
 
     parser_gap.add_argument('-n', '--name-peaklist',
-                            required=True, type=str,
+                            type=str, required=True,
                             help="Name of the peaklist.")
 
     #################################
@@ -443,6 +447,7 @@ def main():
                                               replicates=args.replicates,
                                               min_peaks=args.min_peak_present,
                                               rsd_thres=args.rsd_threshold,
+                                              quality_logfile=args.quality_logfile,
                                               filelist=args.filelist,
                                               block_size=args.block_size,
                                               ncpus=args.ncpus)
