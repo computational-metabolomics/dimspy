@@ -490,3 +490,4 @@ def create_sample_list(peaklists, path_out, delimiter="\t", qc_label="QC", col_n
                 else:
                     row[header.index(c)] = "NA"
     return
+
