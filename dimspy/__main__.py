@@ -527,7 +527,7 @@ def main():
         hdf5_portal.save_peaklists_as_hdf5(pls, args.output)
 
     elif args.step == "hdf5-pm-to-txt":
-        if samples_representation == "rows":
+        if args.representation_samples == "rows":
             samples_in_rows = True
         else:
 	    samples_in_rows = False
