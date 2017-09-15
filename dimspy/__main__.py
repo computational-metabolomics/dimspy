@@ -360,8 +360,8 @@ def main():
                              default="tab", choices=["tab", "comma"],
                              help="Values on each line of the file are separated by this character.")
 
-    parser_hpmt.add_argument('-s', '--samples-in-rows',
-                             action='store_true', required=False,
+    parser_hpmt.add_argument('-s', '--samples-representation',
+                             default="rows", choices=["row", "columns"],
                              help="Peak matrix with the samples present in the first column.")
 
     parser_hpmt.add_argument('-c', '--comprehensive',
@@ -527,12 +527,16 @@ def main():
         hdf5_portal.save_peaklists_as_hdf5(pls, args.output)
 
     elif args.step == "hdf5-pm-to-txt":
+        if samples-representation == "row":
+            samples_in_rows = True
+        else:
+	    samples_in_rows = False
         tools.hdf5_peak_matrix_to_txt(args.input,
                                       path_out=args.output,
                                       attr_name=args.attribute_name,
                                       delimiter=map_delimiter(args.delimiter),
                                       rsd_tags=args.class_label_rsd,
-                                      samples_in_rows=args.samples_in_rows,
+                                      samples_in_rows=samples_in_rows,
                                       comprehensive=args.comprehensive)
 
     elif args.step == "hdf5-pls-to-txt":
