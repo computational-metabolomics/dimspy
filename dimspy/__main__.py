@@ -23,9 +23,6 @@ def main():
 
     parser = argparse.ArgumentParser(description='Python package to process DIMS data', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-    parser.add_argument('--debug', help='Print debug information', action='store_true')
-    parser.add_argument('--log', help='Log file to write to', default=None)
-
     subparsers = parser.add_subparsers(dest='step')
 
     parser_ps = subparsers.add_parser('process-scans', help='Process scans and/or stitch SIM windows.')
@@ -105,6 +102,8 @@ def main():
                            action='append', nargs=2, required=False, metavar=('start', 'end'), default=[],
                            help="M/z range(s) to remove. E.g. 100.0 102.0  or  140.0 145.0.")
 
+
+
     parser_ps.add_argument('-b', '--block-size',
                            default=2000, type=int, required=False,
                            help="The size of each block of peaks to perform clustering on.")
@@ -123,10 +122,6 @@ def main():
 
     parser_rf.add_argument('-o', '--output',
                            type=str, required=True,
-                           help="HDF5 file to save the peaklist objects to.")
-
-    parser_rf.add_argument('-q', '--quality-logfile',
-                           type=str, required=False, default=None,
                            help="HDF5 file to save the peaklist objects to.")
 
     parser_rf.add_argument('-p', '--ppm',
@@ -152,6 +147,10 @@ def main():
     parser_rf.add_argument('-l', '--filelist',
                            type=str, required=False,
                            help="Tab-delimited file that list all the data files (*.raw or *.mzml) and meta data (filename, technical replicate, class, batch).")
+
+    parser_ps.add_argument('-u', '--report',
+                           type=str, required=False, default=None,
+                           help="Summary/Report of processed mass spectra")
 
     parser_rf.add_argument('-b', '--block-size',
                            default=2000, type=int, required=False,
@@ -437,6 +436,7 @@ def main():
                                         ringing_thres=args.ringing_threshold,
                                         filter_scan_events=filter_scan_events,
                                         remove_mz_range=remove_mz_range,
+                                        report=args.report,
                                         block_size=args.block_size,
                                         ncpus=args.ncpus)
         hdf5_portal.save_peaklists_as_hdf5(peaklists, args.output)
@@ -447,8 +447,8 @@ def main():
                                               replicates=args.replicates,
                                               min_peaks=args.min_peak_present,
                                               rsd_thres=args.rsd_threshold,
-                                              quality_logfile=args.quality_logfile,
                                               filelist=args.filelist,
+                                              report=args.report,
                                               block_size=args.block_size,
                                               ncpus=args.ncpus)
         hdf5_portal.save_peaklists_as_hdf5(peaklists_rf, args.output)
@@ -530,7 +530,7 @@ def main():
         if args.representation_samples == "rows":
             samples_in_rows = True
         else:
-	    samples_in_rows = False
+            samples_in_rows = False
         tools.hdf5_peak_matrix_to_txt(args.input,
                                       path_out=args.output,
                                       attr_name=args.attribute_name,
