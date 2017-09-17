@@ -88,7 +88,7 @@ def main():
                            default=None, type=float, required=False,
                            help="Ringing")
 
-    parser_ps.add_argument('-u', '--include-scan-events',
+    parser_ps.add_argument('-e', '--include-scan-events',
                            action='append', nargs=3, required=False, 
                            metavar=('start', 'end', 'scan_type'), default=[],
                            help="Scan events to select. E.g. 100.0 200.0 sim  or  50.0 1000.0 full")
@@ -102,7 +102,9 @@ def main():
                            action='append', nargs=2, required=False, metavar=('start', 'end'), default=[],
                            help="M/z range(s) to remove. E.g. 100.0 102.0  or  140.0 145.0.")
 
-
+    parser_ps.add_argument('-u', '--report',
+                           type=str, required=False, default=None,
+                           help="Summary/Report of processed mass spectra")
 
     parser_ps.add_argument('-b', '--block-size',
                            default=2000, type=int, required=False,
@@ -148,7 +150,7 @@ def main():
                            type=str, required=False,
                            help="Tab-delimited file that list all the data files (*.raw or *.mzml) and meta data (filename, technical replicate, class, batch).")
 
-    parser_ps.add_argument('-u', '--report',
+    parser_rf.add_argument('-u', '--report',
                            type=str, required=False, default=None,
                            help="Summary/Report of processed mass spectra")
 
