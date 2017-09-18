@@ -177,6 +177,5 @@ def filter_blank_peaks(pm, blank_label, fraction_threshold=1, fold_threshold=1, 
 
     if rm_blanks:
         pm = pm.remove_samples(np.where(map(lambda x: x.has_tag(blank_label), pm.peaklist_tags)))
-        pm.remove_empty_peaks()
     return pm
 

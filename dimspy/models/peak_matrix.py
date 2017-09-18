@@ -635,6 +635,7 @@ class PeakMatrix(object):
         self._tags = np.delete(self._tags, rmids, axis=0)
         self._attr_dict = OrderedDict((k, np.delete(v, rmids, axis=0)) for k,v in self._attr_dict.items())
         self._mask = np.delete(self._mask, rmids, axis=0)
+        self.remove_empty_peaks()
         if self.is_empty(): logging.warning('matrix is empty after removal')
         return self
 
