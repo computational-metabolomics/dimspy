@@ -654,6 +654,20 @@ class PeakMatrix(object):
         if self.is_empty(): logging.warning('matrix is empty after removal')
         return self
 
+    def remove_empty_peaks(self):
+        """
+        Removes empty peaks from the peak matrix.
+
+        Empty peaks are peaks with not valid m/z or intensity value over the samples. They may occur after removing
+        an entire sample from the peak matrix, e.g., remove the blank samples in the blank filter.
+
+        :rtype: PeakMatrix object (self)
+
+        """
+        prm = self.property('present_matrix', flagged_only = False)
+        self.remove_peaks(np.where(np.sum(prm, axis = 0) == 0)[0], flagged_only = False)
+        return self
+
     def is_empty(self):
         """
         Checks whether the peak matrix is empty under the current mask and flags.
@@ -734,9 +748,12 @@ class PeakMatrix(object):
         :rtype: str
 
         """
-        hd = ['m/z'] + map(str, self.attr_mean_vector('mz', flagged_only = False))
+        self.remove_empty_peaks()
+
+        mz = self.attr_matrix('mz', flagged_only = not comprehensive)
+        hd = ['m/z'] + map(str, np.average(mz, axis = 0, weights = mz.astype(bool)))
         dm = [map(str, self.peaklist_ids)] + \
-             [map(str, ln) for ln in self.attr_matrix(attr_name, flagged_only = False).T]
+             [map(str, ln) for ln in self.attr_matrix(attr_name, flagged_only = not comprehensive).T]
 
         if comprehensive:
             ttypes = set(reduce(lambda x, y: x + y, map(lambda x: x.tag_types, self.peaklist_tags)))
