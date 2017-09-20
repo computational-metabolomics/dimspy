@@ -37,7 +37,7 @@ from process.replicate_processing import remove_edges
 
 
 def process_scans(source, function_noise, snr_thres, ppm, min_fraction=None, rsd_thres=None, min_scans=1, filelist=None,
-                  skip_stitching=False, remove_mz_range=None, ringing_thres=None, filter_scan_events=None, report=None, block_size=2000, ncpus=None):
+                  skip_stitching=False, remove_mz_range=None, ringing_thres=None, filter_scan_events=None, report=None, block_size=5000, ncpus=None):
 
     if filter_scan_events is None:
         filter_scan_events = {}
@@ -73,7 +73,8 @@ def process_scans(source, function_noise, snr_thres, ppm, min_fraction=None, rsd
         if type(remove_mz_range) == list and len(remove_mz_range) > 0:
             print "Removing m/z ranges....."
             for h in pls_scans:
-                pls_scans[h] = [filter_mz_ranges(pl, remove_mz_range) for pl in pls_scans[h]]
+                pls_scans[h] = [filter_mz_ranges(pl, remove_mz_range) if len(pl.mz) > 0 else pl
+                                for pl in pls_scans[h]]
 
         if not skip_stitching:
             mz_ranges = [mz_range_from_header(h) for h in pls_scans]
@@ -85,12 +86,13 @@ def process_scans(source, function_noise, snr_thres, ppm, min_fraction=None, rsd
         if ringing_thres is not None and float(ringing_thres) > 0.0:
             print "Removing ringing artifacts....."
             for h in pls_scans:
-                pls_scans[h] = [filter_ringing(pl, threshold=ringing_thres, bin_size=1.0)
-                                for pl in pls_scans[h] if len(pl.mz) > 0]
+                pls_scans[h] = [filter_ringing(pl, threshold=ringing_thres, bin_size=1.0) if len(pl.mz) > 0 else pl
+                                for pl in pls_scans[h]]
 
         print "Removing noise....."
         for h in pls_scans:
-            pls_scans[h] = [filter_attr(pl, "snr", min_threshold=snr_thres) for pl in pls_scans[h]]
+            pls_scans[h] = [filter_attr(pl, "snr", min_threshold=snr_thres) if len(pl.mz) > 0 else pl
+                            for pl in pls_scans[h]]
 
         print "Aligning, averaging and filtering peaks....."
         pls_avg = []
@@ -98,7 +100,7 @@ def process_scans(source, function_noise, snr_thres, ppm, min_fraction=None, rsd
         for h in pls_scans:
 
             nscans, n_peaks, median_rsd = len(pls_scans[h]), 0, "NA"
-            pls_scans[h] = [pl for pl in pls_scans[h] if len(pl.mz) > 0]
+            #pls_scans[h] = [pl for pl in pls_scans[h] if len(pl.mz) > 0]
 
             if len(pls_scans[h]) >= 1:
                 if sum(pl.shape[0] for pl in pls_scans[h]) == 0:
@@ -132,7 +134,7 @@ def process_scans(source, function_noise, snr_thres, ppm, min_fraction=None, rsd
 
 # placeholder (synonym)
 def sim_stitch(source, function_noise, snr_thres, ppm, min_fraction=None, rsd_thres=None, min_scans=1, filelist=None,
-                  skip_stitching=False, remove_mz_range=None, ringing_thres=None, filter_scan_events=None, report=None, block_size=2000, ncpus=None):
+                  skip_stitching=False, remove_mz_range=None, ringing_thres=None, filter_scan_events=None, report=None, block_size=5000, ncpus=None):
 
     if filter_scan_events is None:
         filter_scan_events = {}
@@ -143,7 +145,7 @@ def sim_stitch(source, function_noise, snr_thres, ppm, min_fraction=None, rsd_th
                   skip_stitching, remove_mz_range, ringing_thres, filter_scan_events, block_size, ncpus)
 
 
-def replicate_filter(source, ppm, replicates, min_peaks, rsd_thres=None, filelist=None, report=None, block_size=2000, ncpus=None):
+def replicate_filter(source, ppm, replicates, min_peaks, rsd_thres=None, filelist=None, report=None, block_size=5000, ncpus=None):
 
     if replicates < min_peaks:
         raise IOError("Provide realistic values for the number of replicates and minimum number of peaks present (min_peaks)")
@@ -195,7 +197,7 @@ def replicate_filter(source, ppm, replicates, min_peaks, rsd_thres=None, filelis
 
         for pls_comb in combinations(peaklists[idxs_peaklists[idxs_pls][0]:idxs_peaklists[idxs_pls][-1] + 1], replicates):
 
-            pl = average_replicate_peaklists(pls_comb, ppm, min_peaks, rsd_thres, block_size=2000, ncpus=None)
+            pl = average_replicate_peaklists(pls_comb, ppm, min_peaks, rsd_thres, block_size=block_size, ncpus=None)
 
             if hasattr(pls_comb[0].metadata, "injectionOrder"):
                 pl.metadata["injectionOrder"] = pls_comb[0].metadata["injectionOrder"]
@@ -250,7 +252,7 @@ def replicate_filter(source, ppm, replicates, min_peaks, rsd_thres=None, filelis
     return pls_rep_filt
 
 
-def align_samples(source, ppm, filelist=None, block_size=2000, ncpus=None):
+def align_samples(source, ppm, filelist=None, block_size=5000, ncpus=None):
 
     filenames = check_paths(filelist, source)
     peaklists = load_peaklists(source)

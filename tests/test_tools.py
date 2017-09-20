@@ -30,7 +30,7 @@ class WorkflowTestCase(unittest.TestCase):
         pls = process_scans(to_test_data("MTBLS79_mzml_single.zip"), function_noise="median",
                             snr_thres=3.0, min_scans=1, ppm=2.0, min_fraction=None, rsd_thres=None,
                             filelist=to_test_data("filelist_mzml_single.txt"),
-                            filter_scan_events=None, report=to_test_result("MTBLS79_mzml_single_report.txt"), block_size=2000, ncpus=None)
+                            filter_scan_events=None, report=to_test_result("MTBLS79_mzml_single_report.txt"), block_size=5000, ncpus=None)
 
         # save_peaklists_as_hdf5(pls, to_test_data("MTBLS79_mzml_single.hdf5"))  # creating test set
         pls_comp = load_peaklists_from_hdf5(to_test_data("MTBLS79_mzml_single.hdf5"))
@@ -44,7 +44,7 @@ class WorkflowTestCase(unittest.TestCase):
         pls = process_scans(to_test_data("MTBLS79_mzml_single.zip"), function_noise="median",
                             snr_thres=3.0, min_scans=1, ppm=2.0, min_fraction=0.5, rsd_thres=30.0,
                             filelist=to_test_data("filelist_mzml_single.txt"),
-                            filter_scan_events=None, report=None, block_size=2000, ncpus=None)
+                            filter_scan_events=None, report=None, block_size=5000, ncpus=None)
 
         # save_peaklists_as_hdf5(pls, to_test_data("MTBLS79_mzml_frac_rsd.hdf5"))  # creating test set
         pls_comp = load_peaklists_from_hdf5(to_test_data("MTBLS79_mzml_frac_rsd.hdf5"))
@@ -55,7 +55,7 @@ class WorkflowTestCase(unittest.TestCase):
     def test_process_scans_raw_path(self):
         pls = process_scans(to_test_data("raw", "batch04_QC17_rep01_262.RAW"), function_noise="noise_packets",
                             snr_thres=3.0, min_scans=1, ppm=2.0, min_fraction=None, rsd_thres=None, filelist=None,
-                            filter_scan_events=None, report=None, block_size=2000, ncpus=None)
+                            filter_scan_events=None, report=None, block_size=5000, ncpus=None)
         # save_peaklists_as_hdf5(pls, to_test_data("MTBLS79_raw_batch04_QC17_rep01_262.hdf5"))  # creating test set
         pls_comp = load_peaklists_from_hdf5(to_test_data("MTBLS79_raw_batch04_QC17_rep01_262.hdf5"))
         # with open(to_test_result("test_pl_raw.txt"), "w") as out: out.write(pls[0].to_str("\t"))  # creating test set
@@ -66,12 +66,12 @@ class WorkflowTestCase(unittest.TestCase):
         # pls = process_scans(to_test_data("MTBLS79_mzml_triplicates.zip"), function_noise="median",  # creating test set
         #                    snr_thres=3.0, min_scans=1, ppm=2.0, min_fraction=None, rsd_thres=None,  # creating test set
         #                    filelist=to_test_data("filelist_mzml_triplicates.txt"),  # creating test set
-        #                    filter_scan_events=None, report=None, block_size=2000, ncpus=None)  # creating test set
+        #                    filter_scan_events=None, report=None, block_size=5000, ncpus=None)  # creating test set
         # save_peaklists_as_hdf5(pls, to_test_data("MTBLS79_mzml_triplicates.hdf5"))  # creating test set
         pls = load_peaklists_from_hdf5(to_test_data("MTBLS79_mzml_triplicates.hdf5"))
         pls_rf = replicate_filter(pls, ppm=2.0, replicates=3, min_peaks=2, rsd_thres=None,
                                   filelist=None, report=to_test_result("MTBLS79_mzml_triplicates_report.txt"),
-                                  block_size=2000, ncpus=None)
+                                  block_size=5000, ncpus=None)
         # save_peaklists_as_hdf5(pls_rf, to_test_data("MTBLS79_mzml_triplicates_rf.hdf5"))  # creating test set
         pls_rf_comp = load_peaklists_from_hdf5(to_test_data("MTBLS79_mzml_triplicates_rf.hdf5"))
         # with open(to_test_result("test_pl_rf.txt"), "w") as out: out.write(pls_rf[0].to_str("\t"))  # creating test set
@@ -83,7 +83,7 @@ class WorkflowTestCase(unittest.TestCase):
 
         pls_rf = replicate_filter(pls, ppm=2.0, replicates=3, min_peaks=2, rsd_thres=None,
                                   filelist=to_test_data("filelist_mzml_triplicates.txt"),
-                                  report=None, block_size=2000, ncpus=None)
+                                  report=None, block_size=5000, ncpus=None)
         # save_peaklists_as_hdf5(pls_rf, to_test_data("MTBLS79_mzml_triplicates_rf_2.hdf5"))
         pls_rf_comp = load_peaklists_from_hdf5(to_test_data("MTBLS79_mzml_triplicates_rf_2.hdf5"))
         # with open(to_test_result("test_pl_rf_2.txt"), "w") as out: out.write(pls_rf[0].to_str("\t"))  # creating test set
@@ -94,10 +94,10 @@ class WorkflowTestCase(unittest.TestCase):
         # pls = process_scans(to_test_data("MTBLS79_mzml_triplicates.zip"), function_noise="median",  # creating test set
         #                     snr_thres=3.0, min_scans=1, ppm=2.0, min_fraction=None, rsd_thres=None,  # creating test set
         #                     filelist=to_test_data("filelist_mzml_triplicates.txt"),  # creating test set
-        #                     filter_scan_events=None, block_size=2000, ncpus=None)  # creating test set
+        #                     filter_scan_events=None, block_size=5000, ncpus=None)  # creating test set
         # save_peaklists_as_hdf5(pls, to_test_data("MTBLS79_mzml_triplicates.hdf5"))  # creating test set
         pls = load_peaklists_from_hdf5(to_test_data("MTBLS79_mzml_triplicates.hdf5"))
-        pm = align_samples(pls, ppm=2.0, filelist=None, block_size=2000, ncpus=None)
+        pm = align_samples(pls, ppm=2.0, filelist=None, block_size=5000, ncpus=None)
         # save_peak_matrix_as_hdf5(pm, to_test_data("MTBLS79_mzml_peak_matrix.hdf5"))  # creating test set
         pm_comp = load_peak_matrix_from_hdf5(to_test_data("MTBLS79_mzml_peak_matrix.hdf5"))
         # with open(to_test_result("test_pm_as.txt"), "w") as out: out.write(pm.to_str())  # creating test set
@@ -129,7 +129,7 @@ class WorkflowTestCase(unittest.TestCase):
     def test_remove_samples(self):
         pm = load_peak_matrix_from_hdf5(to_test_data("MTBLS79_mzml_peak_matrix.hdf5"))
         pm_rs = remove_samples(pm, ["batch04_B02_rep01_301.mzML", "batch04_B02_rep02_302.mzML", "batch04_B02_rep03_303.mzML"])
-        self.assertEqual(pm_rs.shape, (6, 4617))
+        self.assertEqual(pm_rs.shape, (6, 2692))
 
         pls = load_peaklists_from_hdf5(to_test_data("MTBLS79_mzml_triplicates_rf.hdf5"))
         pls_rs = remove_samples(pls, ["batch04_B02_rep01_301_2_302_3_303", "batch04_QC17_rep01_262_2_263_3_264"])
@@ -141,25 +141,25 @@ class WorkflowTestCase(unittest.TestCase):
         self.assertEqual(pm_mv_sf.shape, (9, 4617))
         pm = load_peak_matrix_from_hdf5(to_test_data("MTBLS79_mzml_peak_matrix.hdf5"))
         pm_mv_sf = missing_values_sample_filter(pm, 0.6)
-        self.assertEqual(pm_mv_sf.shape, (3, 4617))
+        self.assertEqual(pm_mv_sf.shape, (3, 2595))
         pm = load_peak_matrix_from_hdf5(to_test_data("MTBLS79_mzml_peak_matrix.hdf5"))
         pm_mv_sf = missing_values_sample_filter(pm, 0.3)
-        self.assertEqual(pm_mv_sf.shape, (0, 4617))
+        self.assertEqual(pm_mv_sf.shape, (0, 0))
 
     def test_merge_peaklists(self):
         # pls_rep_01 = process_scans(to_test_data("raw", "batch04_QC17_rep01_262.RAW"),  # creating test set
         #                            function_noise="noise_packets", snr_thres=10.0, min_scans=1, ppm=2.0,  # creating test set
         #                            min_fraction=None, rsd_thres=None, filelist=None, filter_scan_events=None,  # creating test set
-        #                            block_size=2000, ncpus=None)  # creating test set
+        #                            block_size=5000, ncpus=None)  # creating test set
         #
         # pls_rep_02 = process_scans(to_test_data("raw", "batch04_QC17_rep02_263.RAW"),  # creating test set
         #                            function_noise="noise_packets", snr_thres=10.0, min_scans=1, ppm=2.0,  # creating test set
         #                            min_fraction=None, rsd_thres=None, filelist=None, filter_scan_events=None,  # creating test set
-        #                            block_size=2000, ncpus=None)  # creating test set
+        #                            block_size=5000, ncpus=None)  # creating test set
         # pls_rep_03 = process_scans(to_test_data("raw", "batch04_QC17_rep03_264.RAW"),  # creating test set
         #                            function_noise="noise_packets", snr_thres=10.0, min_scans=1, ppm=2.0,  # creating test set
         #                            min_fraction=None, rsd_thres=None, filelist=None, filter_scan_events=None,  # creating test set
-        #                            block_size=2000, ncpus=None)  # creating test set
+        #                            block_size=5000, ncpus=None)  # creating test set
         # save_peaklists_as_hdf5(pls_rep_01, to_test_data("batch04_QC17_rep01_262.hdf5"))  # creating test set
         # save_peaklists_as_hdf5(pls_rep_02, to_test_data("batch04_QC17_rep02_263.hdf5"))  # creating test set
         #save_peaklists_as_hdf5(pls_rep_03, to_test_data("batch04_QC17_rep03_264.hdf5"))  # creating test set

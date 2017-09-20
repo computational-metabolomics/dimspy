@@ -7,7 +7,7 @@ python -m dimspy process-scans^
  --ppm 2.0^
  --min_scans 1^
  --min-fraction 0.5^
- --block-size 2000^
+ --block-size 5000^
  --ncpus 2
 
 python -m dimspy replicate-filter^

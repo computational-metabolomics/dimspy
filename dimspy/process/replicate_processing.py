@@ -119,7 +119,7 @@ def read_scans(fn, source, function_noise, min_scans=1, filter_scan_events=None)
     return scans
 
 
-def average_replicate_scans(ID, pls, ppm=2.0, min_fraction=0.8, rsd_thres=30.0, block_size=2000, ncpus=None):
+def average_replicate_scans(name, pls, ppm=2.0, min_fraction=0.8, rsd_thres=30.0, block_size=5000, ncpus=None):
 
     emlst = np.array(map(lambda x: x.size == 0, pls))
     if np.sum(emlst) > 0:
@@ -128,7 +128,7 @@ def average_replicate_scans(ID, pls, ppm=2.0, min_fraction=0.8, rsd_thres=30.0, 
 
     pm = align_peaks(pls, ppm=ppm, block_size=block_size, ncpus=ncpus)
 
-    pl_avg = pm.to_peaklist(ID=ID)
+    pl_avg = pm.to_peaklist(ID=name)
     # meta data
     for pl in pls:
         for k, v in pl.metadata.items():
@@ -152,7 +152,7 @@ def average_replicate_scans(ID, pls, ppm=2.0, min_fraction=0.8, rsd_thres=30.0, 
     return pl_avg
 
 
-def average_replicate_peaklists(pls, ppm, min_peaks, rsd_thres, block_size=2000, ncpus=None):
+def average_replicate_peaklists(pls, ppm, min_peaks, rsd_thres=None, block_size=5000, ncpus=None):
 
     pm = align_peaks(pls, ppm, block_size, ncpus)
 
@@ -173,7 +173,7 @@ def average_replicate_peaklists(pls, ppm, min_peaks, rsd_thres, block_size=2000,
     return pl
 
 
-def join_peaklists(ID, pls):
+def join_peaklists(name, pls):
 
     def _join_atrtributes(pls):
         attrs_out = collections.OrderedDict()
@@ -195,7 +195,7 @@ def join_peaklists(ID, pls):
         return pl
 
     attrs = _join_atrtributes(pls)
-    pl_j = PeakList(ID=ID, mz=attrs["mz"], intensity=attrs["intensity"])
+    pl_j = PeakList(ID=name, mz=attrs["mz"], intensity=attrs["intensity"])
     del attrs["mz"], attrs["intensity"]  # default attributes
     for a in attrs:
         pl_j.add_attribute(a, attrs[a], is_flag=(a in pls[0].flag_attributes), flagged_only=False)

@@ -145,7 +145,7 @@ class PeakAlignmentTestCase(unittest.TestCase):
     #             for i in range(100)]
     #
     #     try:
-    #         pm = align_peaks(pkls, ppm = 2.0, block_size = 2000, fixed_block = False, edge_extend = 10, ncpus = 2)
+    #         pm = align_peaks(pkls, ppm = 2.0, block_size = 5000, fixed_block = False, edge_extend = 10, ncpus = 2)
     #     except Exception, e:
     #         self.fail('alignment failed: ' + str(e))
 

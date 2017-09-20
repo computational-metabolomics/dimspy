@@ -107,7 +107,7 @@ def main():
                            help="Summary/Report of processed mass spectra")
 
     parser_ps.add_argument('-b', '--block-size',
-                           default=2000, type=int, required=False,
+                           default=5000, type=int, required=False,
                            help="The size of each block of peaks to perform clustering on.")
 
     parser_ps.add_argument('-c', '--ncpus',
@@ -155,7 +155,7 @@ def main():
                            help="Summary/Report of processed mass spectra")
 
     parser_rf.add_argument('-b', '--block-size',
-                           default=2000, type=int, required=False,
+                           default=5000, type=int, required=False,
                            help="The size of each block of peaks to perform clustering on.")
 
     parser_rf.add_argument('-c', '--ncpus',
@@ -185,7 +185,7 @@ def main():
                                 "Column names: filename, replicate, batch, injectionOrder, classLabel.")
 
     parser_as.add_argument('-b', '--block-size',
-                           default=2000, type=int, required=False,
+                           default=5000, type=int, required=False,
                            help="The size of each block of peaks to perform clustering on.")
 
     parser_as.add_argument('-c', '--ncpus',
