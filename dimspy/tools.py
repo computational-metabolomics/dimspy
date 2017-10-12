@@ -129,7 +129,7 @@ def process_scans(source, function_noise, snr_thres, ppm, min_fraction=None, rsd
                 pl = update_metadata([pl], fl)
                 pl = join_peaklists("{}#{}".format(os.path.basename(filenames[i]), pl[0].metadata["header"][0]), pl)
                 pls.append(pl)
-                print pls
+
     return pls
 
 
