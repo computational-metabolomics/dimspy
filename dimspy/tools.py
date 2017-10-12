@@ -127,8 +127,9 @@ def process_scans(source, function_noise, snr_thres, ppm, min_fraction=None, rsd
         else:
             for pl in pls_avg:
                 pl = update_metadata([pl], fl)
-                pl = join_peaklists("{}#{}".format(os.path.basename(filenames[i]), pl.metadata["header"][0]), [pl])
-                pls.extend(pl)
+                pl = join_peaklists("{}#{}".format(os.path.basename(filenames[i]), pl[0].metadata["header"][0]), pl)
+                pls.append(pl)
+                print pls
     return pls
 
 
