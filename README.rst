@@ -67,9 +67,9 @@ Released under the GNU General Public License v3.0 (see `LICENSE` file)::
 .. |Build Status (Travis)| image:: https://img.shields.io/travis/computational-metabolomics/dimspy.svg?style=flat&maxAge=3600&label=Travis-CI
    :target: https://travis-ci.org/computational-metabolomics/dimspy
 
-.. |Build Status (AppVeyor)| image:: https://img.shields.io/appveyor/ci/computational-metabolomics/mzml2isa.svg?style=flat&maxAge=3600&label=AppVeyor
-   :target: https://ci.appveyor.com/project/RJMW/dimspy
-
+.. |Build Status (AppVeyor)| image:: https://img.shields.io/appveyor/ci/RJMW/dimspy.svg?style=flat&maxAge=3600&label=AppVeyor
+   :target: https://ci.appveyor.com/project/RJMW/dimspy/branch/master
+   
 .. |Py versions| image:: https://img.shields.io/pypi/pyversions/dimspy.svg?style=flat&maxAge=3600
    :target: https://pypi.python.org/pypi/dimspy/
 
