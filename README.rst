@@ -1,4 +1,4 @@
-dimspy
+DIMSpy
 ======
 |Version| |Py versions| |Git| |Bioconda| |Build Status (Travis)| |Build Status (AppVeyor)| |License| |RTD doc|
 
@@ -68,7 +68,7 @@ Released under the GNU General Public License v3.0 (see `LICENSE` file)::
    :target: https://travis-ci.org/computational-metabolomics/dimspy
 
 .. |Build Status (AppVeyor)| image:: https://img.shields.io/appveyor/ci/computational-metabolomics/mzml2isa.svg?style=flat&maxAge=3600&label=AppVeyor
-   :target: https://ci.appveyor.com/project/computational-metabolomics/dimspy
+   :target: https://ci.appveyor.com/project/RJMW/dimspy
 
 .. |Py versions| image:: https://img.shields.io/pypi/pyversions/dimspy.svg?style=flat&maxAge=3600
    :target: https://pypi.python.org/pypi/dimspy/
@@ -86,7 +86,7 @@ Released under the GNU General Public License v3.0 (see `LICENSE` file)::
    :target: https://www.gnu.org/licenses/gpl-3.0.html
 
 .. |RTD doc| image:: https://img.shields.io/badge/documentation-RTD-71B360.svg?style=flat&maxAge=3600
-   :target: http://dimspy.readthedocs.io/en/latest/dimspy/index.html
+   :target: https://computational-metabolomics.github.io/dimspy/
 
 .. _pip: https://pip.pypa.io/
 .. _Conda: http://conda.pydata.org/docs/
