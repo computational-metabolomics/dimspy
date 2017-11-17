@@ -202,7 +202,7 @@ def replicate_filter(source, ppm, replicates, min_peaks, rsd_thres=None, filelis
 
             if hasattr(pls_comb[0].metadata, "injectionOrder"):
                 pl.metadata["injectionOrder"] = pls_comb[0].metadata["injectionOrder"]
-            pl.metadata["replicate"] = [_pl.metadata["replicate"] for _pl in pls_comb]
+            pl.metadata["replicates"] = [_pl.metadata["replicate"] for _pl in pls_comb]
             pl.tags.add_tags(*pls_comb[0].tags.tag_of(None),
                              **{t: pls_comb[0].tags.tag_of(t) for t in pls_comb[0].tags.tag_types})
 
@@ -459,6 +459,8 @@ def create_sample_list(source, path_out, delimiter="\t", qc_label="QC", col_name
         header = ["filename", "batch", "injectionOrder", "classLabel", "sampleType"]
         if hasattr(source[0].metadata, "replicate"):
             header.insert(1, "replicate")
+        elif hasattr(source[0].metadata, "replicates"):
+            header.insert(1, "replicates")
 
         pls_tags = [pl.tags for pl in source]
         pls_ids = [pl.ID for pl in source]
@@ -497,6 +499,8 @@ def create_sample_list(source, path_out, delimiter="\t", qc_label="QC", col_name
             if len(pls_metadata) > 0:
                 if hasattr(pls_metadata[i], "replicate"):
                     row[header.index("replicate")] = pls_metadata[i].replicate
+                if hasattr(pls_metadata[i], "replicates"):
+                    row[header.index("replicates")] = pls_metadata[i].replicates
                 if hasattr(pls_metadata[i], "injectionOrder"):
                     row[header.index("injectionOrder")] = pls_metadata[i].injectionOrder
 
