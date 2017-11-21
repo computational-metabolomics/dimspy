@@ -349,7 +349,7 @@ def main():
                              help="Directory (peaklists) or text file (peak matrix) to write to.")
 
     parser_hpmt.add_argument('-a', '--attribute_name',
-                             default="intensity", choices=["intensity", "mz"], required=False,
+                             default="intensity", choices=["intensity", "mz", "snr"], required=False,
                              help="Type of matrix to print.")
 
     parser_hpmt.add_argument('-l', '--class-label-rsd',

@@ -199,6 +199,7 @@ class WorkflowTestCase(unittest.TestCase):
                 with open(to_test_data(fn), "rU") as comp:
                     self.assertEqual(test_result.read(), comp.read())
 
+
     def test_hdf5_peak_matrix_to_txt(self):
         hdf5_peak_matrix_to_txt(to_test_data("MTBLS79_mzml_peak_matrix.hdf5"), to_test_result("pm_mzml_triplicates.txt"),
                                 attr_name="intensity", rsd_tags=(), delimiter="\t", samples_in_rows=True, comprehensive=False)
@@ -212,11 +213,18 @@ class WorkflowTestCase(unittest.TestCase):
             self.assertEquals(test_result.readline().split("\t")[0:6],
                               ["m/z", "missing values", "tags_classLabel", "tags_batch", "tags_untyped", "74.0166655257"])
 
+        hdf5_peak_matrix_to_txt(to_test_data("MTBLS79_mzml_peak_matrix.hdf5"), to_test_result("pm_mzml_triplicates_snr.txt"),
+                                attr_name="snr", rsd_tags=("QC",), delimiter="\t", samples_in_rows=True, comprehensive=False)
+        with open(to_test_result("pm_mzml_triplicates_snr.txt"), "rU") as test_result:
+            self.assertEquals(test_result.readlines()[1].split("\t")[0:10],
+                              ["batch04_B02_rep01_301.mzML", "0.0", "0.0", "0.0", "0.0", "0.0", "0.0", "3.60960180872", "0.0", "4.35180213987"])
+
         hdf5_peak_matrix_to_txt(to_test_data("MTBLS79_mzml_peak_matrix.hdf5"), to_test_result("pm_mzml_triplicates_comprehensive_T.txt"),
                                 attr_name="intensity", rsd_tags=("QC",), delimiter="\t", samples_in_rows=False, comprehensive=True)
         with open(to_test_result("pm_mzml_triplicates_comprehensive_T.txt"), "rU") as test_result:
             self.assertEquals(test_result.readline().split("\t")[0:5],
                               ['m/z', 'present', 'occurrence', 'purity', 'rsd_QC'])
+
 
     def test_create_sample_list(self):
         pls = load_peaklists_from_hdf5(to_test_data("MTBLS79_mzml_triplicates.hdf5"))
