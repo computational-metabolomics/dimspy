@@ -25,15 +25,8 @@ def _eval(v):
     except (ValueError, SyntaxError):
         return str(v)
 
-def _packMeta(v):
-    dv = cp.dumps(v)
-    # in case unicode chars, which are 4 times larger then str in python
-    return ['O', dv] if sys.getsizeof(dv) / 1000. < 16 else \
-           ['C', zlib.compress(dv)]
-
-def _unpackMeta(v):
-    dv = zlib.decompress(v[1]) if v[0] == 'C' else v[1]
-    return cp.loads(dv)
+_packMeta = lambda x: [zlib.compress(cp.dumps(x))]
+_unpackMeta = lambda x: cp.loads(zlib.decompress(x[0]))
 
 
 # peaklists portals
