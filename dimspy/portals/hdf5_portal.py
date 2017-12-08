@@ -10,7 +10,8 @@ The PeakList and PeakMatrix HDF5 portals.
 
 """
 
-import os, logging, h5py
+import os, sys, logging, zlib, h5py
+import cPickle as cp
 import numpy as np
 from ast import literal_eval
 from dimspy.models.peaklist_tags import PeakList_Tags
@@ -23,6 +24,16 @@ def _eval(v):
         return literal_eval(v)
     except (ValueError, SyntaxError):
         return str(v)
+
+def _packMeta(v):
+    dv = cp.dumps(v)
+    # in case unicode chars, which are 4 times larger then str in python
+    return ['O', dv] if sys.getsizeof(dv) / 1000. < 16 else \
+           ['C', zlib.compress(dv)]
+
+def _unpackMeta(v):
+    dv = zlib.decompress(v[1]) if v[0] == 'C' else v[1]
+    return cp.loads(dv)
 
 
 # peaklists portals
@@ -56,7 +67,7 @@ def save_peaklists_as_hdf5(pkls, filename):
 
         dset.attrs['flag_attrs'] = pkl.flag_attributes
         dset.attrs['tags'] = [(t if type(t) in (tuple, list) else ('None', t)) for t in pkl.tags.to_list()]
-        for k, v in pkl.metadata.items(): dset.attrs['metadata_' + k] = v
+        for k, v in pkl.metadata.items(): dset.attrs['metadata_' + k] = _packMeta(v)
 
     map(lambda x: _savepkl(*x), enumerate(pkls))
 
@@ -89,7 +100,7 @@ def load_peaklists_from_hdf5(filename):
         if dn[0] != 'mz' or dn[1] != 'intensity':
             raise IOError('PANIC: HDF5 dataset matrix not in order')
         pkl = PeakList(ID, dm[0].astype(np.float64), dm[1].astype(np.float64),
-                       **{k[9:]: v for k,v in dset.attrs.items() if k.startswith('metadata_')})
+                       **{k[9:]: _unpackMeta(v) for k,v in dset.attrs.items() if k.startswith('metadata_')})
 
         for n, v, t in zip(dn[2:], dm[2:], dt[2:]):
             pkl.add_attribute(n, v, t, is_flag=(n in dset.attrs['flag_attrs']), flagged_only=False)
