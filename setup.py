@@ -3,8 +3,6 @@
 import setuptools
 import sys
 import dimspy
-import os
-import unittest
 
 
 def main():
@@ -14,14 +12,14 @@ def main():
 
     setuptools.setup(name="dimspy",
         version=dimspy.__version__,
-        description="Python package to process DIMS data",
+        description="Python package for data processing of direct-infusion mass spectrometry-based metabolomics and lipidomics data",
         long_description=open('README.rst').read(),
         author="Ralf Weber, Albert Zhou",
         author_email="r.j.weber@bham.ac.uk, j.zhou.3@bham.ac.uk ",
         url="https://github.com/computational-metabolomics/dimspy",
         license="GPLv3",
         platforms=['Windows, UNIX'],
-        keywords=['Metabolomics', 'Mass spectrometry', 'Data Processing', 'Direct-Infusion Mass Spectrometry'],
+        keywords=['Metabolomics', 'Lipidomics', 'Mass spectrometry', 'Data Processing', 'Direct-Infusion Mass Spectrometry'],
         packages=setuptools.find_packages(),
         test_suite='tests.suite',
         install_requires=open('requirements.txt').read().splitlines(),
