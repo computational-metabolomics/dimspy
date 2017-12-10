@@ -10,7 +10,7 @@ The PeakList and PeakMatrix HDF5 portals.
 
 """
 
-import os, sys, logging, zlib, h5py
+import os, logging, zlib, h5py
 import cPickle as cp
 import numpy as np
 from ast import literal_eval
@@ -25,8 +25,8 @@ def _eval(v):
     except (ValueError, SyntaxError):
         return str(v)
 
-_packMeta = lambda x: [zlib.compress(cp.dumps(x))]
-_unpackMeta = lambda x: cp.loads(zlib.decompress(x[0]))
+_packMeta = lambda x: np.array(zlib.compress(cp.dumps(x)) + '\xFF') # numpy truncates right-side \x00
+_unpackMeta = lambda x: cp.loads(zlib.decompress(x[:-1]))
 
 
 # peaklists portals
