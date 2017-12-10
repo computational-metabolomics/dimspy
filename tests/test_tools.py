@@ -162,7 +162,7 @@ class WorkflowTestCase(unittest.TestCase):
         #                            block_size=5000, ncpus=None)  # creating test set
         # save_peaklists_as_hdf5(pls_rep_01, to_test_data("batch04_QC17_rep01_262.hdf5"))  # creating test set
         # save_peaklists_as_hdf5(pls_rep_02, to_test_data("batch04_QC17_rep02_263.hdf5"))  # creating test set
-        #save_peaklists_as_hdf5(pls_rep_03, to_test_data("batch04_QC17_rep03_264.hdf5"))  # creating test set
+        # save_peaklists_as_hdf5(pls_rep_03, to_test_data("batch04_QC17_rep03_264.hdf5"))  # creating test set
 
         pls_rep_01 = load_peaklists_from_hdf5(to_test_data("batch04_QC17_rep01_262.hdf5"))
         pls_rep_02 = load_peaklists_from_hdf5(to_test_data("batch04_QC17_rep02_263.hdf5"))
