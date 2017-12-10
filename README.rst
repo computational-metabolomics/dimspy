@@ -26,7 +26,7 @@ Bugs
 Please report any bugs that you find `here <https://github.com/computational-metabolomics/dimspy/issues>`_.
 Or fork the repository on `GitHub <https://github.com/computational-metabolomics/dimspy/>`_
 and create a pull request (PR). We welcome all contributions, and we
-will help you to make the PR if you are new to `git` (see `CONTRIBUTING.rst`).
+will help you to make the PR if you are new to `git`.
 
 
 Developers & Contributors
@@ -38,9 +38,7 @@ Developers & Contributors
 
 License
 -------
-Released under the GNU General Public License v3.0 (see `LICENSE` file)::
-
-
+Released under the GNU General Public License v3.0 (see `LICENSE file <https://github.com/computational-metabolomics/dimspy/blob/master/LICENSE>`_)
 
 
 .. |Build Status (Travis)| image:: https://img.shields.io/travis/computational-metabolomics/dimspy.svg?style=flat&maxAge=3600&label=Travis-CI
