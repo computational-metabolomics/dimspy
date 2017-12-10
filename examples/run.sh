@@ -35,11 +35,11 @@ python -m dimspy sample-filter \
 --output tests/test_results/pm_a_bf_sf.hdf5 \
 --min-fraction 0.8
 
-python -m dimspy hdf5-to-txt \
+python -m dimspy hdf5-pls-to-txt \
 --input tests/test_results/peaklists_rf.hdf5 \
 --output tests/test_results/
 
-python -m dimspy hdf5-to-txt \
+python -m dimspy hdf5-pm-to-txt \
 --input tests/test_results/pm_a_bf_sf.hdf5 \
 --output tests/test_results/pm_a_bf_sf.txt
 
