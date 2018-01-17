@@ -113,7 +113,7 @@ class PeakFiltersTestCase(unittest.TestCase):
         pm = filter_fraction(pm, 0.6, within_classes = True, class_tag_type = 'plate')
         self.assertEqual(pm.shape[1], 9)
         self.assertRaises(AttributeError, lambda: filter_fraction(pm, 1, within_classes = True, class_tag_type = 'time_point'))
-        self.assertRaises(AttributeError, lambda: filter_fraction(pm, 1, within_classes = True))
+        self.assertRaises(KeyError, lambda: filter_fraction(pm, 1, within_classes = True))
 
     def test_peak_matrix_blank_filter(self):
         pm = self._createPeakMatrix()
