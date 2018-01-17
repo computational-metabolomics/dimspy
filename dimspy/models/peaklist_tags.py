@@ -90,11 +90,11 @@ class PeakList_Tags(object):
         """
         Checks whether there exists a specific tag type.
 
-        :param tag_type: the tag type for checking
+        :param tag_type: the tag type for checking, None tag_type (i.e. untyped) always return True
         :rtype: bool
 
         """
-        return tag_type in self.tag_types
+        return tag_type is None or tag_type in self.tag_types
 
     def has_tag(self, *args, **kwargs):
         """

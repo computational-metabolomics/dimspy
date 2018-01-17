@@ -120,7 +120,7 @@ def filter_fraction(pm, fraction_threshold, within_classes=False, class_tag_type
     :param pm: the target peak matrix
     :param fraction_threshold: threshold of the sample fractions
     :param within_classes: whether to calculate the fraction array within each class. Default = False
-    :param class_tag_type: tag type to unmask samples within the same class. Default = None, indicating untyped tags
+    :param class_tag_type: tag type to unmask samples within the same class. Default = None
     :param flag_name: name of the new flag. Default = 'fraction_flag'
     :rtype: PeakMatrix object
 
@@ -131,6 +131,8 @@ def filter_fraction(pm, fraction_threshold, within_classes=False, class_tag_type
     if not within_classes:
         pm.add_flag(flag_name, pm.fraction >= fraction_threshold)
     else:
+        if class_tag_type is None:
+            raise KeyError('must provide class tag type for within classes filtering')
         if not all(map(lambda t: t.has_tag_type(class_tag_type), pm.peaklist_tags)):
             raise AttributeError('not all tags have tag type [%s]' % class_tag_type)
         flg = np.ones(pm.shape[1])
