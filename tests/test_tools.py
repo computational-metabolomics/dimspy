@@ -11,6 +11,7 @@ origin: 05-23-2017
 
 
 import unittest
+import numpy as np
 from dimspy.tools import *
 from dimspy.portals.hdf5_portal import *
 
@@ -204,20 +205,23 @@ class WorkflowTestCase(unittest.TestCase):
         hdf5_peak_matrix_to_txt(to_test_data("MTBLS79_mzml_peak_matrix.hdf5"), to_test_result("pm_mzml_triplicates.txt"),
                                 attr_name="intensity", rsd_tags=(), delimiter="\t", samples_in_rows=True, comprehensive=False)
         with open(to_test_result("pm_mzml_triplicates.txt"), "rU") as test_result:
-            self.assertEquals(test_result.readline().split("\t")[0:5],
-                              ['m/z', '74.0166655257', '74.0198337519', '74.0200238089', '74.0202012645'])
+            ln = test_result.readline().split("\t")[:5]
+            self.assertEqual(ln[0], "m/z")
+            self.assertTrue(np.allclose(map(float,ln[1:]), [74.0166655257, 74.0198337519, 74.0200238089, 74.0202012645], atol = 1e-10))
 
         hdf5_peak_matrix_to_txt(to_test_data("MTBLS79_mzml_peak_matrix.hdf5"), to_test_result("pm_mzml_triplicates_comprehensive.txt"),
                                 attr_name="intensity", rsd_tags=("QC",), delimiter="\t", samples_in_rows=True, comprehensive=True)
         with open(to_test_result("pm_mzml_triplicates_comprehensive.txt"), "rU") as test_result:
-            self.assertEquals(test_result.readline().split("\t")[0:6],
-                              ["m/z", "missing values", "tags_classLabel", "tags_batch", "tags_untyped", "74.0166655257"])
+            ln = test_result.readline().split("\t")[:6]
+            self.assertEquals(ln[:-1], ["m/z", "missing values", "tags_classLabel", "tags_batch", "tags_untyped"])
+            self.assertTrue(np.isclose(float(ln[-1]), 74.0166655257))
 
         hdf5_peak_matrix_to_txt(to_test_data("MTBLS79_mzml_peak_matrix.hdf5"), to_test_result("pm_mzml_triplicates_snr.txt"),
                                 attr_name="snr", rsd_tags=("QC",), delimiter="\t", samples_in_rows=True, comprehensive=False)
         with open(to_test_result("pm_mzml_triplicates_snr.txt"), "rU") as test_result:
-            self.assertEquals(test_result.readlines()[1].split("\t")[0:10],
-                              ["batch04_B02_rep01_301.mzML", "0.0", "0.0", "0.0", "0.0", "0.0", "0.0", "3.60960180872", "0.0", "4.35180213987"])
+            ln = test_result.readlines()[1].split("\t")[:10]
+            self.assertEqual(ln[0], "batch04_B02_rep01_301.mzML")
+            self.assertTrue(np.allclose(map(float,ln[1:]), [0., 0., 0., 0., 0., 0., 3.60960180872, 0., 4.35180213987], atol = 1e-10))
 
         hdf5_peak_matrix_to_txt(to_test_data("MTBLS79_mzml_peak_matrix.hdf5"), to_test_result("pm_mzml_triplicates_comprehensive_T.txt"),
                                 attr_name="intensity", rsd_tags=("QC",), delimiter="\t", samples_in_rows=False, comprehensive=True)
