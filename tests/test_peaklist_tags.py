@@ -40,11 +40,10 @@ class PeakListTagsTestCase(unittest.TestCase):
         self.assertFalse(tags.has_tag_type('None') or tags.has_tag_type('not_exist'))
 
         self.assertTrue(tags.has_tag(1) and tags.has_tag([2, 3]) and tags.has_tag('str_tag'))
-        self.assertTrue(tags.has_tag(typed_tag1 = (4, 5)) and tags.has_tag(typed_tag2 = u'ustr_tag'))
-        self.assertTrue(tags.has_tag((4, 5)) and tags.has_tag(u'ustr_tag'))
-        self.assertFalse(tags.has_tag('not_exist') or tags.has_tag(not_such_type = None))
-        self.assertFalse(tags.has_tag(typed_tag1 = u'ustr_tag'))
-        self.assertRaises(ValueError, lambda: tags.has_tag(1, typed_tag1 = (2, 3)))
+        self.assertTrue(tags.has_tag((4, 5), 'typed_tag1') and tags.has_tag(u'ustr_tag', 'typed_tag2'))
+        self.assertFalse(tags.has_tag((4, 5)) or tags.has_tag(u'ustr_tag'))
+        self.assertFalse(tags.has_tag('not_exist') or tags.has_tag(None, 'not_such_type'))
+        self.assertFalse(tags.has_tag(u'ustr_tag', 'typed_tag1'))
 
         self.assertListEqual(sorted(tags.tag_of()), [1, [2, 3], 'str_tag'])
         self.assertTrue(tags.tag_of('typed_tag1') == (4, 5) and tags.tag_of('typed_tag2') == u'ustr_tag')
@@ -56,11 +55,8 @@ class PeakListTagsTestCase(unittest.TestCase):
         self.assertRaises(KeyError, lambda: tags.add_tags(**{'None': 'none_tag'}))
         self.assertRaises(ValueError, lambda: tags.add_tags(None))
         self.assertRaises(ValueError, lambda: tags.add_tags(typed_tag3 = None))
-        self.assertRaises(ValueError, lambda: tags.add_tags('str_tag3', 'str_tag4', typed_tag3 = 'str_tag3'))
         self.assertRaises(ValueError, lambda: tags.add_tags('str_tag', 'str_tag2'))
-        self.assertRaises(ValueError, lambda: tags.add_tags(u'ustr_tag', ))
         self.assertRaises(ValueError, lambda: tags.add_tags(typed_tag2 = u'ustr_tag'))
-        self.assertRaises(ValueError, lambda: tags.add_tags(typed_tag3 = u'ustr_tag'))
 
         try:
             tags.add_tags() # empty input should work
@@ -80,7 +76,7 @@ class PeakListTagsTestCase(unittest.TestCase):
     def test_dropping_methods(self):
         tags = self._createTags()
 
-        tags.drop_tags([2, 3], (4, 5), {6, 7})
+        tags.drop_tags([2, 3], typed_tag1 = (4, 5))
         self.assertListEqual(sorted(tags.typed_tags), [('typed_tag2', u'ustr_tag')])
         self.assertListEqual(sorted(tags.untyped_tags), [1, 'str_tag'])
 

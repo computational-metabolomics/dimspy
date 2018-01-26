@@ -463,7 +463,7 @@ class PeakMatrix(object):
         """            
         override = kwargs.pop('override') if kwargs.has_key('override') else False
         mask = map(lambda x: all(map(lambda t: x.has_tag(t), args)) and
-                             all(map(lambda t: x.has_tag(**dict([t])), kwargs.items())), self._tags)
+                             all(map(lambda t: x.has_tag(t[1], tag_type = t[0]), kwargs.items())), self._tags)
         self.mask = np.logical_or(False if override else self._mask, mask)
         return self
 
@@ -487,7 +487,7 @@ class PeakMatrix(object):
         """                
         override = kwargs.pop('override') if kwargs.has_key('override') else False
         mask = map(lambda x: not (all(map(lambda t: x.has_tag(t), args)) and
-                                  all(map(lambda t: x.has_tag(**dict([t])), kwargs.items()))), self._tags)
+                                  all(map(lambda t: x.has_tag(t[1], tag_type = x[0]), kwargs.items()))), self._tags)
         self.mask = np.logical_and(True if override else self._mask, mask)
         return self
 

@@ -55,13 +55,14 @@ class PeakList_Tags(object):
     @property
     def tag_values(self):
         """
-        Property of included tag values.
+        Property of included tag values. Same typed tag values will be combined
 
         :getter: returns a tuple containing all the tag values, both typed and untyped tags
         :type: tuple
 
         """
-        return tuple(self._untyped_tags + self._typed_tags.values())
+        return tuple(self._untyped_tags) + \
+               reduce(lambda x,y: x + ((y,) if y not in x else ()), self._typed_tags.values(), ())
 
     @property
     def typed_tags(self):
@@ -96,12 +97,12 @@ class PeakList_Tags(object):
         """
         return tag_type is None or tag_type in self.tag_types
 
-    def has_tag(self, *args, **kwargs):
+    def has_tag(self, tag, tag_type = None):
         """
         Checks whether there exists a specific tag.
 
-        :param args: **one** tag value, either typed or untyped
-        :param kwargs: **one** tag_type = tag_value
+        :param tag: the tag value for checking
+        :param tag_type: the tag type for checking, None indicates untyped tags
         :rtype: bool
 
         >>> tags = PeakList_Tags('untyped_tag1', tag_type1 = 'tag_value1')
@@ -109,21 +110,19 @@ class PeakList_Tags(object):
         True
         >>> tags.has_tag(tag_type1 = 'untyped_tag1')
         False
-        >>> tags.has_tag('untyped_tag1', 'tag_value1')
-        ...
-        ValueError: searching multiple tags is not allowded
+        >>> tags.has_tag('tag_value1')
+        False
 
         """
-        if len(args) + len(kwargs) > 1:
-            raise ValueError('searching multiple tags is not allowded')
-        return (args[0] in self.tag_values) if len(args) > 0 else (kwargs.items()[0] in self.typed_tags)
+        return (tag in self._untyped_tags) if tag_type is None else \
+               (self._typed_tags.has_key(tag_type) and self._typed_tags[tag_type] == tag)
 
     def tag_of(self, tag_type = None):
         """
         Returns tag value of the given tag type, or tuple of untyped tags if tag_type is None.
 
         :param tag_type: valid tag type, or None for untyped tags
-        :rtype: same as tag_value (tag_type is not None), or tupe (tag_type is None)
+        :rtype: tuple (tag_type is None), or any (tag_type is not None)
 
         """
         if not (tag_type is None or self.has_tag_type(tag_type)):
@@ -144,28 +143,32 @@ class PeakList_Tags(object):
             raise KeyError('["None"] is not an acceptable tag type') # reserve for hdf5 protal
         if None in args or None in kwargs.values():
             raise ValueError('None is not an acceptable tag value')
-        if any(map(lambda x: x in kwargs.values(), args)) or \
-           any(map(lambda x: x in args, kwargs.values())):
-            raise ValueError('assigned tags have duplication')
-        if any(map(self.has_tag, args)) or any(map(self.has_tag, kwargs.values())):
+        if len(args) != len(reduce(lambda x,y: x+([y] if y not in x else []), args, [])): # set cannot not apply to list
+            raise ValueError('assigned untyped tags have duplication')
+        if any(map(self.has_tag, args)) or \
+           any(map(lambda x: self.has_tag(x[1], tag_type = x[0]), kwargs.items())):
             raise ValueError('tag(s) already exists')
         self._untyped_tags += list(args)
         self._typed_tags.update(kwargs)
 
-    def drop_tags(self, *args):
+    def drop_tags(self, *args, **kwargs):
         """
         Drops multiple typed and untyped tags.
 
-        :param args: list of tag values, both typed and untyped
+        :param args: list of untyped tags
+        :param kwargs: list of typed tags
 
         >>> tags = PeakList_Tags('untyped_tag1', tag_type1 = 'tag_value1')
-        >>> tags.drop_tags('tag_value1')
+        >>> tags.drop_tags(tag_type1 = 'tag_value1')
         >>> print tags
         untyped_tag1
 
         """
-        self._untyped_tags = filter(lambda x: x not in args, self._untyped_tags)
-        self._typed_tags = dict(filter(lambda x: x[1] not in args, self._typed_tags.items()))
+        if not all(map(self.has_tag, args)) or \
+           not all(map(lambda x: self.has_tag(x[1], tag_type = x[0]), kwargs.items())):
+            raise ValueError('tag(s) not exists')
+        self._untyped_tags = list(filter(lambda x: x not in args, self.untyped_tags))
+        self._typed_tags = dict(filter(lambda x: x not in kwargs.items(), self.typed_tags))
 
     def drop_tag_types(self, *args):
         """
@@ -174,7 +177,7 @@ class PeakList_Tags(object):
         :param args: list of tag types
 
         """
-        self._typed_tags = dict(filter(lambda x: x[0] not in args, self._typed_tags.items()))
+        self._typed_tags = dict(filter(lambda x: x[0] not in args, self.typed_tags))
 
     def drop_all_tags(self):
         """
