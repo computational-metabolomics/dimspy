@@ -20,13 +20,13 @@ class PeakListMetadataTestCase(unittest.TestCase):
     def _createMetadata():
         return PeakList_Metadata((('a', 1), ('b', 2), ('c', 3)))
 
-    def test_creation(self):
+    def test_pl_meta_creation(self):
         try:
             self._createMetadata()
         except Exception, e:
             self.fail('create metadata object failed: ' + str(e))
 
-    def test_operations(self):
+    def test_pl_meta_operations(self):
         meta = self._createMetadata()
 
         self.assertListEqual(sorted(meta.keys()), ['a', 'b', 'c'])
@@ -43,7 +43,7 @@ class PeakListMetadataTestCase(unittest.TestCase):
         del meta['b']
         self.assertFalse(meta.has_key('b'))
 
-    def test_pickle(self):
+    def test_pl_meta_pickle(self):
         meta = self._createMetadata()
         try:
             mstr = cp.dumps(meta)

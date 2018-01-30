@@ -16,6 +16,7 @@ import logging
 import numpy as np
 from collections import OrderedDict, Iterable
 from string import join
+from peaklist_tags import Tag
 from peaklist import PeakList
 
 
@@ -204,10 +205,10 @@ class PeakMatrix(object):
         Property of the source peaklist tag types.
 
         :getter: returns a tuple including the types of the typed tags of the source peaklists
-        :type: tuple
+        :type: set
 
         """
-        return tuple(set(reduce(lambda x, y: x + y, [t.tag_types for t in self.peaklist_tags], ())))
+        return reduce(lambda x,y: x.union(y), map(lambda x: x.tag_types, self.peaklist_tags))
 
     @property
     def peaklist_tag_values(self):
@@ -215,10 +216,10 @@ class PeakMatrix(object):
         Property of the source peaklist tag values.
 
         :getter: returns a tuple including the values of the source peaklists tags, both typed and untyped
-        :type: tuple
+        :type: set
 
         """
-        return tuple(set(reduce(lambda x, y: x + y, [t.tag_values for t in self.peaklist_tags], ())))
+        return reduce(lambda x,y: x.union(y), map(lambda x: x.tag_values, self.peaklist_tags))
 
     @property
     def shape(self):
@@ -398,8 +399,8 @@ class PeakMatrix(object):
         """
         Calculates relative standard deviation (RSD) array.
 
-        :param args: untyped tag label for RSD calculation, no value = calculate over all samples
-        :param kwargs: typed tag label for RSD calculation, , no value = calculate over all samples
+        :param args: tags or untyped tag values for RSD calculation, no value = calculate over all samples
+        :param kwargs: typed tags for RSD calculation, , no value = calculate over all samples
         :param flagged_only: whether to calculate on flagged peaks only. Default = True
         :type: numpy array
 
@@ -437,19 +438,19 @@ class PeakMatrix(object):
         :param tag_type: the type of the returning tags. Provide None to obtain untyped tags
         :rtype: tuple
 
-        """        
-        if not (tag_type is None or all(map(lambda x: x.has_tag_type(tag_type), self.peaklist_tags))):
-            raise ValueError('not all samples has tag type [%s]' % tag_type)
-        tlst = [t.tag_of(tag_type) for t in self.peaklist_tags]
+        """
+        if any(map(lambda x: not x.has_tag_type(tag_type), self.peaklist_tags)):
+            raise KeyError('not all samples has tag type [%s]' % tag_type)
+        tlst = filter(lambda x: x is not None, [t.tag_of(tag_type) for t in self.peaklist_tags])
         if tag_type is None: tlst = reduce(lambda x, y: x + y, tlst)
-        return tuple(set(tlst))
+        return reduce(lambda x, y: x + ((y,) if y not in x else ()), tlst, ())
 
     def mask_tags(self, *args, **kwargs):  # match to all
         """
         Masks samples with particular tags.
 
-        :param args: target tag values, both typed and untyped
-        :param kwargs: target typed tag types and values
+        :param args: tags or untyped tag values for masking
+        :param kwargs: typed tags for masking
         :param override: whether to override the current mask, default = False
         :rtype: PeakMatrix object (self)
 
@@ -462,6 +463,8 @@ class PeakMatrix(object):
 
         """            
         override = kwargs.pop('override') if kwargs.has_key('override') else False
+        if any(map(lambda x: isinstance(x, Tag), kwargs.values())):
+            logging.warning('setting additional type for Tag object in kwargs will be ignored')
         mask = map(lambda x: all(map(lambda t: x.has_tag(t), args)) and
                              all(map(lambda t: x.has_tag(t[1], tag_type = t[0]), kwargs.items())), self._tags)
         self.mask = np.logical_or(False if override else self._mask, mask)
@@ -471,8 +474,8 @@ class PeakMatrix(object):
         """
         Unmasks samples with particular tags.
 
-        :param args: target tag values, both typed and untyped
-        :param kwargs: target typed tag types and values
+        :param args: tags or untyped tag values for unmasking
+        :param kwargs: typed tags for unmasking
         :param override: whether to override the current mask, default = False
         :rtype: PeakMatrix object (self)
 
@@ -486,8 +489,10 @@ class PeakMatrix(object):
 
         """                
         override = kwargs.pop('override') if kwargs.has_key('override') else False
+        if any(map(lambda x: isinstance(x, Tag), kwargs.values())):
+            logging.warning('setting additional type for Tag object in kwargs will be ignored')
         mask = map(lambda x: not (all(map(lambda t: x.has_tag(t), args)) and
-                                  all(map(lambda t: x.has_tag(t[1], tag_type = x[0]), kwargs.items()))), self._tags)
+                                  all(map(lambda t: x.has_tag(t[1], tag_type = t[0]), kwargs.items()))), self._tags)
         self.mask = np.logical_and(True if override else self._mask, mask)
         return self
 
@@ -757,12 +762,13 @@ class PeakMatrix(object):
              [map(str, ln) for ln in self.attr_matrix(attr_name, flagged_only = not comprehensive).T]
 
         if comprehensive:
-            ttypes = set(reduce(lambda x, y: x + y, map(lambda x: x.tag_types, self.peaklist_tags)))
+            ttypes = reduce(lambda x, y: x.union(y), map(lambda x: x.tag_types, self.peaklist_tags))
+            ttypes.remove(None)
             tnum = len(ttypes)
             hd = [hd[0]] + ['missing values'] + map(lambda x: 'tags_' + x, ttypes) + ['tags_untyped'] + hd[1:]
             dm = [dm[0]] + \
                  [map(str, self.missing_values)] + \
-                 [map(lambda x: str(x.tag_of(t)) if x.has_tag_type(t) else '', self.peaklist_tags) for t in ttypes] + \
+                 [map(lambda x: (lambda v: '' if v is None else str(v.value))(x.tag_of(t)), self.peaklist_tags) for t in ttypes] + \
                  [map(lambda x: join(map(str, x.tag_of(None)), ';'), self.peaklist_tags)] + \
                  dm[1:]
 
@@ -771,7 +777,7 @@ class PeakMatrix(object):
             prelst = ['present']    + ([''] * (tnum + 2)) + map(str, self.property('present', flagged_only = False))
             ocrlst = ['occurrence'] + ([''] * (tnum + 2)) + map(str, self.property('occurrence', flagged_only = False))
             puplst = ['purity']     + ([''] * (tnum + 2)) + map(str, self.property('purity', flagged_only = False))
-            rsdmtx = [['rsd_' + rt] + ([''] * (tnum + 2)) + map(str, self.rsd(rt, flagged_only = False)) for rt in rsd_tags]
+            rsdmtx = [['rsd_' + str(rt)] + ([''] * (tnum + 2)) + map(str, self.rsd(rt, flagged_only = False)) for rt in rsd_tags]
             rsdlst = ['rsd_all']    + ([''] * (tnum + 2)) + map(str, self.rsd(flagged_only = False))
             flgmtx = [[fn] + ([''] * (tnum + 2)) + map(str, self.flag_values(fn).astype(int)) for fn in self.flag_names]
             flglst = ['flags']      + ([''] * (tnum + 2)) + map(str, self.flags.astype(int))
@@ -806,13 +812,13 @@ class mask_peakmatrix:
 
     def __init__(self, pm, *args, **kwargs):
         self._pm = pm
-        self._utags = args
-        self._ttags = kwargs
-        if not self._ttags.has_key('override'): self._ttags['override'] = True  # default for with statement
+        self._args = args
+        self._kwargs = kwargs
+        if not self._kwargs.has_key('override'): self._kwargs['override'] = True  # default for with statement
         self._oldmask = dict(zip(pm._pids, pm._mask))
 
     def __enter__(self):
-        self._pm.mask_tags(*self._utags, **self._ttags)
+        self._pm.mask_tags(*self._args, **self._kwargs)
         return self._pm
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -843,13 +849,13 @@ class unmask_peakmatrix:
 
     def __init__(self, pm, *args, **kwargs):
         self._pm = pm
-        self._utags = args
-        self._ttags = kwargs
-        if not self._ttags.has_key('override'): self._ttags['override'] = True  # default for with statement
+        self._args = args
+        self._kwargs = kwargs
+        if not self._kwargs.has_key('override'): self._kwargs['override'] = True  # default for with statement
         self._oldmask = dict(zip(pm._pids, pm._mask))
 
     def __enter__(self):
-        self._pm.unmask_tags(*self._utags, **self._ttags)
+        self._pm.unmask_tags(*self._args, **self._kwargs)
         return self._pm
 
     def __exit__(self, exc_type, exc_val, exc_tb):

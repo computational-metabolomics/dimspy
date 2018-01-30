@@ -24,13 +24,13 @@ class PeakListTestCase(unittest.TestCase):
         pl = PeakList('sample_peaklist', mzs, ints, mz_range = (100, 1000), frag_mode = 'slb')
         return pl
 
-    def test_creation(self):
+    def test_pl_creation(self):
         try:
             self._createPeakList()
         except Exception, e:
             self.fail('create PeakList object failed: ' + str(e))
 
-    def test_properties(self):
+    def test_pl_properties(self):
         pl = self._createPeakList()
         self.assertEqual(pl.ID, 'sample_peaklist')
 
@@ -47,11 +47,13 @@ class PeakListTestCase(unittest.TestCase):
         self.assertListEqual(sorted(pl.metadata.keys()), ['frag_mode', 'mz_range', 'type'])
 
         try:
-            pl.tags.add_tags('sample', 'passed_qc', treatment = 'high_dose')
+            pl.tags.add_tag('sample')
+            pl.tags.add_tag('passed_qc')
+            pl.tags.add_tag('high_dose', tag_type = 'treatment')
         except Exception, e:
             self.fail('access tags failed: ' + str(e))
-        self.assertListEqual(sorted(pl.tags.untyped_tags), ['passed_qc', 'sample'])
-        self.assertListEqual(sorted(pl.tags.typed_tags), [('treatment', 'high_dose')])
+        self.assertEqual(set(pl.tags.tag_types), {None, 'treatment'})
+        self.assertEqual(set(pl.tags.tag_values), {'sample', 'passed_qc', 'high_dose'})
 
         self.assertTupleEqual(pl.attributes, ('mz', 'intensity', 'odd_flag'))
         self.assertTupleEqual(pl.flag_attributes, ('odd_flag',))
@@ -61,7 +63,7 @@ class PeakListTestCase(unittest.TestCase):
         self.assertTupleEqual((len(pl.peaks), len(pl.peaks[0])), (5, 3))
         self.assertTupleEqual((len(pl.dtable), len(pl.dtable[0])), (10, 3))
 
-    def test_attribute_operations(self):
+    def test_pl_attribute_operations(self):
         pl = self._createPeakList()
 
         self.assertTrue(pl.has_attribute('mz'))
@@ -105,7 +107,7 @@ class PeakListTestCase(unittest.TestCase):
         self.assertRaises(AttributeError, lambda: pl.drop_attribute('values_4'))
         self.assertRaises(AttributeError, lambda: pl.drop_attribute('mz'))
 
-    def test_peaks_operations(self):
+    def test_pl_peaks_operations(self):
         pl = self._createPeakList()
         pl.add_attribute('value_flag', [1, 0] * 5, is_flag = True)
 
@@ -134,7 +136,7 @@ class PeakListTestCase(unittest.TestCase):
         pl.cleanup_unflagged_peaks()
         self.assertTupleEqual((0, 200, 600, 800), tuple(pl.get_attribute('mz')))
 
-    def test_build_ins(self):
+    def test_pl_build_ins(self):
         pl = self._createPeakList()
 
         try:
@@ -153,7 +155,7 @@ class PeakListTestCase(unittest.TestCase):
         self.assertListEqual([0, 200, 400, 600, 800], pl['mz'].tolist())
         self.assertListEqual([0, 200, 400], list(zip(*pl[:3].tolist())[0]))
 
-    def test_exports(self):
+    def test_pl_exports(self):
         pl = self._createPeakList()
 
         try:
@@ -169,7 +171,7 @@ class PeakListTestCase(unittest.TestCase):
         self.assertListEqual(np.arange(0, 1000, step = 100).tolist(),
                              map(float, zip(*map(lambda x: x.split(','), psr.split('\n')[1:]))[0]))
 
-    def test_pickle(self):
+    def test_pl_pickle(self):
         pl = self._createPeakList()
         try:
             pstr = cp.dumps(pl)
