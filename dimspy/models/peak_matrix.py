@@ -762,14 +762,14 @@ class PeakMatrix(object):
              [map(str, ln) for ln in self.attr_matrix(attr_name, flagged_only = not comprehensive).T]
 
         if comprehensive:
-            ttypes = reduce(lambda x, y: x.union(y), map(lambda x: x.tag_types, self.peaklist_tags))
-            ttypes.remove(None)
+            ttypes = self.peaklist_tag_types
+            if None in ttypes: ttypes.remove(None)
             tnum = len(ttypes)
             hd = [hd[0]] + ['missing values'] + map(lambda x: 'tags_' + x, ttypes) + ['tags_untyped'] + hd[1:]
             dm = [dm[0]] + \
                  [map(str, self.missing_values)] + \
                  [map(lambda x: (lambda v: str(v.value) if v else '')(x.tag_of(t)), self.peaklist_tags) for t in ttypes] + \
-                 [map(lambda x: join(map(str, x.tag_of(None)), ';'), self.peaklist_tags)] + \
+                 [map(lambda x: join((lambda v: map(str,v) if v else ())(x.tag_of(None)), ';'), self.peaklist_tags)] + \
                  dm[1:]
 
             rsd_tags = tuple(rsd_tags) if isinstance(rsd_tags, Iterable) else (rsd_tags,)
