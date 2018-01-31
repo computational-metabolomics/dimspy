@@ -78,8 +78,8 @@ class Tag(object):
     def ttype(self, value):
         if not isinstance(value, Tag._ttype_valid_types):
             raise TypeError('Tag type must be string or None')
-        if value == 'None': # reserve for hdf5 protal
-            raise KeyError('["None"] is not an acceptable tag type')
+        if value in ('None', ''): # reserve for hdf5 protal
+            raise KeyError('["%s"] is not an acceptable tag type' % str(value))
         self._type = None if value is None else str(value)
 
     @property
@@ -133,6 +133,12 @@ class PeakList_Tags(object):
     # build-ins
     def __str__(self):
         return self.to_str()
+
+    def __contains__(self, item):
+        return item in self._tags
+
+    def __len__(self):
+        return len(self._tags)
 
     # properties
     @property
@@ -287,6 +293,19 @@ class PeakList_Tags(object):
         self._tags = []
 
     # portals
+    def to_list(self):
+        """
+        Exports tags to a list. Each element is a tuple of (tag value, tag type).
+
+        >>> tags = PeakList_Tags('untyped_tag1', tag_type1 = 'tag_value1')
+        >>> tags.to_list()
+        [('untyped_tag1', None), ('tag_value1', 'tag_type1')]
+
+        :rtype: list
+
+        """
+        return [(t.value, t.ttype) for t in self._tags]
+
     def to_str(self):
         """
         Exports tags to a string. It can also be used inexplicitly as

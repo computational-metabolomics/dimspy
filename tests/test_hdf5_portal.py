@@ -12,6 +12,7 @@ origin: 05-14-2017
 
 import unittest, os
 import numpy as np
+from dimspy.models.peaklist_tags import Tag
 from dimspy.models.peaklist import PeakList
 from dimspy.process.peak_alignment import align_peaks
 from dimspy.portals.hdf5_portal import save_peaklists_as_hdf5, load_peaklists_from_hdf5
@@ -33,12 +34,12 @@ class HDF5PortalsTestCase(unittest.TestCase):
             PeakList('QC_2', _mzs(), _ints(), mz_range = (100, 1200)),
         ]
 
-        pkls[0].tags.add_tags('sample', treatment = 'compound_1', time_point = '1hr', plate = 1)
-        pkls[1].tags.add_tags('sample', treatment = 'compound_1', time_point = '6hr', plate = 1)
-        pkls[2].tags.add_tags('qc', plate = 1)
-        pkls[3].tags.add_tags('sample', treatment = 'compound_2', time_point = '1hr', plate = 2)
-        pkls[4].tags.add_tags('sample', treatment = 'compound_2', time_point = '6hr', plate = 2)
-        pkls[5].tags.add_tags('qc', plate = 2)
+        for t in ('sample', Tag('compound_1', 'treatment'), Tag('1hr', 'time_point'), Tag(1, 'plate')): pkls[0].tags.add_tag(t)
+        for t in ('sample', Tag('compound_1', 'treatment'), Tag('6hr', 'time_point'), Tag(1, 'plate')): pkls[1].tags.add_tag(t)
+        for t in ('qc', Tag(1, 'plate')): pkls[2].tags.add_tag(t)
+        for t in ('sample', Tag('compound_2', 'treatment'), Tag('1hr', 'time_point'), Tag(2, 'plate')): pkls[3].tags.add_tag(t)
+        for t in ('sample', Tag('compound_2', 'treatment'), Tag('6hr', 'time_point'), Tag(2, 'plate')): pkls[4].tags.add_tag(t)
+        for t in ('qc', Tag(2, 'plate')): pkls[5].tags.add_tag(t)
 
         for p in pkls: p.add_attribute('snr', np.random.uniform(300, 400, size = 100))
         for p in pkls: p.add_attribute('quad_flag', [0, 1, 1, 1] * 25, is_flag = True)
@@ -84,8 +85,8 @@ class HDF5PortalsTestCase(unittest.TestCase):
         self.assertTrue(np.all(pm.attr_matrix('lab') == npm.attr_matrix('lab')))
         self.assertTrue(np.all( pm.property('present_matrix', flagged_only = False) ==
                                npm.property('present_matrix', flagged_only = False)))
-        self.assertTupleEqual(pm.peaklist_tag_types, npm.peaklist_tag_types)
-        self.assertTupleEqual(pm.peaklist_tag_values, npm.peaklist_tag_values)
+        self.assertEqual(pm.peaklist_tag_types, npm.peaklist_tag_types)
+        self.assertEqual(pm.peaklist_tag_values, npm.peaklist_tag_values)
         self.assertTrue(np.all(pm.mask == npm.mask))
         self.assertTrue(np.all(pm.flag_values('odd_flag') == npm.flag_values('odd_flag')))
         self.assertTrue(np.all(pm.flag_values('qua_flag') == npm.flag_values('qua_flag')))

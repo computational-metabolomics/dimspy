@@ -768,7 +768,7 @@ class PeakMatrix(object):
             hd = [hd[0]] + ['missing values'] + map(lambda x: 'tags_' + x, ttypes) + ['tags_untyped'] + hd[1:]
             dm = [dm[0]] + \
                  [map(str, self.missing_values)] + \
-                 [map(lambda x: (lambda v: '' if v is None else str(v.value))(x.tag_of(t)), self.peaklist_tags) for t in ttypes] + \
+                 [map(lambda x: (lambda v: str(v.value) if v else '')(x.tag_of(t)), self.peaklist_tags) for t in ttypes] + \
                  [map(lambda x: join(map(str, x.tag_of(None)), ';'), self.peaklist_tags)] + \
                  dm[1:]
 

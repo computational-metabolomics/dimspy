@@ -27,14 +27,14 @@ class PeakFiltersTestCase(unittest.TestCase):
     @staticmethod
     def _createPeakMatrix():
         pids, tags = zip(*[
-            ('sample_1_1', PeakList_Tags('sample', treatment = 'compound_1', time_point = '1hr', plate = 1)),
-            ('sample_1_2', PeakList_Tags('sample', treatment = 'compound_1', time_point = '6hr', plate = 1)),
-            ('QC_1',       PeakList_Tags('qc', plate = 1)),
-            ('Blank_1',    PeakList_Tags('blank', plate = 1)),
-            ('sample_2_1', PeakList_Tags('sample', treatment = 'compound_2', time_point = '1hr', plate = 2)),
-            ('sample_2_2', PeakList_Tags('sample', treatment = 'compound_2', time_point = '6hr', plate = 2)),
-            ('QC_2',       PeakList_Tags('qc', plate = 2)),
-            ('Blank_2',    PeakList_Tags('blank', plate = 2)),
+            ('sample_1_1', PeakList_Tags('sample', treatment = 'compound_1', time_point = '1hr', plate = 1, order = 1)),
+            ('sample_1_2', PeakList_Tags('sample', treatment = 'compound_1', time_point = '6hr', plate = 1, order = 2)),
+            ('QC_1',       PeakList_Tags('qc', plate = 1, order = 3)),
+            ('Blank_1',    PeakList_Tags('blank', plate = 1, order = 4)),
+            ('sample_2_1', PeakList_Tags('sample', treatment = 'compound_2', time_point = '1hr', plate = 2, order = 1)),
+            ('sample_2_2', PeakList_Tags('sample', treatment = 'compound_2', time_point = '6hr', plate = 2, order = 2)),
+            ('QC_2',       PeakList_Tags('qc', plate = 2, order = 3)),
+            ('Blank_2',    PeakList_Tags('blank', plate = 2, order = 4)),
         ])
 
         mzs = np.tile(np.arange(0, 1000, step = 100, dtype = float), (8, 1))

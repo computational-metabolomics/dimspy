@@ -12,6 +12,7 @@ origin: 05-14-2017
 
 import unittest, os
 import numpy as np
+from dimspy.models.peaklist_tags import Tag
 from dimspy.models.peaklist import PeakList
 from dimspy.process.peak_alignment import align_peaks
 from dimspy.portals.txt_portal import save_peaklist_as_txt, load_peaklist_from_txt
@@ -43,18 +44,19 @@ class TxtPortalsTestCase(unittest.TestCase):
             PeakList('sample_2_2', _mzs(), _ints()),
             PeakList('QC_2', _mzs(), _ints()),
         ]
-        pkls[0].tags.add_tags('sample', treatment = 'compound_1', time_point = '1hr', plate = 1)
-        pkls[1].tags.add_tags('sample', treatment = 'compound_1', time_point = '6hr', plate = 1)
-        pkls[2].tags.add_tags('qc', plate = 1)
-        pkls[3].tags.add_tags('sample', treatment = 'compound_2', time_point = '1hr', plate = 2)
-        pkls[4].tags.add_tags('sample', treatment = 'compound_2', time_point = '6hr', plate = 2)
-        pkls[5].tags.add_tags('qc', plate = 2)
+        for t in ('sample', Tag('compound_1', 'treatment'), Tag('1hr', 'time_point'), Tag(1, 'plate')): pkls[0].tags.add_tag(t)
+        for t in ('sample', Tag('compound_1', 'treatment'), Tag('6hr', 'time_point'), Tag(1, 'plate')): pkls[1].tags.add_tag(t)
+        for t in ('qc', Tag(1, 'plate')): pkls[2].tags.add_tag(t)
+        for t in ('sample', Tag('compound_2', 'treatment'), Tag('1hr', 'time_point'), Tag(2, 'plate')): pkls[3].tags.add_tag(t)
+        for t in ('sample', Tag('compound_2', 'treatment'), Tag('6hr', 'time_point'), Tag(2, 'plate')): pkls[4].tags.add_tag(t)
+        for t in ('qc', Tag(2, 'plate')): pkls[5].tags.add_tag(t)
 
         pm = align_peaks(pkls, ppm = 2e+4, block_size = 10, ncpus = 2)
         pm.add_flag('odd_flag', ([0, 1] * int(pm.shape[1]/2+1))[:pm.shape[1]])
         pm.add_flag('qua_flag', ([0, 0, 1, 1] * int(pm.shape[1]/4+1))[:pm.shape[1]])
 
-        save_peak_matrix_as_txt(pm, '.test_peak_matrix.txt', samples_in_rows = True, comprehensive = True, rsd_tags = ('qc', 'compound_1', 'compound_2'))
+        save_peak_matrix_as_txt(pm, '.test_peak_matrix.txt', samples_in_rows = True, comprehensive = True,
+                                rsd_tags = ('qc', Tag('compound_1', 'treatment'), Tag('compound_2', 'treatment')))
         npm = load_peak_matrix_from_txt('.test_peak_matrix.txt', samples_in_rows = True, comprehensive = 'auto')
 
         self.assertEqual(pm.shape, npm.shape)
@@ -62,8 +64,8 @@ class TxtPortalsTestCase(unittest.TestCase):
         self.assertTrue(np.all(pm.flags == npm.flags))
         self.assertTrue(np.all(pm.flag_names == npm.flag_names))
         self.assertTrue(np.allclose(pm.intensity_matrix, npm.intensity_matrix))
-        self.assertTupleEqual(pm.peaklist_tag_types, npm.peaklist_tag_types)
-        self.assertTupleEqual(pm.peaklist_tag_values, npm.peaklist_tag_values)
+        self.assertEqual(pm.peaklist_tag_types, npm.peaklist_tag_types)
+        self.assertEqual(pm.peaklist_tag_values, npm.peaklist_tag_values)
 
     def tearDown(self):
         if os.path.isfile('.test_peaklist.txt'): os.remove('.test_peaklist.txt')

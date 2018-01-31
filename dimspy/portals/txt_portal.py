@@ -142,7 +142,7 @@ def load_peak_matrix_from_txt(filename, delimiter='\t', samples_in_rows=True, co
             if not ln[0].startswith('tags_'): break
             tn, tv = ln[0][5:], ln[pcol:]
             tl = filter(lambda x: x[1] != '', enumerate(_evalv(tv)))
-            for i, v in tl: tgs[i].add_tags(v) if tn == 'untyped' else tgs[i].add_tags(**{tn: v})
+            for i, v in tl: tgs[i].add_tag(v) if tn == 'untyped' else tgs[i].add_tag(v, tn)
         return l, tgs
     tnum, tags = 0, [PeakList_Tags() for _ in pids]
     if comprehensive: tnum, tags = _parsetags(tags)

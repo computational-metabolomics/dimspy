@@ -10,6 +10,7 @@ PeakList and PeakMatrix filters.
 
 """
 
+
 from __future__ import division
 
 import logging
@@ -97,7 +98,7 @@ def filter_rsd(pm, rsd_threshold, qc_label='qc', flag_name='rsd_flag'):
 
     :param pm: the target peak matrix
     :param rsd_threshold: threshold of the RSD of the QC samples
-    :param qc_label: tag label to unmask qc samples
+    :param qc_label: label (tag) to unmask qc samples
     :param flag_name: name of the new flag. Default = 'rsd_flag'
     :rtype: PeakMatrix object
 
@@ -137,7 +138,7 @@ def filter_fraction(pm, fraction_threshold, within_classes=False, class_tag_type
             raise AttributeError('not all tags have tag type [%s]' % class_tag_type)
         flg = np.ones(pm.shape[1])
         for tag in pm.tags_of(class_tag_type):
-            with unmask_peakmatrix(pm, **{class_tag_type: tag}) as m:
+            with unmask_peakmatrix(pm, tag) as m:
                 flg = np.logical_and(flg, (m.fraction >= fraction_threshold))
         pm.add_flag(flag_name, flg)
     return pm
@@ -162,7 +163,7 @@ def filter_blank_peaks(pm, blank_label, fraction_threshold=1, fold_threshold=1, 
     blank intensities x fold_threshold, this peak will be unflagged.
 
     """
-    if blank_label not in pm.peaklist_tag_values:
+    if not any(map(lambda x: blank_label in x, pm.peaklist_tags)):
         raise ValueError('blank label [%s] does not exist' % blank_label)
     if method not in ('mean', 'median', 'max'):
         raise ValueError('filter method must be mean, median or max')

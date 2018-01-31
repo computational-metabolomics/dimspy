@@ -80,7 +80,7 @@ class PeakListTagsTestCase(unittest.TestCase):
         tags = self._createTags()
         self.assertEqual(tags.tag_types, {None, 'typed_tag1', 'typed_tag2'})
         self.assertEqual(tags.tag_values, {0, 1, 2, 'str_tag', u'ustr_tag'})
-        self.assertEqual(len(tags.tags), 5)
+        self.assertEqual(len(tags), 5)
         self.assertTrue(all(map(lambda x: x.ttype is not None, tags.typed_tags)))
         self.assertTrue(all(map(lambda x: x.ttype is None, tags.untyped_tags)))
 
@@ -137,6 +137,7 @@ class PeakListTagsTestCase(unittest.TestCase):
 
     def test_pl_tags_portals(self):
         tags = self._createTags()
+        self.assertListEqual(tags.to_list(), [(0, None), ('str_tag', None), (u'ustr_tag', None), (1, 'typed_tag1'), (2, 'typed_tag2')])
         self.assertEqual(tags.to_str(), '0, str_tag, ustr_tag, typed_tag1:1, typed_tag2:2')
         self.assertEqual(str(tags), '0, str_tag, ustr_tag, typed_tag1:1, typed_tag2:2')
 
@@ -149,7 +150,7 @@ class PeakListTagsTestCase(unittest.TestCase):
             self.fail('tags pickle failed: ' + str(e))
         self.assertEqual(tags.tag_types, {None, 'typed_tag1', 'typed_tag2'})
         self.assertEqual(tags.tag_values, {0, 1, 2, 'str_tag', u'ustr_tag'})
-        self.assertEqual(len(tags.tags), 5)
+        self.assertEqual(len(tags), 5)
 
 
 if __name__ == '__main__':
