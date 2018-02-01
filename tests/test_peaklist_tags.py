@@ -91,6 +91,7 @@ class PeakListTagsTestCase(unittest.TestCase):
         self.assertTrue(tags.has_tag_type(None))
         self.assertFalse(tags.has_tag_type('not_exist'))
 
+        self.assertTrue(Tag(2, 'typed_tag2') in tags)
         self.assertTrue(tags.has_tag(0) and tags.has_tag('str_tag') and tags.has_tag(u'ustr_tag'))
         self.assertTrue(tags.has_tag(1, 'typed_tag1') and tags.has_tag(2, 'typed_tag2'))
         self.assertTrue(tags.has_tag(Tag(1, 'typed_tag1')))
