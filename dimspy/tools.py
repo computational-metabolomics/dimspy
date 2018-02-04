@@ -201,8 +201,8 @@ def replicate_filter(source, ppm, replicates, min_peaks, rsd_thres=None, filelis
             pl = average_replicate_peaklists(pls_comb, ppm, min_peaks, rsd_thres, block_size=block_size, ncpus=None)
 
             if hasattr(pls_comb[0].metadata, "injectionOrder"):
-                pl.metadata["injectionOrder"] = pls_comb[0].metadata["injectionOrder"]
-                pl.tags.add_tag(pls_comb[0].metadata["injectionOrder"], "injectionOrder")
+                pl.metadata["injectionOrder"] = int(pls_comb[0].metadata["injectionOrder"])
+                pl.tags.add_tag(int(pls_comb[0].metadata["injectionOrder"]), "injectionOrder")
 
             reps = [_pl.metadata["replicate"] for _pl in pls_comb]
             pl.metadata["replicates"] = reps
