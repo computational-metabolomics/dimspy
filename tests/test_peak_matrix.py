@@ -13,7 +13,7 @@ origin: 05-10-2017
 import unittest
 import numpy as np
 import cPickle as cp
-from dimspy.models.peaklist_tags import PeakList_Tags
+from dimspy.models.peaklist_tags import Tag, PeakList_Tags
 from dimspy.models.peak_matrix import PeakMatrix
 from dimspy.models.peak_matrix import mask_peakmatrix, unmask_peakmatrix, mask_all_peakmatrix, unmask_all_peakmatrix
 
@@ -22,12 +22,12 @@ class PeakListTestCase(unittest.TestCase):
     @staticmethod
     def _createPeakMatrix():
         pids, tags = zip(*[
-            ('sample_1_1', PeakList_Tags('sample', treatment = 'compound_1', time_point = '1hr', plate = 1)),
-            ('sample_1_2', PeakList_Tags('sample', treatment = 'compound_1', time_point = '6hr', plate = 1)),
-            ('QC_1',       PeakList_Tags('qc', plate = 1)),
-            ('sample_2_1', PeakList_Tags('sample', treatment = 'compound_2', time_point = '1hr', plate = 2)),
-            ('sample_2_2', PeakList_Tags('sample', treatment = 'compound_2', time_point = '6hr', plate = 2)),
-            ('QC_2',       PeakList_Tags('qc', plate = 2)),
+            ('sample_1_1', PeakList_Tags('sample', treatment = 'compound_1', time_point = '1hr', plate = 1, order = 1)),
+            ('sample_1_2', PeakList_Tags('sample', treatment = 'compound_1', time_point = '6hr', plate = 1, order = 2)),
+            ('QC_1',       PeakList_Tags('qc', plate = 1, order = 3)),
+            ('sample_2_1', PeakList_Tags('sample', treatment = 'compound_2', time_point = '1hr', plate = 2, order = 1)),
+            ('sample_2_2', PeakList_Tags('sample', treatment = 'compound_2', time_point = '6hr', plate = 2, order = 2)),
+            ('QC_2',       PeakList_Tags('qc', plate = 2, order = 3)),
         ])
 
         mzs = np.tile(np.arange(0, 1000, step = 100, dtype = float) + 1, (6, 1))
@@ -39,7 +39,13 @@ class PeakListTestCase(unittest.TestCase):
             m[:,2] = 0
         return PeakMatrix(pids, tags, [('mz', mzs), ('intensity', ints), ('intra_count', ics)])
 
-    def test_properties(self):
+    def test_pm_creation(self):
+        try:
+            self._createPeakMatrix()
+        except Exception, e:
+            self.fail('create PeakMatrix object failed: ' + str(e))
+
+    def test_pm_properties(self):
         pm = self._createPeakMatrix()
 
         pm.mask = [True, False] * 3
@@ -56,10 +62,8 @@ class PeakListTestCase(unittest.TestCase):
             ('sample_1_1', 'sample_1_2', 'QC_1', 'sample_2_1', 'sample_2_2', 'QC_2'))
 
         self.assertEqual(len(pm.peaklist_tags), 6)
-        self.assertListEqual(sorted(pm.peaklist_tag_types),
-                             sorted(('treatment', 'time_point', 'plate')))
-        self.assertListEqual(sorted(pm.peaklist_tag_values),
-                             sorted(('sample', 'qc', 'compound_1', 'compound_2', '1hr', '6hr', 1, 2)))
+        self.assertEqual(pm.peaklist_tag_types, {None, 'treatment', 'time_point', 'plate', 'order'})
+        self.assertEqual(pm.peaklist_tag_values, {'sample', 'qc', 'compound_1', 'compound_2', '1hr', '6hr', 1, 2, 3})
 
         pm.mask = [True, False] * 3
         self.assertTupleEqual(pm.shape, (3, 10))
@@ -88,14 +92,16 @@ class PeakListTestCase(unittest.TestCase):
         mit = [30., 29., np.nan, 27., 26., 25., 31., 32., 33., 34.]
         self.assertTrue(np.allclose(*map(np.nan_to_num, (pm.intensity_mean_vector*20, mit))))
 
-    def test_mask(self):
+    def test_pm_mask(self):
         pm = self._createPeakMatrix()
 
-        self.assertListEqual(sorted(pm.tags_of('plate')), [1, 2])
-        self.assertListEqual(sorted(pm.tags_of()), sorted(('sample', 'qc')))
-        self.assertRaises(ValueError, lambda: pm.tags_of('treatment'))
-        self.assertRaises(ValueError, lambda: pm.tags_of('not_exist'))
+        self.assertEqual(set(map(lambda x: x.value, pm.tags_of('plate'))), {1, 2})
+        self.assertEqual(set(map(lambda x: x.value, pm.tags_of())), {'sample', 'qc'})
+        self.assertRaises(KeyError, lambda: pm.tags_of('treatment'))
+        self.assertRaises(KeyError, lambda: pm.tags_of('not_exist'))
 
+        pm.mask_tags(1)
+        self.assertTupleEqual(pm.peaklist_ids, ('sample_1_1', 'sample_1_2', 'QC_1', 'sample_2_1', 'sample_2_2', 'QC_2'))
         pm.mask_tags('qc', plate = 1) # mask samples with both of the two
         self.assertTupleEqual(pm.peaklist_ids, ('sample_1_1', 'sample_1_2', 'sample_2_1', 'sample_2_2', 'QC_2'))
         pm.mask = None
@@ -150,7 +156,7 @@ class PeakListTestCase(unittest.TestCase):
             m.remove_samples((1, 2))
         self.assertTupleEqual(pm.peaklist_ids, ('sample_1_1', 'QC_1', 'sample_2_2', 'QC_2'))
 
-    def test_flags(self):
+    def test_pm_flags(self):
         pm = self._createPeakMatrix()
 
         self.assertTrue(np.sum(pm.flags) == 10)
@@ -177,7 +183,7 @@ class PeakListTestCase(unittest.TestCase):
             self.assertTrue(np.allclose(m.mz_matrix, mzs))
         self.assertTupleEqual(pm.shape, (6, 5))
 
-    def test_access(self):
+    def test_pm_access(self):
         pm = self._createPeakMatrix()
 
         pm.add_flag('even_flag', [0, 1] * 5)
@@ -206,7 +212,7 @@ class PeakListTestCase(unittest.TestCase):
             self.assertTupleEqual(pm.peaklist_ids, ('QC_2',))
         self.assertTupleEqual(pm.peaklist_ids, ('sample_1_1', 'QC_2'))
 
-    def test_exports(self):
+    def test_pm_exports(self):
         pm = self._createPeakMatrix()
 
         pm.add_flag('even_flag', [0, 1] * 5)
@@ -225,12 +231,9 @@ class PeakListTestCase(unittest.TestCase):
         pkl = pm.to_peaklist('merged_pkl')
         self.assertTrue(np.allclose(pkl.mz, [1.0, 101.0, 301.0, 401.0, 501.0, 601.0, 701.0, 801.0, 901.0]))
 
-        try:
-            pm.to_str(comprehensive = True, rsd_tags = ('compound_1', 'compound_2', 'qc'))
-        except Exception, e:
-            self.fail('PeakMatrix to_str() method failed: ' + str(e))
+        pm.to_str(comprehensive = True, rsd_tags = (Tag('compound_1', 'treatment'), Tag('compound_2', 'treatment'), 'qc'))
 
-    def test_pickle(self):
+    def test_pm_pickle(self):
         pm = self._createPeakMatrix()
         try:
             pstr = cp.dumps(pm)

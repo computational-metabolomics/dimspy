@@ -10,11 +10,12 @@ The PeakList and PeakMatrix HDF5 portals.
 
 """
 
+
 import os, logging, zlib, h5py
 import cPickle as cp
 import numpy as np
 from ast import literal_eval
-from dimspy.models.peaklist_tags import PeakList_Tags
+from dimspy.models.peaklist_tags import Tag, PeakList_Tags
 from dimspy.models.peaklist import PeakList
 from dimspy.models.peak_matrix import PeakMatrix, unmask_all_peakmatrix
 
@@ -59,7 +60,7 @@ def save_peaklists_as_hdf5(pkls, filename):
         dset.attrs['dtable_names'], dset.attrs['dtable_types'] = zip(*pkl.dtable.dtype.descr)
 
         dset.attrs['flag_attrs'] = pkl.flag_attributes
-        dset.attrs['tags'] = [(t if type(t) in (tuple, list) else ('None', t)) for t in pkl.tags.to_list()]
+        dset.attrs['tags'] = [(t or 'None', v) for v,t in pkl.tags.to_list()]
         for k, v in pkl.metadata.items(): dset.attrs['metadata_' + k] = _packMeta(v)
 
     map(lambda x: _savepkl(*x), enumerate(pkls))
@@ -98,8 +99,7 @@ def load_peaklists_from_hdf5(filename):
         for n, v, t in zip(dn[2:], dm[2:], dt[2:]):
             pkl.add_attribute(n, v, t, is_flag=(n in dset.attrs['flag_attrs']), flagged_only=False)
 
-        pkl.tags.add_tags(*[_eval(t[1]) for t in dset.attrs['tags'] if t[0] == 'None'],
-                          **{t[0]: _eval(t[1]) for t in dset.attrs['tags'] if t[0] != 'None'})
+        for t,v in dset.attrs['tags']: pkl.tags.add_tag(_eval(v), None if t == 'None' else t)
         return dset.attrs['order'], pkl
 
     return zip(*sorted(map(_loadpkl, f.keys())))[1]
@@ -145,7 +145,7 @@ def save_peak_matrix_as_hdf5(pm, filename):
     with unmask_all_peakmatrix(pm):
         dset.attrs['peaklist_ids'] = pm.peaklist_ids
         for i, tags in enumerate(pm.peaklist_tags):
-            dset.attrs['peaklist_tags_%d' % i] = [(t if type(t) in (tuple, list) else ('None', t)) for t in tags.to_list()]
+            dset.attrs['peaklist_tags_%d' % i] = [(t or 'None', v) for v,t in tags.to_list()]
 
         dset.attrs['flag_names'] = pm.flag_names
         for fn in pm.flag_names:
@@ -177,12 +177,9 @@ def load_peak_matrix_from_hdf5(filename):
     mask = dset.attrs['mask']
 
     tatt = sorted(filter(lambda x: x.startswith('peaklist_tags_'), dset.attrs.keys()), key=lambda x: int(x[14:]))
-    ptgs = [PeakList_Tags(*[_eval(t[1]) for t in tags if t[0] == 'None'],
-                          **{t[0]: _eval(t[1]) for t in tags if t[0] != 'None'})
-            for tags in map(lambda x: dset.attrs[x], tatt)]
+    ptgs = [PeakList_Tags(*[Tag(_eval(v), None if t == 'None' else t) for t,v in tags]) for tags in map(lambda x: dset.attrs[x], tatt)]
 
     flgs = [(fn, dset.attrs[fn]) for fn in dset.attrs['flag_names']]
-
     alst = [(attr, np.array(f[attr]).astype(f[attr].attrs['dtype'])) for attr in attl]
 
     pm = PeakMatrix(pids, ptgs, alst)

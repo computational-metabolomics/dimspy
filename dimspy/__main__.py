@@ -224,7 +224,7 @@ def main():
                            action='store_true', required=False,
                            help="Remove blank samples from peak matrix.")
 
-    parser_bf.add_argument('-a', '--class-labels',
+    parser_bf.add_argument('-a', '--labels',
                            type=str, required=False,
                            help="Tab delimited file with at least two columns named 'filename' and 'classLabel'.")
 
@@ -257,7 +257,7 @@ def main():
                            default=None, type=str, required=False,
                            help="Class label for QCs")
 
-    parser_sf.add_argument('-a', '--class-labels',
+    parser_sf.add_argument('-a', '--labels',
                            type=str, required=False,
                            help="Tab delimited file with at least two columns named 'filename' and 'classLabel'.")
 
@@ -470,7 +470,7 @@ def main():
                                    min_fold_change=args.min_fold_change,
                                    function=args.function,
                                    rm_samples=args.remove_blank_samples,
-                                   class_labels=args.class_labels)
+                                   labels=args.labels)
         hdf5_portal.save_peak_matrix_as_hdf5(pm_bf, args.output)
 
     elif args.step == "sample-filter":
@@ -479,7 +479,7 @@ def main():
                                     within=args.within,
                                     rsd=args.rsd_threshold,
                                     qc_label=args.qc_label,
-                                    class_labels=args.class_labels)
+                                    labels=args.labels)
         hdf5_portal.save_peak_matrix_as_hdf5(pm_sf, args.output)
 
     elif args.step == "mv-sample-filter":
@@ -545,9 +545,11 @@ def main():
         tools.hdf5_peaklists_to_txt(args.input, path_out=args.output, delimiter=map_delimiter(args.delimiter))
 
     elif args.step == "create-sample-list":
-        pls = hdf5_portal.load_peaklists_from_hdf5(args.input)
-        tools.create_sample_list(pls, args.output, delimiter=map_delimiter(args.delimiter))
-
+        try:
+            inp = hdf5_portal.load_peaklists_from_hdf5(args.input)
+        except:
+            inp = hdf5_portal.load_peak_matrix_from_hdf5(args.input)
+        tools.create_sample_list(inp, args.output, delimiter=map_delimiter(args.delimiter))
 
 if __name__ == "__main__":
     main()
