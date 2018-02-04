@@ -777,7 +777,7 @@ class PeakMatrix(object):
             prelst = ['present']    + ([''] * (tnum + 2)) + map(str, self.property('present', flagged_only = False))
             ocrlst = ['occurrence'] + ([''] * (tnum + 2)) + map(str, self.property('occurrence', flagged_only = False))
             puplst = ['purity']     + ([''] * (tnum + 2)) + map(str, self.property('purity', flagged_only = False))
-            rsdmtx = [['rsd_' + str(rt)] + ([''] * (tnum + 2)) + map(str, self.rsd(rt, flagged_only = False)) for rt in rsd_tags]
+            rsdmtx = [['rsd_' + str(rt.value if isinstance(rt, Tag) else rt)] + ([''] * (tnum + 2)) + map(str, self.rsd(rt, flagged_only = False)) for rt in rsd_tags]
             rsdlst = ['rsd_all']    + ([''] * (tnum + 2)) + map(str, self.rsd(flagged_only = False))
             flgmtx = [[fn] + ([''] * (tnum + 2)) + map(str, self.flag_values(fn).astype(int)) for fn in self.flag_names]
             flglst = ['flags']      + ([''] * (tnum + 2)) + map(str, self.flags.astype(int))

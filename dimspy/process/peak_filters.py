@@ -92,13 +92,13 @@ def filter_mz_ranges(pl, mz_remove_rngs, flag_name='mz_range_remove_flag', flag_
 
 
 # PeakMatrix filters
-def filter_rsd(pm, rsd_threshold, qc_label='qc', flag_name='rsd_flag'):
+def filter_rsd(pm, rsd_threshold, qc_tag, flag_name='rsd_flag'):
     """
     PeakMatrix RSD filter.
 
     :param pm: the target peak matrix
     :param rsd_threshold: threshold of the RSD of the QC samples
-    :param qc_label: label (tag) to unmask qc samples
+    :param qc_tag: tag (label) to unmask qc samples
     :param flag_name: name of the new flag. Default = 'rsd_flag'
     :rtype: PeakMatrix object
 
@@ -106,7 +106,7 @@ def filter_rsd(pm, rsd_threshold, qc_label='qc', flag_name='rsd_flag'):
     threshold will be unflagged.
 
     """
-    rsd_values = pm.rsd(qc_label)
+    rsd_values = pm.rsd(qc_tag)
     if np.any(np.isnan(rsd_values)):
         logging.warning('nan found in QC rsd values, filter might not work properly')
 
@@ -121,7 +121,7 @@ def filter_fraction(pm, fraction_threshold, within_classes=False, class_tag_type
     :param pm: the target peak matrix
     :param fraction_threshold: threshold of the sample fractions
     :param within_classes: whether to calculate the fraction array within each class. Default = False
-    :param class_tag_type: tag type to unmask samples within the same class. Default = None
+    :param class_tag_type: tag type to unmask samples within the same class (e.g. "classLabel"). Default = None
     :param flag_name: name of the new flag. Default = 'fraction_flag'
     :rtype: PeakMatrix object
 
@@ -144,12 +144,12 @@ def filter_fraction(pm, fraction_threshold, within_classes=False, class_tag_type
     return pm
 
 
-def filter_blank_peaks(pm, blank_label, fraction_threshold=1, fold_threshold=1, method='mean', rm_blanks=True, flag_name='blank_flag'):
+def filter_blank_peaks(pm, blank_tag, fraction_threshold=1, fold_threshold=1, method='mean', rm_blanks=True, flag_name='blank_flag'):
     """
     PeakMatrix blank filter.
 
     :param pm: the target peak matrix
-    :param blank_label: tag label to mask blank samples
+    :param blank_tag: tag (label) to mask blank samples. e.g Tag("blank", "classLabel")
     :param fraction_threshold: threshold of the sample fractions. Default = 1
     :param fold_threshold: threshold of the blank sample intensity folds. Default = 1
     :param method: method to calculate blank sample intensity array. Valid values include 'mean', 'median', and 'max'.
@@ -163,22 +163,21 @@ def filter_blank_peaks(pm, blank_label, fraction_threshold=1, fold_threshold=1, 
     blank intensities x fold_threshold, this peak will be unflagged.
 
     """
-    if not any(map(lambda x: blank_label in x, pm.peaklist_tags)):
-        raise ValueError('blank label [%s] does not exist' % blank_label)
+    if not any(map(lambda x: blank_tag in x, pm.peaklist_tags)):
+        raise ValueError('blank tag [%s] does not exist' % blank_tag)
     if method not in ('mean', 'median', 'max'):
         raise ValueError('filter method must be mean, median or max')
 
-    with unmask_peakmatrix(pm, blank_label) as m:
+    with unmask_peakmatrix(pm, blank_tag) as m:
         ints = m.intensity_matrix[0] if m.shape[0] == 1 else \
                np.max(m.intensity_matrix, axis=0) if method == 'max' else \
                np.array(map(lambda x: getattr(np, method)(x), m.intensity_matrix.T))
         ints *= fold_threshold
 
-    with mask_peakmatrix(pm, blank_label) as m:
+    with mask_peakmatrix(pm, blank_tag) as m:
         faild_int = np.sum(m.intensity_matrix >= ints, axis=0) < (fraction_threshold * m.shape[0])
         m.add_flag(flag_name, ~((ints > 0) & faild_int))
 
     if rm_blanks:
-        pm = pm.remove_samples(np.where(map(lambda x: x.has_tag(blank_label), pm.peaklist_tags)))
+        pm = pm.remove_samples(np.where(map(lambda x: x.has_tag(blank_tag), pm.peaklist_tags)))
     return pm
-

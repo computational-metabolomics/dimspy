@@ -175,7 +175,7 @@ def check_metadata(fn_tsv):
     return fm_dict
 
 
-def update_metadata(peaklists, fl):
+def update_metadata_and_labels(peaklists, fl):
 
     if not isinstance(peaklists[0], PeakList):
         raise IOError("PeakList object required")
@@ -189,34 +189,16 @@ def update_metadata(peaklists, fl):
             pl.metadata[k] = fl[k][index]
             #pl.metadata["filelist"] = {k:fl[k][index] for k in fl.keys()}
 
-            if "classLabel" in fl.keys():
-                if pl.tags.has_tag_type("classLabel"):
-                    pl.tags.drop_tag_types("classLabel")
-                pl.tags.add_tags(classLabel=fl["classLabel"][index])
-
-            if "batch" in fl.keys():
-                if pl.tags.has_tag_type("batch"):
-                    pl.tags.drop_tag_types("batch")
-                pl.tags.add_tags(batch=fl["batch"][index])
+            for tag_name in ["replicate", "replicates", "batch", "injectionOrder", "classLabel"]:
+                if tag_name in fl.keys():
+                    if pl.tags.has_tag_type(tag_name):
+                        pl.tags.drop_tag_type(tag_name)
+                    pl.tags.add_tag(fl[tag_name][index], tag_name)
 
     return peaklists
 
 
-def copy_metadata(peak_list, peak_list_out, labels=None):
-    if not isinstance(peak_list, PeakList) or not isinstance(peak_list_out, PeakList):
-        raise IOError("PeakList object required")
-    for k, v in peak_list.metadata.items():
-        if labels is None:
-            peak_list_out.metadata[k] = v
-        elif k in labels:
-            peak_list_out.metadata[k] = v
-
-    peak_list_out.tags.add_tags(*peak_list.tags.tag_of(None),
-                                **{t: peak_list.tags.tag_of(t) for t in peak_list.tags.tag_types})
-    return peak_list
-
-
-def update_class_labels(pm, fn_tsv):
+def update_labels(pm, fn_tsv):
 
     assert os.path.isfile(fn_tsv.encode('string-escape')), "{} does not exist".format(fn_tsv)
 
@@ -228,17 +210,12 @@ def update_class_labels(pm, fn_tsv):
     assert "classLabel" in fm.dtype.names, "Column for class label (classLabel) not available"
     assert (fm[fm.dtype.names[0]] == pm.peaklist_ids).all(), "Sample ids do not match {}".format(np.setdiff1d(fm[fm.dtype.names[0]], pm.peaklist_ids))
 
-    for i in range(len(fm["classLabel"])):
-        if pm.peaklist_tags[i].has_tag_type("classLabel"):
-            pm.peaklist_tags[i].drop_tag_types("classLabel")
-            pm.peaklist_tags[i].add_tags(classLabel=fm["classLabel"][i])
-
-    if "batch" in fm.keys():
-        for i in range(len(fm["batch"])):
-            if pm.peaklist_tags[i].has_tag_type("batch"):
-                pm.peaklist_tags[i].drop_tag_types("batch")
-                pm.peaklist_tags[i].add_tags(batch=fm["batch"][i])
-
+    for tag_name in ["replicate", "replicates", "batch", "injectionOrder", "classLabel"]:
+        if tag_name in fm.dtype.names:
+            for i in range(len(fm[tag_name])):
+                if pm.peaklist_tags[i].has_tag_type(tag_name):
+                    pm.peaklist_tags[i].drop_tag_type(tag_name)
+                pm.peaklist_tags[i].add_tag(fm[tag_name][i], tag_name)
     return pm
 
 

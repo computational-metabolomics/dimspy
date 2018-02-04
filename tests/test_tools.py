@@ -65,14 +65,15 @@ class WorkflowTestCase(unittest.TestCase):
 
     def test_replicate_filter(self):
         # pls = process_scans(to_test_data("MTBLS79_mzml_triplicates.zip"), function_noise="median",  # creating test set
-        #                    snr_thres=3.0, min_scans=1, ppm=2.0, min_fraction=None, rsd_thres=None,  # creating test set
-        #                    filelist=to_test_data("filelist_mzml_triplicates.txt"),  # creating test set
-        #                    filter_scan_events=None, report=None, block_size=5000, ncpus=None)  # creating test set
+        #                     snr_thres=3.0, min_scans=1, ppm=2.0, min_fraction=None, rsd_thres=None,  # creating test set
+        #                     filelist=to_test_data("filelist_mzml_triplicates.txt"),  # creating test set
+        #                     filter_scan_events=None, report=None, block_size=5000, ncpus=None)  # creating test set
         # save_peaklists_as_hdf5(pls, to_test_data("MTBLS79_mzml_triplicates.hdf5"))  # creating test set
         pls = load_peaklists_from_hdf5(to_test_data("MTBLS79_mzml_triplicates.hdf5"))
         pls_rf = replicate_filter(pls, ppm=2.0, replicates=3, min_peaks=2, rsd_thres=None,
                                   filelist=None, report=to_test_result("MTBLS79_mzml_triplicates_report.txt"),
                                   block_size=5000, ncpus=None)
+
         # save_peaklists_as_hdf5(pls_rf, to_test_data("MTBLS79_mzml_triplicates_rf.hdf5"))  # creating test set
         pls_rf_comp = load_peaklists_from_hdf5(to_test_data("MTBLS79_mzml_triplicates_rf.hdf5"))
         # with open(to_test_result("test_pl_rf.txt"), "w") as out: out.write(pls_rf[0].to_str("\t"))  # creating test set
@@ -106,10 +107,20 @@ class WorkflowTestCase(unittest.TestCase):
         self.assertEqual(pm.to_str(), pm_comp.to_str())
         self.assertEqual(pm.to_peaklist("pl").to_str(), pm_comp.to_peaklist("pl").to_str())
 
+        pls = load_peaklists_from_hdf5(to_test_data("MTBLS79_mzml_triplicates_rf.hdf5"))
+        pm = align_samples(pls, ppm=2.0, filelist=None, block_size=5000, ncpus=None)
+        # save_peak_matrix_as_hdf5(pm, to_test_data("MTBLS79_mzml_peak_matrix_rf.hdf5"))  # creating test set
+        pm_comp = load_peak_matrix_from_hdf5(to_test_data("MTBLS79_mzml_peak_matrix_rf.hdf5"))
+        # with open(to_test_result("test_pm_as_rf.txt"), "w") as out: out.write(pm.to_str())  # creating test set
+        # with open(to_test_result("test_pm_as_rf_comp.txt"), "w") as out: out.write(pm_comp.to_str())  # creating test set
+        self.assertEqual(pm.to_str(), pm_comp.to_str())
+        self.assertEqual(pm.to_peaklist("pl").to_str(), pm_comp.to_peaklist("pl").to_str())
+
+
     def test_blank_filter(self):
         pm = load_peak_matrix_from_hdf5(to_test_data("MTBLS79_mzml_peak_matrix.hdf5"))
         pm_bf = blank_filter(pm, blank_label="blank", min_fraction=1.0, min_fold_change=1.0, function="mean",
-                             rm_samples=True, class_labels=None)
+                             rm_samples=True, labels=None)
         # save_peak_matrix_as_hdf5(pm_bf, to_test_data("MTBLS79_mzml_peak_matrix_bf.hdf5"))  # creating test set
         pm_comp = load_peak_matrix_from_hdf5(to_test_data("MTBLS79_mzml_peak_matrix_bf.hdf5"))
         # with open(to_test_result("test_pm_bf.txt"), "w") as out: out.write(pm.to_str())  # creating test set
@@ -119,7 +130,7 @@ class WorkflowTestCase(unittest.TestCase):
 
     def test_sample_filter(self):
         pm = load_peak_matrix_from_hdf5(to_test_data("MTBLS79_mzml_peak_matrix_bf.hdf5"))
-        pm_sf = sample_filter(pm, min_fraction=0.8, within=False, rsd=None, qc_label=None, class_labels=None)
+        pm_sf = sample_filter(pm, min_fraction=0.8, within=False, rsd=None, qc_label=None, labels=None)
         # save_peak_matrix_as_hdf5(pm_sf, to_test_data("MTBLS79_mzml_peak_matrix_sf.hdf5"))  # creating test set
         pm_comp = load_peak_matrix_from_hdf5(to_test_data("MTBLS79_mzml_peak_matrix_sf.hdf5"))
         # with open(to_test_result("test_pm_sf.txt"), "w") as out: out.write(pm.to_str())  # creating test set
@@ -170,7 +181,7 @@ class WorkflowTestCase(unittest.TestCase):
         pls_rep_03 = load_peaklists_from_hdf5(to_test_data("batch04_QC17_rep03_264.hdf5"))
 
         pls_merged = merge_peaklists([pls_rep_01, pls_rep_02, pls_rep_03])
-        #save_peaklists_as_hdf5(pls_merged, to_test_data("MTBLS79__01_262_02_263.hdf5"))  # creating test set
+        # save_peaklists_as_hdf5(pls_merged, to_test_data("MTBLS79__01_262_02_263.hdf5"))  # creating test set
         pls_comp = load_peaklists_from_hdf5(to_test_data("MTBLS79__01_262_02_263.hdf5"))
         self.assertEqual([pl.to_str() for pl in pls_merged], [pl.to_str() for pl in pls_comp])
 
@@ -202,6 +213,7 @@ class WorkflowTestCase(unittest.TestCase):
 
 
     def test_hdf5_peak_matrix_to_txt(self):
+
         hdf5_peak_matrix_to_txt(to_test_data("MTBLS79_mzml_peak_matrix.hdf5"), to_test_result("pm_mzml_triplicates.txt"),
                                 attr_name="intensity", rsd_tags=(), delimiter="\t", samples_in_rows=True, comprehensive=False)
         with open(to_test_result("pm_mzml_triplicates.txt"), "rU") as test_result:
@@ -210,10 +222,10 @@ class WorkflowTestCase(unittest.TestCase):
             self.assertTrue(np.allclose(map(float,ln[1:]), [74.0166655257, 74.0198337519, 74.0200238089, 74.0202012645], atol = 1e-10))
 
         hdf5_peak_matrix_to_txt(to_test_data("MTBLS79_mzml_peak_matrix.hdf5"), to_test_result("pm_mzml_triplicates_comprehensive.txt"),
-                                attr_name="intensity", rsd_tags=("QC",), delimiter="\t", samples_in_rows=True, comprehensive=True)
+                                attr_name="intensity", rsd_tags=(Tag("QC", "classLabel"),), delimiter="\t", samples_in_rows=True, comprehensive=True)
         with open(to_test_result("pm_mzml_triplicates_comprehensive.txt"), "rU") as test_result:
-            ln = test_result.readline().split("\t")[:6]
-            self.assertEquals(ln[:-1], ["m/z", "missing values", "tags_classLabel", "tags_batch", "tags_untyped"])
+            ln = test_result.readline().split("\t")[:8]
+            self.assertEquals(ln[:-2], ['m/z', 'missing values', 'tags_batch', 'tags_replicate', 'tags_injectionOrder', 'tags_classLabel'])
             self.assertTrue(np.isclose(float(ln[-1]), 74.0166655257))
 
         hdf5_peak_matrix_to_txt(to_test_data("MTBLS79_mzml_peak_matrix.hdf5"), to_test_result("pm_mzml_triplicates_snr.txt"),
@@ -224,7 +236,7 @@ class WorkflowTestCase(unittest.TestCase):
             self.assertTrue(np.allclose(map(float,ln[1:]), [0., 0., 0., 0., 0., 0., 3.60960180872, 0., 4.35180213987], atol = 1e-10))
 
         hdf5_peak_matrix_to_txt(to_test_data("MTBLS79_mzml_peak_matrix.hdf5"), to_test_result("pm_mzml_triplicates_comprehensive_T.txt"),
-                                attr_name="intensity", rsd_tags=("QC",), delimiter="\t", samples_in_rows=False, comprehensive=True)
+                                attr_name="intensity", rsd_tags=(Tag("QC", "classLabel"),), delimiter="\t", samples_in_rows=False, comprehensive=True)
         with open(to_test_result("pm_mzml_triplicates_comprehensive_T.txt"), "rU") as test_result:
             self.assertEquals(test_result.readline().split("\t")[0:5],
                               ['m/z', 'present', 'occurrence', 'purity', 'rsd_QC'])

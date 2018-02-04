@@ -1,10 +1,10 @@
-filename	batch	classLabel	sampleType
-batch04_B02_rep01_301.mzML	1	blank	sample
-batch04_B02_rep02_302.mzML	1	blank	sample
-batch04_B02_rep03_303.mzML	1	blank	sample
-batch04_QC17_rep01_262.mzML	1	QC	QC
-batch04_QC17_rep02_263.mzML	1	QC	QC
-batch04_QC17_rep03_264.mzML	1	QC	QC
-batch04_S01_rep01_247.mzML	1	sample	sample
-batch04_S01_rep02_248.mzML	1	sample	sample
-batch04_S01_rep03_249.mzML	1	sample	sample
+filename	replicate	batch	injectionOrder	classLabel
+batch04_B02_rep01_301.mzML	1	1	1	blank
+batch04_B02_rep02_302.mzML	2	1	2	blank
+batch04_B02_rep03_303.mzML	3	1	3	blank
+batch04_QC17_rep01_262.mzML	1	1	4	QC
+batch04_QC17_rep02_263.mzML	2	1	5	QC
+batch04_QC17_rep03_264.mzML	3	1	6	QC
+batch04_S01_rep01_247.mzML	1	1	7	sample
+batch04_S01_rep02_248.mzML	2	1	8	sample
+batch04_S01_rep03_249.mzML	3	1	9	sample
