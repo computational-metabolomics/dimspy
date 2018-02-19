@@ -757,7 +757,7 @@ class PeakMatrix(object):
         self.remove_empty_peaks()
 
         mz = self.attr_matrix('mz', flagged_only = not comprehensive)
-        hd = ['m/z'] + map(str, np.average(mz, axis = 0, weights = mz.astype(bool)))
+        hd = ['mz'] + map(str, np.average(mz, axis = 0, weights = mz.astype(bool)))
         dm = [map(str, self.peaklist_ids)] + \
              [map(str, ln) for ln in self.attr_matrix(attr_name, flagged_only = not comprehensive).T]
 

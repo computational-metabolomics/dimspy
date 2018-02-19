@@ -1,4 +1,4 @@
-m/z	present	occurrence	purity	rsd_QC	rsd_all	flags	batch04_B02_rep01_301.mzML	batch04_B02_rep02_302.mzML	batch04_B02_rep03_303.mzML	batch04_QC17_rep01_262.mzML	batch04_QC17_rep02_263.mzML	batch04_QC17_rep03_264.mzML	batch04_S01_rep01_247.mzML	batch04_S01_rep02_248.mzML	batch04_S01_rep03_249.mzML
+mz	present	occurrence	purity	rsd_QC	rsd_all	flags	batch04_B02_rep01_301.mzML	batch04_B02_rep02_302.mzML	batch04_B02_rep03_303.mzML	batch04_QC17_rep01_262.mzML	batch04_QC17_rep02_263.mzML	batch04_QC17_rep03_264.mzML	batch04_S01_rep01_247.mzML	batch04_S01_rep02_248.mzML	batch04_S01_rep03_249.mzML
 missing values							2548	2454	2474	2839	2832	2829	2865	2859	2884
 tags_class_label							blank	blank	blank	QC	QC	QC	sample	sample	sample
 tags_untyped															

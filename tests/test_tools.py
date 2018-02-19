@@ -218,14 +218,14 @@ class WorkflowTestCase(unittest.TestCase):
                                 attr_name="intensity", rsd_tags=(), delimiter="\t", samples_in_rows=True, comprehensive=False)
         with open(to_test_result("pm_mzml_triplicates.txt"), "rU") as test_result:
             ln = test_result.readline().split("\t")[:5]
-            self.assertEqual(ln[0], "m/z")
+            self.assertEqual(ln[0], "mz")
             self.assertTrue(np.allclose(map(float,ln[1:]), [74.0166655257, 74.0198337519, 74.0200238089, 74.0202012645], atol = 1e-10))
 
         hdf5_peak_matrix_to_txt(to_test_data("MTBLS79_mzml_peak_matrix.hdf5"), to_test_result("pm_mzml_triplicates_comprehensive.txt"),
                                 attr_name="intensity", rsd_tags=(Tag("QC", "classLabel"),), delimiter="\t", samples_in_rows=True, comprehensive=True)
         with open(to_test_result("pm_mzml_triplicates_comprehensive.txt"), "rU") as test_result:
             ln = test_result.readline().split("\t")[:8]
-            self.assertEquals(ln[:-2], ['m/z', 'missing values', 'tags_batch', 'tags_replicate', 'tags_injectionOrder', 'tags_classLabel'])
+            self.assertEquals(ln[:-2], ['mz', 'missing values', 'tags_batch', 'tags_replicate', 'tags_injectionOrder', 'tags_classLabel'])
             self.assertTrue(np.isclose(float(ln[-1]), 74.0166655257))
 
         hdf5_peak_matrix_to_txt(to_test_data("MTBLS79_mzml_peak_matrix.hdf5"), to_test_result("pm_mzml_triplicates_snr.txt"),
@@ -239,7 +239,7 @@ class WorkflowTestCase(unittest.TestCase):
                                 attr_name="intensity", rsd_tags=(Tag("QC", "classLabel"),), delimiter="\t", samples_in_rows=False, comprehensive=True)
         with open(to_test_result("pm_mzml_triplicates_comprehensive_T.txt"), "rU") as test_result:
             self.assertEquals(test_result.readline().split("\t")[0:5],
-                              ['m/z', 'present', 'occurrence', 'purity', 'rsd_QC'])
+                              ['mz', 'present', 'occurrence', 'purity', 'rsd_QC'])
 
 
     def test_create_sample_list(self):
