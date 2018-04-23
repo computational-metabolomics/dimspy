@@ -14,16 +14,21 @@ import collections
 import pymzml
 import numpy as np
 import zipfile
+from copy import deepcopy
 from dimspy.models.peaklist import PeakList
 from dimspy.experiment import mz_range_from_header
 
 
 class Mzml:
-    def __init__(self, filename="", archive=None):
+    def __init__(self, filename="", archive=None, preload=True):
         self.filename = filename
         self.archive = archive
+        self._preload = preload
+        self._cache = None
 
     def run(self):
+        if self._cache is not None: return self._cache
+
         if not self.filename.lower().endswith(".mzml") and not self.filename.lower().endswith(".mzml.gz") and not self.filename.lower().endswith(".zip"):
             raise IOError('Incorrect file format for mzML parser')
         if self.archive is not None:
@@ -32,11 +37,15 @@ class Mzml:
             zf = zipfile.ZipFile(self.archive, 'r')
             if self.filename not in zf.namelist():
                 raise IOError("{} does not exist in zip file".format(self.filename))
-            return pymzml.run.Reader('', file_object=zf.open(self.filename))
+            dat = pymzml.run.Reader('', file_object=zf.open(self.filename))
+            if self._preload: dat = self._cache = tuple(map(deepcopy, dat))
+            return dat
         elif self.filename.lower().endswith(".mzml") or self.filename.lower().endswith(".mzml.gz"):
             if not os.path.isfile(self.filename):
                 raise IOError("{} does not exist".format(self.filename))
-            return pymzml.run.Reader(self.filename)
+            dat = pymzml.run.Reader(self.filename)
+            if self._preload: dat = self._cache = tuple(map(deepcopy, dat))
+            return dat
         else:
             return None
 

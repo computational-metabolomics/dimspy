@@ -92,13 +92,14 @@ def filter_mz_ranges(pl, mz_remove_rngs, flag_name='mz_range_remove_flag', flag_
 
 
 # PeakMatrix filters
-def filter_rsd(pm, rsd_threshold, qc_tag, flag_name='rsd_flag'):
+def filter_rsd(pm, rsd_threshold, qc_tag, on_attr = 'intensity', flag_name='rsd_flag'):
     """
     PeakMatrix RSD filter.
 
     :param pm: the target peak matrix
     :param rsd_threshold: threshold of the RSD of the QC samples
     :param qc_tag: tag (label) to unmask qc samples
+    :param on_attr: calculate RSD on given attribute. Default = "intensity"
     :param flag_name: name of the new flag. Default = 'rsd_flag'
     :rtype: PeakMatrix object
 
@@ -106,7 +107,7 @@ def filter_rsd(pm, rsd_threshold, qc_tag, flag_name='rsd_flag'):
     threshold will be unflagged.
 
     """
-    rsd_values = pm.rsd(qc_tag)
+    rsd_values = pm.rsd(qc_tag, on_attr = on_attr)
     if np.any(np.isnan(rsd_values)):
         logging.warning('nan found in QC rsd values, filter might not work properly')
 
