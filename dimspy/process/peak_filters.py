@@ -67,27 +67,28 @@ def filter_ringing(pl, threshold, bin_size=1.0, flag_name='ringing_flag', flag_i
     return pl.add_attribute(flag_name, pl.intensity > (mask * threshold), is_flag=True, on_index=flag_index)
 
 
-def filter_mz_ranges(pl, mz_remove_rngs, flag_name='mz_range_remove_flag', flag_index=None):
+def filter_mz_ranges(pl, mz_ranges, flag_name='mz_ranges_flag', flagged_only=False, flag_index=None):
     """
     Peaklist mz range filter.
-
     :param pl: the target peaklist
-    :param mz_remove_rngs: the mz ranges to remove. Must be in the format of [(mz_min1, mz_max2), (mz_min2, mz_max2), ...]
+    :param mz_ranges: the mz ranges to remove. Must be in the format of [(mz_min1, mz_max2), (mz_min2, mz_max2), ...]
     :param flag_name: name of the new flag attribute. Default = 'mz_range_remove_flag'
     :param flag_index: index of the new flag to be inserted into the peaklist. Default = None
     :rtype: PeakList object
-
     This filter will remove all the peaks whose mz values are within any of the ranges in the mz_remove_rngs.
-
     """
-    mzrs_removed_flags = np.ones(pl.shape[0], dtype=bool)
-    for mzr in mz_remove_rngs:
+    if flagged_only:
+        flags = np.ones(pl.shape[0], dtype=bool)
+    else:
+        flags = np.ones(pl.full_size, dtype=bool)
+
+    for mzr in mz_ranges:
         if len(mzr) != 2:
             raise ValueError('mzr_remove: Provide a list of "start" and "end" values for each m/z range that needs to be removed.')
         if mzr[0] >= mzr[1]:
             raise ValueError('mzr_remove: Start value cannot be larger then end value.')
-        mzrs_removed_flags[(pl.mz >= mzr[0]) & (pl.mz <= mzr[1])] = False
-    pl.add_attribute(flag_name, mzrs_removed_flags, is_flag=True, on_index=flag_index)
+        flags[(pl.get_attribute("mz", flagged_only) >= mzr[0]) & (pl.get_attribute("mz", flagged_only) <= mzr[1])] = False
+    pl.add_attribute(flag_name, flags, flagged_only=flagged_only, is_flag=True, on_index=flag_index)
     return pl
 
 
