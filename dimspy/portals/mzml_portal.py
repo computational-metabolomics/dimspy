@@ -74,7 +74,7 @@ class Mzml:
                 if len(scan.peaks) > 0:
                     mzs, ints = zip(*scan.peaks)
                 else:
-                    mss, ints = [], []
+                    mzs, ints = [], []
 
                 scan_time = scan["MS:1000016"]
                 tic = scan["total ion current"]
