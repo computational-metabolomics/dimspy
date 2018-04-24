@@ -113,9 +113,20 @@ class Mzml:
         # print self.run()[2]
         for scan in self.run():
             if scan["id"] == "TIC":
-                tics = zip(*scan.peaks)[1]
-                return tics
+                return zip(*scan.peaks)[1]
         return
+
+    def injection_times(self):
+        injection_times = {}
+        for scan in self.run():
+            injection_times[scan['id']] = None
+            for element in scan.xmlTree:
+                if "MS:1000927" == element.get('accession'):
+                    injection_times[scan['id']] = float(element.get("value"))
+                    break
+            if scan['id'] not in injection_times:
+                injection_times[scan['id']] = None
+        return injection_times
 
     def scan_dependents(self):
         l = []
