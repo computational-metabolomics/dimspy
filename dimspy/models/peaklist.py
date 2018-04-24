@@ -140,10 +140,15 @@ class PeakList(object):
         Property of the peaklist ID.
 
         :getter: returns the peaklist ID
+        :setter: set the peaklist ID
         :type: same as input ID
 
         """
         return self._id
+
+    @ID.setter
+    def ID(self, value):
+        self._id = str(value)
 
     @property
     def size(self):
