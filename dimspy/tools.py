@@ -209,8 +209,9 @@ def replicate_filter(source, ppm, replicates, min_peaks, rsd_thres=None, filelis
             pl.tags.add_tag("_".join(map(str, reps)), "replicates")
 
             for t in pls_comb[0].tags.tags:
-                if not pl.tags.has_tag_type(t.ttype):
-                    pl.tags.add_tag(t)
+                if t.ttype != "replicate":
+                    if not pl.tags.has_tag_type(t.ttype):
+                        pl.tags.add_tag(t)
 
             pl_filt = filter_attr(pl.copy(), attr_name="present", min_threshold=replicates, flag_name="pres_rsd")
             median_rsd = np.median(pl_filt.get_attribute("rsd", flagged_only=True))
