@@ -138,10 +138,10 @@ def filter_fraction(pm, fraction_threshold, within_classes=False, class_tag_type
             raise KeyError('must provide class tag type for within classes filtering')
         if not all(map(lambda t: t.has_tag_type(class_tag_type), pm.peaklist_tags)):
             raise AttributeError('not all tags have tag type [%s]' % class_tag_type)
-        flg = np.ones(pm.shape[1])
+        flg = np.zeros(pm.shape[1])
         for tag in pm.tags_of(class_tag_type):
             with unmask_peakmatrix(pm, tag) as m:
-                flg = np.logical_and(flg, (m.fraction >= fraction_threshold))
+                flg = np.logical_or(flg, (m.fraction >= fraction_threshold))
         pm.add_flag(flag_name, flg)
     return pm
 
