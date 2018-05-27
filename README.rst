@@ -32,7 +32,7 @@ will help you to make the PR if you are new to `git`.
 Developers & Contributors
 -------------------------
  - Ralf J. M. Weber (r.j.weber@bham.ac.uk) - `University of Birmingham (UK) <http://www.birmingham.ac.uk/index.aspx>`_
- - Jiarui (Albert) Zhou (j.zhou.3@bham.ac.uk) - `University of Birmingham (UK) <http://www.birmingham.ac.uk/index.aspx>`_, `HIT Shenzhen Graduate School (China) <http://www.hitsz.edu.cn>`_
+ - Jiarui (Albert) Zhou (j.zhou.3@bham.ac.uk) - `University of Birmingham (UK) <http://www.birmingham.ac.uk/index.aspx>`_, `HIT Shenzhen (China) <http://www.hitsz.edu.cn>`_
  - Thomas N. Lawson (tnl495@bham.ac.uk) - `University of Birmingham (UK) <http://www.birmingham.ac.uk/index.aspx>`_
 
 
