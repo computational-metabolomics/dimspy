@@ -106,7 +106,7 @@ def process_scans(source, function_noise, snr_thres, ppm, min_fraction=None, rsd
                 if sum(pl.shape[0] for pl in pls_scans[h]) == 0:
                     logging.warning("No scan data available for {}".format(h))
                 else:
-                    pl_avg = average_replicate_scans(h, pls_scans[h], ppm, min_fraction, rsd_thres, block_size, ncpus)
+                    pl_avg = average_replicate_scans(h, pls_scans[h], ppm, min_fraction, rsd_thres, "intensity", block_size, ncpus)
                     pls_avg.append(pl_avg)
                     n_peaks, median_rsd = pl_avg.shape[0], np.nanmedian(pl_avg.rsd)
             else:
@@ -209,8 +209,9 @@ def replicate_filter(source, ppm, replicates, min_peaks, rsd_thres=None, filelis
             pl.tags.add_tag("_".join(map(str, reps)), "replicates")
 
             for t in pls_comb[0].tags.tags:
-                if not pl.tags.has_tag_type(t.ttype):
-                    pl.tags.add_tag(t)
+                if t.ttype != "replicate":
+                    if not pl.tags.has_tag_type(t.ttype):
+                        pl.tags.add_tag(t)
 
             pl_filt = filter_attr(pl.copy(), attr_name="present", min_threshold=replicates, flag_name="pres_rsd")
             median_rsd = np.median(pl_filt.get_attribute("rsd", flagged_only=True))

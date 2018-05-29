@@ -254,3 +254,9 @@ class WorkflowTestCase(unittest.TestCase):
         with open(to_test_result("filelist_csl_MTBLS79_mzml_peak_matrix.txt"), "rU") as test_result:
             with open(to_test_data("filelist_csl_MTBLS79_mzml_peak_matrix.txt"), "rU") as comp:
                 self.assertEqual(test_result.read(), comp.read())
+
+        pm = load_peaklists_from_hdf5(to_test_data("MTBLS79_mzml_triplicates_rf.hdf5"))
+        create_sample_list(pm, to_test_result("filelist_csl_MTBLS79_mzml_triplicates_rf.txt"))
+        with open(to_test_result("filelist_csl_MTBLS79_mzml_triplicates_rf.txt"), "rU") as test_result:
+            with open(to_test_data("filelist_csl_MTBLS79_mzml_triplicates_rf.txt"), "rU") as comp:
+                self.assertEqual(test_result.read(), comp.read())

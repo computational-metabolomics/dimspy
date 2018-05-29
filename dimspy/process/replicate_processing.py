@@ -119,7 +119,7 @@ def read_scans(fn, source, function_noise, min_scans=1, filter_scan_events=None)
     return scans
 
 
-def average_replicate_scans(name, pls, ppm=2.0, min_fraction=0.8, rsd_thres=30.0, block_size=5000, ncpus=None):
+def average_replicate_scans(name, pls, ppm=2.0, min_fraction=0.8, rsd_thres=30.0, rsd_on="intensity", block_size=5000, ncpus=None):
 
     emlst = np.array(map(lambda x: x.size == 0, pls))
     if np.sum(emlst) > 0:
@@ -137,18 +137,26 @@ def average_replicate_scans(name, pls, ppm=2.0, min_fraction=0.8, rsd_thres=30.0
             if v is not None:
                 pl_avg.metadata[k].append(v)
 
-    pl_avg.add_attribute("snr", pm.attr_mean_vector('snr'), on_index=2)
+    if rsd_on != "intensity":
+        pl_avg.add_attribute(rsd_on, pm.attr_mean_vector(rsd_on), on_index=2)
+        rsd_label = "rsd_{}".format(rsd_on)
+        shift = 1
+    else:
+        rsd_label = "rsd"
+        shift = 0
+
+    pl_avg.add_attribute("snr", pm.attr_mean_vector('snr'), on_index=2+shift)
     pl_avg.add_attribute("snr_flag", np.ones(pl_avg.full_size), flagged_only=False, is_flag=True)
 
-    pl_avg.add_attribute("rsd", pm.rsd(flagged_only=False), on_index=5)
+    pl_avg.add_attribute(rsd_label, pm.rsd(on_attr=rsd_on, flagged_only=False), on_index=5+shift)
 
     if min_fraction is not None:
         pl_avg.add_attribute("fraction_flag", (pm.present / float(pm.shape[0])) >= min_fraction, flagged_only=False, is_flag=True)
     if rsd_thres is not None:
         if pm.shape[0] == 1:
             logging.warning('applying RSD filter on single scan, all peaks removed')
-        rsd_flag = map(lambda x: not np.isnan(x) and x < rsd_thres, pl_avg.get_attribute("rsd", flagged_only=False))
-        pl_avg.add_attribute("rsd_flag", rsd_flag, flagged_only=False, is_flag=True)
+        rsd_flag = map(lambda x: not np.isnan(x) and x < rsd_thres, pl_avg.get_attribute(rsd_label, flagged_only=False))
+        pl_avg.add_attribute("{}_flag".format(rsd_label), rsd_flag, flagged_only=False, is_flag=True)
     return pl_avg
 
 

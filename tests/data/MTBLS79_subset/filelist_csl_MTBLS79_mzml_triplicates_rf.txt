@@ -1,0 +1,4 @@
+filename	injectionOrder	replicates	batch	classLabel
+batch04_B02_rep01_301_2_302_3_303	1	1_2_3	1	blank
+batch04_QC17_rep01_262_2_263_3_264	4	1_2_3	1	QC
+batch04_S01_rep01_247_2_248_3_249	7	1_2_3	1	sample

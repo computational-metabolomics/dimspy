@@ -67,38 +67,40 @@ def filter_ringing(pl, threshold, bin_size=1.0, flag_name='ringing_flag', flag_i
     return pl.add_attribute(flag_name, pl.intensity > (mask * threshold), is_flag=True, on_index=flag_index)
 
 
-def filter_mz_ranges(pl, mz_remove_rngs, flag_name='mz_range_remove_flag', flag_index=None):
+def filter_mz_ranges(pl, mz_ranges, flag_name='mz_ranges_flag', flagged_only=False, flag_index=None):
     """
     Peaklist mz range filter.
-
     :param pl: the target peaklist
-    :param mz_remove_rngs: the mz ranges to remove. Must be in the format of [(mz_min1, mz_max2), (mz_min2, mz_max2), ...]
+    :param mz_ranges: the mz ranges to remove. Must be in the format of [(mz_min1, mz_max2), (mz_min2, mz_max2), ...]
     :param flag_name: name of the new flag attribute. Default = 'mz_range_remove_flag'
     :param flag_index: index of the new flag to be inserted into the peaklist. Default = None
     :rtype: PeakList object
-
     This filter will remove all the peaks whose mz values are within any of the ranges in the mz_remove_rngs.
-
     """
-    mzrs_removed_flags = np.ones(pl.shape[0], dtype=bool)
-    for mzr in mz_remove_rngs:
+    if flagged_only:
+        flags = np.ones(pl.shape[0], dtype=bool)
+    else:
+        flags = np.ones(pl.full_size, dtype=bool)
+
+    for mzr in mz_ranges:
         if len(mzr) != 2:
             raise ValueError('mzr_remove: Provide a list of "start" and "end" values for each m/z range that needs to be removed.')
         if mzr[0] >= mzr[1]:
             raise ValueError('mzr_remove: Start value cannot be larger then end value.')
-        mzrs_removed_flags[(pl.mz >= mzr[0]) & (pl.mz <= mzr[1])] = False
-    pl.add_attribute(flag_name, mzrs_removed_flags, is_flag=True, on_index=flag_index)
+        flags[(pl.get_attribute("mz", flagged_only) >= mzr[0]) & (pl.get_attribute("mz", flagged_only) <= mzr[1])] = False
+    pl.add_attribute(flag_name, flags, flagged_only=flagged_only, is_flag=True, on_index=flag_index)
     return pl
 
 
 # PeakMatrix filters
-def filter_rsd(pm, rsd_threshold, qc_tag, flag_name='rsd_flag'):
+def filter_rsd(pm, rsd_threshold, qc_tag, on_attr = 'intensity', flag_name='rsd_flag'):
     """
     PeakMatrix RSD filter.
 
     :param pm: the target peak matrix
     :param rsd_threshold: threshold of the RSD of the QC samples
     :param qc_tag: tag (label) to unmask qc samples
+    :param on_attr: calculate RSD on given attribute. Default = "intensity"
     :param flag_name: name of the new flag. Default = 'rsd_flag'
     :rtype: PeakMatrix object
 
@@ -106,7 +108,7 @@ def filter_rsd(pm, rsd_threshold, qc_tag, flag_name='rsd_flag'):
     threshold will be unflagged.
 
     """
-    rsd_values = pm.rsd(qc_tag)
+    rsd_values = pm.rsd(qc_tag, on_attr = on_attr)
     if np.any(np.isnan(rsd_values)):
         logging.warning('nan found in QC rsd values, filter might not work properly')
 
@@ -136,10 +138,10 @@ def filter_fraction(pm, fraction_threshold, within_classes=False, class_tag_type
             raise KeyError('must provide class tag type for within classes filtering')
         if not all(map(lambda t: t.has_tag_type(class_tag_type), pm.peaklist_tags)):
             raise AttributeError('not all tags have tag type [%s]' % class_tag_type)
-        flg = np.ones(pm.shape[1])
+        flg = np.zeros(pm.shape[1])
         for tag in pm.tags_of(class_tag_type):
             with unmask_peakmatrix(pm, tag) as m:
-                flg = np.logical_and(flg, (m.fraction >= fraction_threshold))
+                flg = np.logical_or(flg, (m.fraction >= fraction_threshold))
         pm.add_flag(flag_name, flg)
     return pm
 

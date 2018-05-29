@@ -401,6 +401,7 @@ class PeakMatrix(object):
 
         :param args: tags or untyped tag values for RSD calculation, no value = calculate over all samples
         :param kwargs: typed tags for RSD calculation, , no value = calculate over all samples
+        :param on_attr: calculate RSD on given attribute. Default = "intensity"
         :param flagged_only: whether to calculate on flagged peaks only. Default = True
         :type: numpy array
 
@@ -413,6 +414,7 @@ class PeakMatrix(object):
         corresponding rsd value will be set to np.nan.
 
         """
+        on_attr = kwargs.pop('on_attr') if kwargs.has_key('on_attr') else 'intensity'
         flagged_only = kwargs.pop('flagged_only') if kwargs.has_key('flagged_only') else True
 
         if self.shape[0] < 2:
@@ -423,7 +425,7 @@ class PeakMatrix(object):
               unmask_peakmatrix(self, *args, **kwargs)) as m:
             if m.shape[0] == 0: raise AttributeError('peak matrix does not have label(s) [%s]' %
                                                      join(map(lambda x: str(x)[1:-1], (args, kwargs)), ', '))
-            ints = m.attr_matrix('intensity', flagged_only)
+            ints = m.attr_matrix(on_attr, flagged_only)
             rsd = m._present_std(ints, 0, flagged_only) / m._present_mean(ints, 0, flagged_only) * 100
 
         rsd[np.where(map(lambda x: len(set(x[np.nonzero(x)])) == 1, ints.T))] = np.nan  # only one valid value
