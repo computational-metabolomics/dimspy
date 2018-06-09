@@ -348,7 +348,7 @@ class PeakList(object):
         attr_name = str(attr_name) # rfn.append_fields doesn't recognise unicode
 
         adt = bool if is_flag else \
-              attr_dtype if attr_dtype is not None else \
+              attr_dtype if attr_dtype not in (None, str, unicode) else \
               attr_value.dtype.str if hasattr(attr_value, 'dtype') else \
               ('S%d' % max(map(len, attr_value))) if type(attr_value[0]) in (unicode, str) else \
               type(attr_value[0])
