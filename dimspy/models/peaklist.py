@@ -99,6 +99,9 @@ class PeakList(object):
     def __str__(self):
         return self.to_str(', ')
 
+    def __repr__(self):
+        return self.to_str('\t')
+
     def __getitem__(self, item):
         if type(item) in (int, slice, list, np.ndarray):
             return self.get_peak(item)
