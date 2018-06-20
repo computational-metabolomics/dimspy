@@ -31,21 +31,34 @@ def _cluster_peaks(mzs, ppm, distype='euclidean', linkmode='centroid'):
     if len(mzs) == 1:
         return np.zeros_like(mzs, dtype=int).reshape((-1, 1))
 
-    m = np.column_stack([mzs])
-    mdist = fc.pdist(m, metric=distype)
-
     outer_mzs = np.add.outer(mzs, mzs)
     np.fill_diagonal(outer_mzs, 0)
-    avg_mz_pair = np.divide(outer_mzs, 2)
-    mdist_mz_pair = squareform(avg_mz_pair)
-    relative_errors = np.multiply(mdist_mz_pair, 1e-6)
+
+    # avg_mz_pair = np.divide(outer_mzs, 2)
+    outer_mzs /= 2  # inplace operation to reduce memory usage
+
+    # mdist_mz_pair = squareform(avg_mz_pair)
+    mdist_mz_pair = squareform(outer_mzs)
+    del outer_mzs  # reduce memory use
+
+    m = np.column_stack([mzs])
+    mdist = fc.pdist(m, metric=distype)
+    del m
+
+    # relative_errors = np.multiply(mdist_mz_pair, 1e-6)
+    mdist_mz_pair *= 1e-6  # inplace operation to reduce memory usage
 
     with np.errstate(divide='ignore', invalid='ignore'):  # using errstate context to avoid seterr side effects
-        m_mass_tol = np.divide(mdist, relative_errors)
-        m_mass_tol[np.isnan(m_mass_tol)] = 0.0
-    z = fc.linkage(m_mass_tol, method=linkmode)
+        # m_mass_tol = np.divide(mdist, relative_errors)
+        mdist /= mdist_mz_pair  # inplace operation to reduce memory usage
+        # m_mass_tol[np.isnan(m_mass_tol)] = 0.0
+        mdist[np.isnan(mdist)] = 0.0
 
-    # cut tree at ppm threshold & order matches the order of mzs
+    # z = fc.linkage(m_mass_tol, method=linkmode)
+    z = fc.linkage(mdist, method=linkmode)
+    del mdist, mdist_mz_pair
+
+    # cut tree at ppm threshold
     return cluster.hierarchy.cut_tree(z, height=ppm)
 
 
