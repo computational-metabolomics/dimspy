@@ -18,11 +18,11 @@ install:
 
   - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy=1.13.0 scipy=1.0 pymzml=0.7.10 pythonnet=2.3.0 h5py=2.7.0 fastcluster=1.1.23 coverage green codecov -c conda-forge -c bioconda
   - source activate test-environment
-  - pip install . --no-dependencies
+  - python setup.py install
 
 script:
   - dimspy --help
-  - green -vvv --run-coverage
+  - python setup.py test
 
 after_script:
   - python -m codecov
