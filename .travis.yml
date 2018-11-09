@@ -1,23 +1,15 @@
 language: python
 python:
   - "2.7"
-install:
-  - sudo apt-get update
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
-      wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh;
-    else
-      wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
-    fi
-  - bash miniconda.sh -b -p $HOME/miniconda
-  - export PATH="$HOME/miniconda/bin:$PATH"
-  - hash -r
-  - conda config --set always_yes yes --set changeps1 no
-  - conda update -q conda
-  - conda info -a
 
-  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy=1.13.0 scipy=0.19.1 pymzml=0.7.10 pythonnet=2.3.0 h5py=2.7.0 fastcluster=1.1.23 -c conda-forge -c bioconda
-  - source activate test-environment
-  - python setup.py install
+install:
+  - pip install coverage
+  - pip install green codecov
+  - pip install .
 
 script:
-  - python setup.py test
+  - dimspy --help
+  - green -vvv --run-coverage
+
+after_script:
+  - python -m codecov
