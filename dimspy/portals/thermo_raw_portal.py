@@ -61,7 +61,7 @@ class ThermoRaw:
         else:
             mzs, ints, baseline, noise = [], [], [], []
 
-        if function_noise == "noise_packets":
+        if function_noise == "noise_packets" and len(ints) > 0:
             snr = [p.SignalToNoise for p in scan.GetCentroids()]
         elif function_noise == "median" and len(ints) > 0:
             snr = ints / np.median(ints)

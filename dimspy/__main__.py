@@ -6,7 +6,7 @@ import argparse
 import h5py
 import tools
 from portals import hdf5_portal
-from . import __version__
+from dimspy import __version__
 
 
 def map_delimiter(delimiter):
