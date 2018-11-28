@@ -10,7 +10,7 @@ Cluster and align peaklists into peak matrix.
 
 """
 
-from __future__ import division
+
 
 import logging
 import numpy as np
@@ -22,6 +22,7 @@ from collections import Counter
 from scipy import cluster
 from scipy.spatial.distance import squareform
 from dimspy.models.peak_matrix import PeakMatrix
+from functools import reduce
 
 
 # single cluster
@@ -76,7 +77,7 @@ def _cluster_peaks_map(mzs, ppm, block_size, fixed_block, edge_extend, ncpus):
 
     # split blocks
     if fixed_block:
-        sids = range(block_size, len(mzs), block_size)
+        sids = list(range(block_size, len(mzs), block_size))
     else:
         umzs, urids = np.unique(mzs, return_index=True)
         sids = [urids[i] for i in range(block_size, len(umzs), block_size)]  # appx size
@@ -91,13 +92,13 @@ def _cluster_peaks_map(mzs, ppm, block_size, fixed_block, edge_extend, ncpus):
         return rets
 
     def _smap(f, p):
-        return map(f, p)
+        return list(map(f, p))
 
     def _pmap(f, p):
-        largechk = filter(lambda x: len(x[0]) > 1E+5, p)
+        largechk = [x for x in p if len(x[0]) > 1E+5]
         if len(largechk) > 0:
             raise RuntimeError('Some of the clustering chunks contain too many peaks: \n%s' %
-                join(map(lambda x: 'mz range [%.5f - %.5f] ... [%d] peaks' % (min(x[0]),max(x[0]),len(x[0])), largechk), '\n'))
+                join(['mz range [%.5f - %.5f] ... [%d] peaks' % (min(x[0]),max(x[0]),len(x[0])) for x in largechk], '\n'))
         return (_smap if ncpus == 1 or cpu_count() <= 2 else _mmap)(f, p)
 
     # align edges
@@ -109,24 +110,24 @@ def _cluster_peaks_map(mzs, ppm, block_size, fixed_block, edge_extend, ncpus):
     if True in overlap:
         logging.warning('[%d] edge blocks overlapped, consider increasing the block size' % (sum(overlap) + 1))
         erngs = reduce(lambda x, y: (x[:-1] + [np.unique(np.hstack((x[-1], y[0])))]) if y[1] else x + [y[0]],
-                       zip(erngs[1:], overlap), [erngs[0]])
+                       list(zip(erngs[1:], overlap)), [erngs[0]])
         sids = [sids[0]] + [s for s, o in zip(sids[1:], overlap) if not o]
 
     _cids = _pmap(_cluster_peaks_mp, [(mzs[r], ppm) for r in erngs])
-    eblks = [r[c == c[r == s]] for s, r, c in zip(sids, erngs, map(lambda x: x.flatten(), _cids))]
-    ecids = map(lambda x: np.zeros_like(x).reshape((-1, 1)), eblks)
+    eblks = [r[c == c[r == s]] for s, r, c in zip(sids, erngs, [x.flatten() for x in _cids])]
+    ecids = [np.zeros_like(x).reshape((-1, 1)) for x in eblks]
 
     # align blocks
     # keep () in reduce in case eblks is empty
     brngs = np.array(
-        (0,) + reduce(lambda x, y: x + y, map(lambda x: (x[0], x[-1] + 1), eblks), ()) + (len(mzs),)
+        (0,) + reduce(lambda x, y: x + y, [(x[0], x[-1] + 1) for x in eblks], ()) + (len(mzs),)
     ).reshape((-1, 2))
 
     # in case edges have reached mz bounds
     bkmzs = [mzs[slice(*r)] for r in brngs]
-    slimbk = map(lambda x: len(x) == 0 or abs(x[-1] - x[0]) / x[0] < eeppm * 10, bkmzs)
+    slimbk = [len(x) == 0 or abs(x[-1] - x[0]) / x[0] < eeppm * 10 for x in bkmzs]
     if np.sum(slimbk) > 0:
-        pbrngs = [map(lambda x: min(x, len(mzs) - 1), (r[0], r[-1] - 1 if r[-1] != r[0] else r[-1])) for r in brngs]
+        pbrngs = [[min(x, len(mzs) - 1) for x in (r[0], r[-1] - 1 if r[-1] != r[0] else r[-1])] for r in brngs]
         pblns = ['block %d' % i + ': [%f, %f]' % itemgetter(*r)(mzs)
                  for i, (s, r) in enumerate(zip(slimbk, pbrngs)) if s]
         logging.warning('[%d] empty / slim clustering block(s) found, consider increasing the block size\n%s' %
@@ -140,12 +141,12 @@ def _cluster_peaks_map(mzs, ppm, block_size, fixed_block, edge_extend, ncpus):
 
 
 def _cluster_peaks_reduce(clusters):
-    return reduce(lambda x, y: np.vstack((x, y + np.max(x) + 1)), filter(lambda x: len(x) > 0, clusters)).flatten()
+    return reduce(lambda x, y: np.vstack((x, y + np.max(x) + 1)), [x for x in clusters if len(x) > 0]).flatten()
 
 
 # alignment
 def _align_peaks(cids, pids, *attrs):
-    if not all(map(lambda x: x.shape == cids.shape == pids.shape, attrs)):
+    if not all([x.shape == cids.shape == pids.shape for x in attrs]):
         raise ValueError('attributes shape not match')
 
     # encode string id list to continuous values and search uniques
@@ -154,17 +155,17 @@ def _align_peaks(cids, pids, *attrs):
         sri = np.argsort(ri)  # ensure order
         return np.argsort(sri)[vi], ids[ri[sri]]
 
-    (mcids, mpids), (ucids, upids) = zip(*map(_idsmap, (cids, pids)))
+    (mcids, mpids), (ucids, upids) = list(zip(*list(map(_idsmap, (cids, pids)))))
 
     # count how many peaks from same sample being clustered into one peak
-    cM = np.zeros(map(len, (upids, ucids)))
-    for pos, count in Counter(zip(mpids, mcids)).items():
+    cM = np.zeros(list(map(len, (upids, ucids))))
+    for pos, count in list(Counter(list(zip(mpids, mcids))).items()):
         cM[pos] = count
 
     # fill all the attributes into matrix
     def _avg_am(a):
-        aM = np.zeros(map(len, (upids, ucids)))
-        for p, v in zip(zip(mpids, mcids), a):
+        aM = np.zeros(list(map(len, (upids, ucids))))
+        for p, v in zip(list(zip(mpids, mcids)), a):
             aM[p] += v
         with np.errstate(divide='ignore', invalid='ignore'):
             aM /= cM
@@ -173,7 +174,7 @@ def _align_peaks(cids, pids, *attrs):
 
     def _cat_am(a):
         aM = [[[] for _ in ucids] for _ in upids]
-        for (r, c), v in zip(zip(mpids, mcids), a):
+        for (r, c), v in zip(list(zip(mpids, mcids)), a):
             aM[r][c] += [str(v)]
         aM = [[join(val, ',') for val in ln] for ln in aM]
         return np.array(aM)
@@ -184,11 +185,11 @@ def _align_peaks(cids, pids, *attrs):
               lambda x: logging.warning('undefined alignment behaviour for [%s] dtype data') # returns None
         return alg(a)
 
-    attrMs = map(_fillam, attrs)
+    attrMs = list(map(_fillam, attrs))
 
     # sort mz values, ensure mzs matrix be the first
     sortids = np.argsort(np.average(attrMs[0], axis=0, weights=attrMs[0].astype(bool)))
-    return upids, map(lambda x: x[:, sortids], attrMs + [cM])
+    return upids, [x[:, sortids] for x in attrMs + [cM]]
 
 
 # interface
@@ -221,10 +222,10 @@ def align_peaks(peaks, ppm=2.0, block_size=5000, fixed_block=True, edge_extend=1
 
     """
     # remove empty peaklists
-    emlst = np.array(map(lambda x: x.size == 0, peaks))
+    emlst = np.array([x.size == 0 for x in peaks])
     if np.sum(emlst) > 0:
         logging.warning(
-            'droping empty peaklist(s) [%s]' % join(map(str, [p.ID for e, p in zip(emlst, peaks) if e]), ','))
+            'droping empty peaklist(s) [%s]' % join(list(map(str, [p.ID for e, p in zip(emlst, peaks) if e])), ','))
         peaks = [p for e, p in zip(emlst, peaks) if not e]
     if len(peaks) == 0: raise ValueError('all input peaklists for alignment are empty')
 
@@ -232,11 +233,11 @@ def align_peaks(peaks, ppm=2.0, block_size=5000, fixed_block=True, edge_extend=1
     attrs = peaks[0].attributes
     if attrs[:2] != ('mz', 'intensity'):
         raise AttributeError('PANIC: peak attributes in wrong order')
-    if not all(map(lambda x: attrs == x.attributes, peaks)):
+    if not all([attrs == x.attributes for x in peaks]):
         raise ValueError('peak attributes not the same')
     if 'intra_count' in attrs:
         raise AttributeError('preserved attribute name [intra_count] already exists')
-    attrs = filter(lambda x: x not in peaks[0].flag_attributes, attrs) # flags should be excluded
+    attrs = [x for x in attrs if x not in peaks[0].flag_attributes] # flags should be excluded
 
     # single peaklist
     if len(peaks) == 1:
@@ -245,12 +246,12 @@ def align_peaks(peaks, ppm=2.0, block_size=5000, fixed_block=True, edge_extend=1
         return PeakMatrix([peaks[0].ID], [peaks[0].tags], attrlst)
 
     # flatten
-    f_pids = np.hstack(map(lambda p: [p.ID] * p.size, peaks))
-    f_attrs = map(lambda attr: np.hstack(map(lambda p: p[attr], peaks)), attrs)
+    f_pids = np.hstack([[p.ID] * p.size for p in peaks])
+    f_attrs = [np.hstack([p[attr] for p in peaks]) for attr in attrs]
 
     sortids = np.argsort(f_attrs[0])  # attrs[0] -> mz values
     s_pids = f_pids[sortids]
-    s_attrs = map(lambda x: x[sortids], f_attrs)
+    s_attrs = [x[sortids] for x in f_attrs]
 
     # cluster
     clusters = _cluster_peaks_map(s_attrs[0], ppm, block_size, fixed_block, edge_extend, ncpus)
@@ -264,6 +265,6 @@ def align_peaks(peaks, ppm=2.0, block_size=5000, fixed_block=True, edge_extend=1
     pids = f_pids[sorted(np.unique(f_pids, return_index=True)[1])]
     pdct = dict((i, mi) for mi, i in enumerate(a_pids))
     porder = [pdct[i] for i in pids]
-    o_attrms = map(lambda x: x[porder] if x is not None else None, a_attrms)
+    o_attrms = [x[porder] if x is not None else None for x in a_attrms]
 
-    return PeakMatrix(pids, [p.tags for p in peaks], filter(lambda x: x[1] is not None, zip(attrs, o_attrms)))
+    return PeakMatrix(pids, [p.tags for p in peaks], [x for x in zip(attrs, o_attrms) if x[1] is not None])

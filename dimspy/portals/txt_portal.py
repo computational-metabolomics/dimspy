@@ -25,7 +25,7 @@ def _evalv(vect):
         ctype = type(literal_eval(vect[0]))
     except (ValueError, SyntaxError):
         ctype = None
-    return vect if ctype is None else map(ctype, vect)
+    return vect if ctype is None else list(map(ctype, vect))
 
 
 # peaklist portals
@@ -61,13 +61,13 @@ def load_peaklist_from_txt(filename, ID, delimiter=',', flag_names='auto', has_f
     if not os.path.isfile(filename):
         raise IOError('plain text file [%s] does not exist' % filename)
     with open(filename, 'rU') as f:
-        rlns = filter(lambda x: x != '', map(strip, f.readlines()))
+        rlns = [x for x in map(strip, f.readlines()) if x != '']
 
-    dlns = map(lambda x: map(strip, x.split(delimiter)), rlns)
-    if any(map(lambda x: len(x) != len(dlns[0]), dlns[1:])):
+    dlns = [list(map(strip, x.split(delimiter))) for x in rlns]
+    if any([len(x) != len(dlns[0]) for x in dlns[1:]]):
         raise IOError('data matrix size not match')
 
-    hd, dm = dlns[0], zip(*dlns[1:])
+    hd, dm = dlns[0], list(zip(*dlns[1:]))
     if has_flag_col:
         hd, dm = hd[:-1], dm[:-1]  # flag_col must be the last one, and discarded
     if len(set(hd)) != len(hd):
@@ -76,7 +76,7 @@ def load_peaklist_from_txt(filename, ID, delimiter=',', flag_names='auto', has_f
     mzs, ints = np.array(dm[0], dtype=float), np.array(dm[1], dtype=float)  # first two cols must be mz and ints
     pkl = PeakList(ID, mzs, ints)
 
-    flag_names = filter(lambda x: x.endswith('_flag'), hd) if flag_names == 'auto' else \
+    flag_names = [x for x in hd if x.endswith('_flag')] if flag_names == 'auto' else \
                  [] if flag_names is None else set(flag_names)
     for n, v in zip(hd[2:], dm[2:]): pkl.add_attribute(n, _evalv(v), is_flag=n in flag_names, flagged_only=False)
 
@@ -114,22 +114,22 @@ def load_peak_matrix_from_txt(filename, delimiter='\t', samples_in_rows=True, co
     if not os.path.isfile(filename):
         raise IOError('plain text file [%s] does not exist' % filename)
     with open(filename, 'rU') as f:
-        rlns = filter(lambda x: x != '', f.readlines())
+        rlns = [x for x in f.readlines() if x != '']
 
-    dlns = map(lambda x: map(strip, x.split(delimiter)), rlns)
-    if any(map(lambda x: len(x) != len(dlns[0]), dlns[1:])):
+    dlns = [list(map(strip, x.split(delimiter))) for x in rlns]
+    if any([len(x) != len(dlns[0]) for x in dlns[1:]]):
         raise IOError('data matrix size not match')
 
-    if samples_in_rows: dlns = zip(*dlns)
+    if samples_in_rows: dlns = list(zip(*dlns))
     if comprehensive == 'auto': comprehensive = ('flags' in dlns[0])
-    rdlns = zip(*dlns)
+    rdlns = list(zip(*dlns))
     rsdrow = filter(lambda x: x[1][0] == 'rsd_all', enumerate(rdlns))[0][0]
 
     def _parseflags():
         fgs = []
         for l, ln in enumerate(rdlns[rsdrow+1:]):
             if ln[0] == 'flags': break
-            fgs += [(ln[0], map(eval, filter(lambda x: x != '', ln[1:])))]
+            fgs += [(ln[0], list(map(eval, [x for x in ln[1:] if x != ''])))]
         return fgs
     flgs = _parseflags() if comprehensive else []
 
@@ -141,13 +141,13 @@ def load_peak_matrix_from_txt(filename, delimiter='\t', samples_in_rows=True, co
         for l, ln in enumerate(dlns[2:]):  # line 1 = missing
             if not ln[0].startswith('tags_'): break
             tn, tv = ln[0][5:], ln[pcol:]
-            tl = filter(lambda x: x[1] != '', enumerate(_evalv(tv)))
+            tl = [x for x in enumerate(_evalv(tv)) if x[1] != '']
             for i, v in tl: tgs[i].add_tag(v) if tn == 'untyped' else tgs[i].add_tag(v, tn)
         return l, tgs
     tnum, tags = 0, [PeakList_Tags() for _ in pids]
     if comprehensive: tnum, tags = _parsetags(tags)
 
-    rlns = zip(*dlns[2 + tnum:])
+    rlns = list(zip(*dlns[2 + tnum:]))
     mz = np.array([rlns[0]] * len(pids), dtype=float)
     ints = np.array(rlns[pcol:], dtype=float)
 

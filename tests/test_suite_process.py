@@ -11,8 +11,8 @@ origin: 04-29-2017
 
 
 import unittest, os
-import test_peak_alignment, test_peak_filters
-from test_suite_runner import runTestSuite
+from . import test_peak_alignment, test_peak_filters
+from .test_suite_runner import runTestSuite
 
 
 if __name__ == '__main__':

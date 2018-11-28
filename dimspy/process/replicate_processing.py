@@ -13,23 +13,24 @@ from dimspy.process.peak_alignment import align_peaks
 from dimspy.experiment import scan_type_from_header
 from dimspy.experiment import mz_range_from_header
 from string import join
+from functools import reduce
 
 
 def _calculate_edges(mz_ranges):
-    s_mz_ranges = map(sorted, mz_ranges)
+    s_mz_ranges = list(map(sorted, mz_ranges))
     if len(s_mz_ranges) == 1:
         return s_mz_ranges
     
-    s_min, s_max = zip(*s_mz_ranges)
-    assert all(map(lambda x: x[0] < x[1], zip(s_min[:-1], s_min[1:]))), 'start values not in order'
-    assert all(map(lambda x: x[0] < x[1], zip(s_max[:-1], s_max[1:]))), 'end values not in order'
+    s_min, s_max = list(zip(*s_mz_ranges))
+    assert all([x[0] < x[1] for x in zip(s_min[:-1], s_min[1:])]), 'start values not in order'
+    assert all([x[0] < x[1] for x in zip(s_max[:-1], s_max[1:])]), 'end values not in order'
     
-    s_zip = zip(s_min[1:], s_max[:-1])
-    e_size = map(lambda x: (x[1]-x[0]) * 0.5, s_zip)
-    assert all(map(lambda x: x > 0, e_size)), 'incorrect overlap'
+    s_zip = list(zip(s_min[1:], s_max[:-1]))
+    e_size = [(x[1]-x[0]) * 0.5 for x in s_zip]
+    assert all([x > 0 for x in e_size]), 'incorrect overlap'
     
     merged = (s_min[0],) + reduce(lambda x, y: x+y, [(z[0]+e, z[1]-e) for z, e in zip(s_zip, e_size)]) + (s_max[-1],)
-    return zip(merged[::2], merged[1::2])
+    return list(zip(merged[::2], merged[1::2]))
 
 
 def remove_edges(pls_sd):
@@ -39,8 +40,8 @@ def remove_edges(pls_sd):
 
     mzrs = [mz_range_from_header(h) for h in pls_sd]
     new_mzrs = _calculate_edges(mzrs)
-    for h in pls_sd.keys():
-        mz_ranges = len(pls_sd[h]) * [new_mzrs[pls_sd.keys().index(h)]]
+    for h in list(pls_sd.keys()):
+        mz_ranges = len(pls_sd[h]) * [new_mzrs[list(pls_sd.keys()).index(h)]]
         for i in range(len(pls_sd[h])):
             remove = [np.where(pls_sd[h][i].mz == mz)[0][0] for mz in pls_sd[h][i].mz if mz < mz_ranges[i][0] or mz >= mz_ranges[i][1]]
             for mz in pls_sd[h][i].mz:
@@ -83,27 +84,27 @@ def read_scans(fn, source, function_noise, min_scans=1, filter_scan_events=None)
                 ("include" not in filter_scan_events and "exclude" not in filter_scan_events):
             raise ValueError("Use 'exclude' or 'include' for filter_scan_events not both. E.g {'include': [[70.0, 170.0, 'sim']]}")
 
-        if len([True for fse in filter_scan_events.values()[0] if len(fse) == 3]) != len(filter_scan_events.values()[0]):
+        if len([True for fse in list(filter_scan_events.values())[0] if len(fse) == 3]) != len(list(filter_scan_events.values())[0]):
             raise ValueError("Provide a start, end and scan type (sim or full) for filter_scan_events.")
 
-        filter_scan_events = {filter_scan_events.keys()[0]:
-                              [[float(fse[0]), float(fse[1]), str(fse[2])] for fse in filter_scan_events.values()[0]]}
+        filter_scan_events = {list(filter_scan_events.keys())[0]:
+                              [[float(fse[0]), float(fse[1]), str(fse[2])] for fse in list(filter_scan_events.values())[0]]}
 
         h_descs = {}
         for h in h_sids.copy():
             mzr = mz_range_from_header(h)
             h_descs[h] = [mzr[0], mzr[1], scan_type_from_header(h).lower()]
 
-        incl_excl = filter_scan_events.keys()[0]
+        incl_excl = list(filter_scan_events.keys())[0]
         for hd in filter_scan_events[incl_excl]:
-            if hd not in h_descs.values():
+            if hd not in list(h_descs.values()):
                 logging.warning("Event {} doest not exist".format(str(hd)))
 
         for hd in h_descs:
-            if filter_scan_events.keys()[0] == "include":
+            if list(filter_scan_events.keys())[0] == "include":
                 if h_descs[hd] not in filter_scan_events["include"]:
                     del h_sids[hd]
-            elif filter_scan_events.keys()[0] == "exclude":
+            elif list(filter_scan_events.keys())[0] == "exclude":
                 if h_descs[hd] in filter_scan_events["exclude"]:
                     del h_sids[hd]
 
@@ -111,7 +112,7 @@ def read_scans(fn, source, function_noise, min_scans=1, filter_scan_events=None)
         raise Exception("No scan data to process. Check filter_scan_events")
 
     scans = collections.OrderedDict()
-    for h, sids in h_sids.iteritems():
+    for h, sids in h_sids.items():
         if len(sids) >= min_scans:
             scans[h] = run.peaklists(sids, function_noise)
         else:
@@ -121,9 +122,9 @@ def read_scans(fn, source, function_noise, min_scans=1, filter_scan_events=None)
 
 def average_replicate_scans(name, pls, ppm=2.0, min_fraction=0.8, rsd_thres=30.0, rsd_on="intensity", block_size=5000, ncpus=None):
 
-    emlst = np.array(map(lambda x: x.size == 0, pls))
+    emlst = np.array([x.size == 0 for x in pls])
     if np.sum(emlst) > 0:
-        logging.warning('No scan data available for [%s]' % join(map(str, [p.ID for e, p in zip(emlst,  pls) if e]), ','))
+        logging.warning('No scan data available for [%s]' % join(list(map(str, [p.ID for e, p in zip(emlst,  pls) if e])), ','))
         pls = [p for e, p in zip(emlst,  pls) if not e]
 
     pm = align_peaks(pls, ppm=ppm, block_size=block_size, ncpus=ncpus)
@@ -131,7 +132,7 @@ def average_replicate_scans(name, pls, ppm=2.0, min_fraction=0.8, rsd_thres=30.0
     pl_avg = pm.to_peaklist(ID=name)
     # meta data
     for pl in pls:
-        for k, v in pl.metadata.items():
+        for k, v in list(pl.metadata.items()):
             if k not in pl_avg.metadata:
                 pl_avg.metadata[k] = []
             if v is not None:
@@ -155,7 +156,7 @@ def average_replicate_scans(name, pls, ppm=2.0, min_fraction=0.8, rsd_thres=30.0
     if rsd_thres is not None:
         if pm.shape[0] == 1:
             logging.warning('applying RSD filter on single scan, all peaks removed')
-        rsd_flag = map(lambda x: not np.isnan(x) and x < rsd_thres, pl_avg.get_attribute(rsd_label, flagged_only=False))
+        rsd_flag = [not np.isnan(x) and x < rsd_thres for x in pl_avg.get_attribute(rsd_label, flagged_only=False)]
         pl_avg.add_attribute("{}_flag".format(rsd_label), rsd_flag, flagged_only=False, is_flag=True)
     return pl_avg
 
@@ -175,7 +176,7 @@ def average_replicate_peaklists(pls, ppm, min_peaks, rsd_thres=None, block_size=
     pl.add_attribute("present_flag", pm.present >= min_peaks, is_flag=True)
 
     if rsd_thres is not None:
-        rsd_flag = map(lambda x: not np.isnan(x) and x < rsd_thres, pl.get_attribute("rsd", flagged_only=False))
+        rsd_flag = [not np.isnan(x) and x < rsd_thres for x in pl.get_attribute("rsd", flagged_only=False)]
         pl.add_attribute("rsd_flag", rsd_flag, flagged_only=False, is_flag=True)
 
     return pl
@@ -188,14 +189,14 @@ def join_peaklists(name, pls):
         for pl in pls:
             for atr in pl.attributes:
                 attrs_out.setdefault(atr, []).extend(list(pl.get_attribute(atr, flagged_only=False)))
-            if list(pl.attributes) != attrs_out.keys():
+            if list(pl.attributes) != list(attrs_out.keys()):
                 raise IOError("Different attributes")
         return attrs_out
 
     def _join_meta_data(pl, pls):
         # meta data
         for pl_ in pls:
-            for k, v in pl_.metadata.items():
+            for k, v in list(pl_.metadata.items()):
                 if k not in pl.metadata:
                     pl.metadata[k] = []
                 if v is not None:

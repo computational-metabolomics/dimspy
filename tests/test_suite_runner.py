@@ -25,7 +25,7 @@ def runTestSuite(suite, filename, mode = 'w', **kwargs):
         filename += '.txt'
 
     with open(filename, mode) as f:
-        kwargs = dict((k, v) for k,v in kwargs.items() if k in getargspec(runner.__init__)[0] and k != 'self')
+        kwargs = dict((k, v) for k,v in list(kwargs.items()) if k in getargspec(runner.__init__)[0] and k != 'self')
         runner = runner(stream = f, **kwargs)
         runner.run(suite)
 

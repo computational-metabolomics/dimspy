@@ -16,8 +16,8 @@ import numpy.lib.recfunctions as rfn
 from collections import OrderedDict, Iterable
 from string import join
 from copy import deepcopy
-from peaklist_metadata import PeakList_Metadata
-from peaklist_tags import PeakList_Tags
+from .peaklist_metadata import PeakList_Metadata
+from .peaklist_tags import PeakList_Tags
 
 
 class PeakList(object):
@@ -68,7 +68,7 @@ class PeakList(object):
 
     """
 
-    _is_ordered = staticmethod(lambda vals: all(map(lambda x: x[0] - x[1] >= 0, zip(vals[1:], vals[:-1]))))
+    _is_ordered = staticmethod(lambda vals: all([x[0] - x[1] >= 0 for x in zip(vals[1:], vals[:-1])]))
 
     def __init__(self, ID, mz, intensity, **metadata):
         if not self._is_ordered(mz):
@@ -76,7 +76,7 @@ class PeakList(object):
         if len(intensity) != len(mz):
             raise ValueError('mz values and intensities must have the same size')
 
-        self._dtable = np.array(zip(mz, intensity), dtype=[('mz', 'f8'), ('intensity', 'f8')])
+        self._dtable = np.array(list(zip(mz, intensity)), dtype=[('mz', 'f8'), ('intensity', 'f8')])
 
         self._id = str(ID)
         self._metadata = PeakList_Metadata(**metadata)
@@ -339,7 +339,7 @@ class PeakList(object):
         :rtype: PeakList object (self)
 
         """
-        if self.__dict__.has_key(attr_name):
+        if attr_name in self.__dict__:
             raise AttributeError('attribute name already been used by property')
         if attr_name in ('mz', 'intensity', 'flags'):
             raise AttributeError('cannot add reserved attribute [%s]' % attr_name)
@@ -351,9 +351,9 @@ class PeakList(object):
         attr_name = str(attr_name) # rfn.append_fields doesn't recognise unicode
 
         adt = bool if is_flag else \
-              attr_dtype if attr_dtype not in (None, str, unicode) else \
+              attr_dtype if attr_dtype not in (None, str, str) else \
               attr_value.dtype.str if hasattr(attr_value, 'dtype') else \
-              ('S%d' % max(map(len, attr_value))) if type(attr_value[0]) in (unicode, str) else \
+              ('S%d' % max(list(map(len, attr_value)))) if type(attr_value[0]) in (str, str) else \
               type(attr_value[0])
         if adt in (bool, 'bool', '|b1'): adt = 'b'  # fix numpy dtype bug
 
@@ -371,7 +371,7 @@ class PeakList(object):
             raise ValueError('flag attribute can only contain True / False values')
 
         if on_index is None: on_index = self.shape[1]
-        anames, atypes = map(list, zip(*self._dtable.dtype.descr))
+        anames, atypes = list(map(list, list(zip(*self._dtable.dtype.descr))))
         prevnm, restnm, resttp = anames[:on_index], anames[on_index:], atypes[on_index:]
 
         # suppress numpy's future warning regarding the structure array indexing
@@ -382,7 +382,7 @@ class PeakList(object):
         prevtb = np.array(nattr, dtype=[(attr_name, adt)]) if len(prevnm) == 0 else \
             rfn.append_fields(self._fields_view(self._dtable, prevnm), attr_name, nattr, dtypes=adt, usemask=False)
         self._dtable = prevtb if len(restnm) == 0 else \
-            rfn.append_fields(prevtb, restnm, zip(*self._fields_view(self._dtable, restnm)), dtypes=resttp,
+            rfn.append_fields(prevtb, restnm, list(zip(*self._fields_view(self._dtable, restnm))), dtypes=resttp,
                               usemask=False)
         warnings.resetwarnings()
 
@@ -405,11 +405,11 @@ class PeakList(object):
         if not self.has_attribute(attr_name):
             raise AttributeError('attribute [%s] does not exist' % attr_name)
 
-        self._dtable = self._dtable[list(filter(lambda x: x != attr_name, self.attributes))]
+        self._dtable = self._dtable[list([x for x in self.attributes if x != attr_name])]
 
         if attr_name in self._flag_attrs:
             logging.warning('flags recalculated, unflagged peaks may contain incorrect values')
-            self._flag_attrs = filter(lambda x: x != attr_name, self._flag_attrs)
+            self._flag_attrs = [x for x in self._flag_attrs if x != attr_name]
             self.calculate_flags()
 
         return self
@@ -578,7 +578,7 @@ class PeakList(object):
         :rtype: list
 
         """
-        return zip(*self._dtable.tolist()) + [self._flags.tolist()]
+        return list(zip(*self._dtable.tolist())) + [self._flags.tolist()]
 
     def to_dict(self, dict_type=OrderedDict):
         """
@@ -598,8 +598,8 @@ class PeakList(object):
         :rtype: str
 
         """
-        title, data = zip(*self.to_dict().items())
-        return join(map(lambda x: join(map(str, x), delimiter), [title] + zip(*data)), '\n')
+        title, data = list(zip(*list(self.to_dict().items())))
+        return join([join(list(map(str, x)), delimiter) for x in [title] + list(zip(*data))], '\n')
 
     # utils
     def copy(self):

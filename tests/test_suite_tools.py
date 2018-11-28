@@ -3,8 +3,8 @@
 
 
 import unittest, os
-import test_tools
-from test_suite_runner import runTestSuite
+from . import test_tools
+from .test_suite_runner import runTestSuite
 
 
 if __name__ == '__main__':

@@ -12,7 +12,7 @@ origin: 04-28-2017
 
 import unittest
 import numpy as np
-import cPickle as cp
+import pickle as cp
 from dimspy.models.peaklist import PeakList
 
 
@@ -27,7 +27,7 @@ class PeakListTestCase(unittest.TestCase):
     def test_pl_creation(self):
         try:
             self._createPeakList()
-        except Exception, e:
+        except Exception as e:
             self.fail('create PeakList object failed: ' + str(e))
 
     def test_pl_properties(self):
@@ -42,7 +42,7 @@ class PeakListTestCase(unittest.TestCase):
 
         try:
             pl.metadata.type = 'blank'
-        except Exception, e:
+        except Exception as e:
             self.fail('access metadata failed: ' + str(e))
         self.assertListEqual(sorted(pl.metadata.keys()), ['frag_mode', 'mz_range', 'type'])
 
@@ -50,7 +50,7 @@ class PeakListTestCase(unittest.TestCase):
             pl.tags.add_tag('sample')
             pl.tags.add_tag('passed_qc')
             pl.tags.add_tag('high_dose', tag_type = 'treatment')
-        except Exception, e:
+        except Exception as e:
             self.fail('access tags failed: ' + str(e))
         self.assertEqual(set(pl.tags.tag_types), {None, 'treatment'})
         self.assertEqual(set(pl.tags.tag_values), {'sample', 'passed_qc', 'high_dose'})
@@ -99,7 +99,7 @@ class PeakListTestCase(unittest.TestCase):
 
         try:
             pl.set_attribute('mz', np.arange(10)[::-1], flagged_only = False, unsorted_mz = True)
-        except Exception, e:
+        except Exception as e:
             self.fail('unsorted_mz flag failed: ' + str(e))
         self.assertTrue(np.all(pl.get_attribute('mz') == np.arange(10)[1::2])) # setting mz reversed the snr_flag
 
@@ -141,7 +141,7 @@ class PeakListTestCase(unittest.TestCase):
 
         try:
             str(pl)
-        except Exception, e:
+        except Exception as e:
             self.fail('__str__ failed: ' + str(e))
         self.assertEqual(len(pl), 10)
 
@@ -160,23 +160,23 @@ class PeakListTestCase(unittest.TestCase):
 
         try:
             lst = pl.to_list()
-        except Exception, e:
+        except Exception as e:
             self.fail('to_list function failed: ' + str(e))
         self.assertListEqual(np.arange(0, 1000, step = 100).tolist(), list(lst[0]))
 
         try:
             psr = pl.to_str(',')
-        except Exception, e:
+        except Exception as e:
             self.fail('to_str function failed: ' + str(e))
         self.assertListEqual(np.arange(0, 1000, step = 100).tolist(),
-                             map(float, zip(*map(lambda x: x.split(','), psr.split('\n')[1:]))[0]))
+                             list(map(float, zip(*[x.split(',') for x in psr.split('\n')[1:]])[0])))
 
     def test_pl_pickle(self):
         pl = self._createPeakList()
         try:
             pstr = cp.dumps(pl)
             pl = cp.loads(pstr)
-        except Exception, e:
+        except Exception as e:
             self.fail('PeakList pickle failed: ' + str(e))
         self.assertTupleEqual(pl.attributes, ('mz', 'intensity'))
 

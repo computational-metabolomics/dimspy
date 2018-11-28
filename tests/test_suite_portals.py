@@ -11,8 +11,8 @@ origin: 05-14-2017
 
 
 import unittest, os
-import test_txt_portal, test_hdf5_portal, test_paths_portal
-from test_suite_runner import runTestSuite
+from . import test_txt_portal, test_hdf5_portal, test_paths_portal
+from .test_suite_runner import runTestSuite
 
 
 if __name__ == '__main__':

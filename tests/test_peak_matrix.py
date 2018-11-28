@@ -12,7 +12,7 @@ origin: 05-10-2017
 
 import unittest
 import numpy as np
-import cPickle as cp
+import pickle as cp
 from dimspy.models.peaklist_tags import Tag, PeakList_Tags
 from dimspy.models.peak_matrix import PeakMatrix
 from dimspy.models.peak_matrix import mask_peakmatrix, unmask_peakmatrix, mask_all_peakmatrix, unmask_all_peakmatrix
@@ -21,14 +21,14 @@ from dimspy.models.peak_matrix import mask_peakmatrix, unmask_peakmatrix, mask_a
 class PeakListTestCase(unittest.TestCase):
     @staticmethod
     def _createPeakMatrix():
-        pids, tags = zip(*[
+        pids, tags = list(zip(*[
             ('sample_1_1', PeakList_Tags('sample', treatment = 'compound_1', time_point = '1hr', plate = 1, order = 1)),
             ('sample_1_2', PeakList_Tags('sample', treatment = 'compound_1', time_point = '6hr', plate = 1, order = 2)),
             ('QC_1',       PeakList_Tags('qc', plate = 1, order = 3)),
             ('sample_2_1', PeakList_Tags('sample', treatment = 'compound_2', time_point = '1hr', plate = 2, order = 1)),
             ('sample_2_2', PeakList_Tags('sample', treatment = 'compound_2', time_point = '6hr', plate = 2, order = 2)),
             ('QC_2',       PeakList_Tags('qc', plate = 2, order = 3)),
-        ])
+        ]))
 
         mzs = np.tile(np.arange(0, 1000, step = 100, dtype = float) + 1, (6, 1))
         ints = np.arange(60, dtype = float).reshape((6, 10)) / 20.
@@ -42,7 +42,7 @@ class PeakListTestCase(unittest.TestCase):
     def test_pm_creation(self):
         try:
             self._createPeakMatrix()
-        except Exception, e:
+        except Exception as e:
             self.fail('create PeakMatrix object failed: ' + str(e))
 
     def test_pm_properties(self):
@@ -88,15 +88,15 @@ class PeakListTestCase(unittest.TestCase):
 
         mmz = np.arange(0, 1000, step = 100, dtype = float) + 1
         mmz[2] = np.nan
-        self.assertTrue(np.allclose(*map(np.nan_to_num, (pm.mz_mean_vector, mmz))))
+        self.assertTrue(np.allclose(*list(map(np.nan_to_num, (pm.mz_mean_vector, mmz)))))
         mit = [30., 29., np.nan, 27., 26., 25., 31., 32., 33., 34.]
-        self.assertTrue(np.allclose(*map(np.nan_to_num, (pm.intensity_mean_vector*20, mit))))
+        self.assertTrue(np.allclose(*list(map(np.nan_to_num, (pm.intensity_mean_vector*20, mit)))))
 
     def test_pm_mask(self):
         pm = self._createPeakMatrix()
 
-        self.assertEqual(set(map(lambda x: x.value, pm.tags_of('plate'))), {1, 2})
-        self.assertEqual(set(map(lambda x: x.value, pm.tags_of())), {'sample', 'qc'})
+        self.assertEqual(set([x.value for x in pm.tags_of('plate')]), {1, 2})
+        self.assertEqual(set([x.value for x in pm.tags_of()]), {'sample', 'qc'})
         self.assertRaises(KeyError, lambda: pm.tags_of('treatment'))
         self.assertRaises(KeyError, lambda: pm.tags_of('not_exist'))
 
@@ -189,8 +189,8 @@ class PeakListTestCase(unittest.TestCase):
         pm.add_flag('even_flag', [0, 1] * 5)
         self.assertTrue(np.allclose(pm.attr_mean_vector('mz'),
                                     [101.0, 301.0, 501.0, 701.0, 901.0]))
-        self.assertTrue(np.allclose(*map(np.nan_to_num, (pm.attr_mean_vector('mz', flagged_only = False),
-                                    [1.0, 101.0, np.nan, 301.0, 401.0, 501.0, 601.0, 701.0, 801.0, 901.0]))))
+        self.assertTrue(np.allclose(*list(map(np.nan_to_num, (pm.attr_mean_vector('mz', flagged_only = False),
+                                    [1.0, 101.0, np.nan, 301.0, 401.0, 501.0, 601.0, 701.0, 801.0, 901.0])))))
         self.assertTrue(np.allclose((lambda x: x[~np.isnan(x)])(pm.rsd('qc')),
                                     [58.92556509, 55.82421956, 50.50762722, 48.21182598]))
         self.assertTrue(np.allclose((lambda x: x[~np.isnan(x)])(pm.rsd()),
@@ -218,14 +218,14 @@ class PeakListTestCase(unittest.TestCase):
         pm.add_flag('even_flag', [0, 1] * 5)
         with mask_peakmatrix(pm, plate = 1):
             peaklists = pm.extract_peaklists()
-        self.assertListEqual(map(lambda x: x.ID, peaklists), ['sample_2_1', 'sample_2_2', 'QC_2'])
+        self.assertListEqual([x.ID for x in peaklists], ['sample_2_1', 'sample_2_2', 'QC_2'])
 
         mzs = [
             [101.0, 501.0, 701.0, 901.0],
             [101.0, 301.0, 501.0, 701.0, 901.0],
             [101.0, 301.0, 701.0, 901.0],
         ]
-        self.assertTrue(all(map(lambda x: np.allclose(x[0].mz, x[1]), zip(peaklists, mzs))))
+        self.assertTrue(all([np.allclose(x[0].mz, x[1]) for x in zip(peaklists, mzs)]))
 
         pm.drop_flag('even_flag')
         pkl = pm.to_peaklist('merged_pkl')
@@ -238,7 +238,7 @@ class PeakListTestCase(unittest.TestCase):
         try:
             pstr = cp.dumps(pm)
             pm = cp.loads(pstr)
-        except Exception, e:
+        except Exception as e:
             self.fail('PeakMatrix pickle failed: ' + str(e))
         self.assertTupleEqual(pm.attributes, ('mz', 'intensity', 'intra_count'))
 

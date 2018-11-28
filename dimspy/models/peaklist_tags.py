@@ -37,8 +37,8 @@ class Tag(object):
     False
 
     """
-    _value_valid_types = (int, float, str, unicode)
-    _ttype_valid_types = (NoneType, str, unicode)
+    _value_valid_types = (int, float, str, str)
+    _ttype_valid_types = (NoneType, str, str)
 
     def __init__(self, value, ttype = None):
         self._value, self._type = None, None
@@ -58,6 +58,7 @@ class Tag(object):
 
     @value.setter
     def value(self, value): # numpy types should be manually converted
+        print(value, Tag._value_valid_types)
         if not isinstance(value, Tag._value_valid_types):
             raise TypeError('Tag value must be string or number')
         self._value = value
@@ -128,7 +129,7 @@ class PeakList_Tags(object):
     def __init__(self, *args, **kwargs):
         self._tags = []
         for v in args: self.add_tag(v)
-        for k,v in kwargs.items(): self.add_tag(v,k)
+        for k,v in list(kwargs.items()): self.add_tag(v,k)
 
     # build-ins
     def __str__(self):
@@ -150,7 +151,7 @@ class PeakList_Tags(object):
         :type: set
 
         """
-        return set(map(lambda x: x.ttype, self._tags))
+        return set([x.ttype for x in self._tags])
 
     @property
     def tag_values(self):
@@ -161,7 +162,7 @@ class PeakList_Tags(object):
         :type: set
 
         """
-        return set(map(lambda x: x.value, self._tags))
+        return set([x.value for x in self._tags])
 
     @property
     def tags(self):
@@ -183,7 +184,7 @@ class PeakList_Tags(object):
         :type: tuple
 
         """
-        return tuple(filter(lambda x: x.typed, self._tags))
+        return tuple([x for x in self._tags if x.typed])
 
     @property
     def untyped_tags(self):
@@ -194,7 +195,7 @@ class PeakList_Tags(object):
         :type: tuple
 
         """
-        return tuple(filter(lambda x: not x.typed, self._tags))
+        return tuple([x for x in self._tags if not x.typed])
 
     # methods
     def has_tag(self, tag, tag_type = None):
@@ -237,7 +238,7 @@ class PeakList_Tags(object):
         :rtype: Tag, or None if tag_type not exists
 
         """
-        t = filter(lambda x: x.ttype == tag_type, self._tags)
+        t = [x for x in self._tags if x.ttype == tag_type]
         return None if len(t) == 0 else tuple(t) if tag_type is None else t[0]
 
     def add_tag(self, tag, tag_type = None):
@@ -274,7 +275,7 @@ class PeakList_Tags(object):
 
         """
         t = Tag(tag, tag_type)
-        self._tags = filter(lambda x: x != t, self._tags)
+        self._tags = [x for x in self._tags if x != t]
 
     def drop_tag_type(self, tag_type = None):
         """
@@ -283,7 +284,7 @@ class PeakList_Tags(object):
         :param tag_type: tag type to drop, None (untyped) may drop multiple tags
 
         """
-        self._tags = filter(lambda x: x.ttype != tag_type, self._tags)
+        self._tags = [x for x in self._tags if x.ttype != tag_type]
 
     def drop_all_tags(self):
         """
@@ -317,4 +318,4 @@ class PeakList_Tags(object):
         :rtype: str
 
         """
-        return join(map(str, self._tags), ', ')
+        return join(list(map(str, self._tags)), ', ')

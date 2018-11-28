@@ -11,8 +11,8 @@ origin: 04-29-2017
 
 
 import unittest, os
-import test_peaklist_metadata, test_peaklist_tags, test_peaklist, test_peak_matrix
-from test_suite_runner import runTestSuite
+from . import test_peaklist_metadata, test_peaklist_tags, test_peaklist, test_peak_matrix
+from .test_suite_runner import runTestSuite
 
 
 if __name__ == '__main__':

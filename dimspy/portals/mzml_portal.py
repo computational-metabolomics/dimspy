@@ -72,7 +72,7 @@ class Mzml:
             if scan["id"] == scan_id:
 
                 if len(scan.peaks) > 0:
-                    mzs, ints = zip(*scan.peaks)
+                    mzs, ints = list(zip(*scan.peaks))
                 else:
                     mzs, ints = [], []
 
@@ -133,10 +133,10 @@ class Mzml:
         for scan in self.run():
             if type(scan["id"]) == int:
                 scan_id = scan["id"]
-                if "precursors" in scan.keys():
+                if "precursors" in list(scan.keys()):
                     spectrum_ref = None
                     for element in scan.xmlTree:
-                        for e in element.items():
+                        for e in list(element.items()):
                             if e[0] == 'spectrumRef':
                                 spectrum_ref = int(e[1].split("scan=")[1])
                     if spectrum_ref is not None:
