@@ -190,7 +190,7 @@ def load_peak_matrix_from_hdf5(filename):
 
     flgs = [(fn, dset.attrs[fn]) for fn in dset.attrs['flag_names']]
     flgs = [(fn, _unpackBool(fv) if fv.dtype.kind == 'u' and np.all(fv[:len(_BOOL_HEADERS)] == _BOOL_HEADERS) else \
-                 _unpackMeta(fv) if fv.dtype.kind == 's' and fv[-1] == '\xFF' else fv) for fn,fv in flgs]
+                 _unpackMeta(fv) if fv.dtype.kind == 'S' and fv[-1] == '\xFF' else fv) for fn,fv in flgs]
     alst = [(attr, np.array(f[attr]).astype(f[attr].attrs['dtype'])) for attr in attl]
 
     pm = PeakMatrix(pids, ptgs, alst)
