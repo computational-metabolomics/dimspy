@@ -11,10 +11,11 @@ The PeakList and PeakMatrix HDF5 portals.
 """
 
 
-import os, logging, zlib, h5py
+import os, logging, zlib, h5py, textwrap
 import cPickle as cp
 import numpy as np
 from ast import literal_eval
+from string import join
 from dimspy.models.peaklist_tags import Tag, PeakList_Tags
 from dimspy.models.peaklist import PeakList
 from dimspy.models.peak_matrix import PeakMatrix, unmask_all_peakmatrix
@@ -26,8 +27,15 @@ def _eval(v):
     except (ValueError, SyntaxError):
         return str(v)
 
-_packMeta = lambda x: np.array(zlib.compress(cp.dumps(x)) + '\xFF') # numpy truncates right-side \x00
+_packMeta = lambda x: np.array(zlib.compress(cp.dumps(x), 9) + '\xFF') # numpy truncates right-side \x00
 _unpackMeta = lambda x: cp.loads(zlib.decompress(x[:-1]))
+
+_BOOL_HEADERS = np.array([0xE5, 0xAD, 0x71, 0x47], dtype = np.uint8)
+_encUInt8 = lambda x,b: np.array(map(lambda v: int(v,16), textwrap.wrap('{0:#0{1}x}'.format(x,2*b+2)[2:], 2)), dtype = np.uint8)
+_decUInt8 = lambda x: int(join(map(lambda v: '{0:#0{1}x}'.format(v,4)[2:], x), ''), 16)
+
+_packBool = lambda x: np.r_[_BOOL_HEADERS, np.packbits(x), _encUInt8(x.shape[0], 4)]
+_unpackBool = lambda x: np.unpackbits(x[len(_BOOL_HEADERS):-4])[:_decUInt8(x[-4:])].astype(bool)
 
 
 # peaklists portals
@@ -149,7 +157,8 @@ def save_peak_matrix_as_hdf5(pm, filename):
 
         dset.attrs['flag_names'] = pm.flag_names
         for fn in pm.flag_names:
-            dset.attrs[fn] = pm.flag_values(fn)
+            fvals = pm.flag_values(fn)
+            dset.attrs[fn] = fvals if fvals.nbytes < 64000 else _packBool(fvals) if fvals.dtype.kind == 'b' else _packMeta(fvals)
 
 
 def load_peak_matrix_from_hdf5(filename):
@@ -180,6 +189,8 @@ def load_peak_matrix_from_hdf5(filename):
     ptgs = [PeakList_Tags(*[Tag(_eval(v), None if t == 'None' else t) for t,v in tags]) for tags in map(lambda x: dset.attrs[x], tatt)]
 
     flgs = [(fn, dset.attrs[fn]) for fn in dset.attrs['flag_names']]
+    flgs = [(fn, _unpackBool(fv) if fv.dtype.kind == 'u' and np.all(fv[:len(_BOOL_HEADERS)] == _BOOL_HEADERS) else \
+                 _unpackMeta(fv) if fv.dtype.kind == 's' and fv[-1] == '\xFF' else fv) for fn,fv in flgs]
     alst = [(attr, np.array(f[attr]).astype(f[attr].attrs['dtype'])) for attr in attl]
 
     pm = PeakMatrix(pids, ptgs, alst)
