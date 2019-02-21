@@ -175,25 +175,33 @@ def check_metadata(fn_tsv):
     return fm_dict
 
 
-def update_metadata_and_labels(peaklists, fl):
+def update_metadata_and_labels(peaklists, fl, pl_id=""):
 
     if not isinstance(peaklists[0], PeakList):
         raise IOError("PeakList object required")
 
-    for k in fl.keys():
-        for pl in peaklists:
-            if pl.ID not in fl[fl.keys()[0]]:
-                raise IOError("filelist and peaklist do not match {}".format(pl.ID))
+    if len(fl) == 0:
+        return peaklists
 
-            index = fl[fl.keys()[0]].index(pl.ID)
+    for pl in peaklists:
+
+        if pl_id == "":
+            pl_ID = pl_id
+        else:
+            pl_ID = pl.ID
+
+        if pl_ID not in fl[fl.keys()[0]]:
+            raise IOError("filelist and peaklist do not match {}".format(pl_ID))
+
+        index = fl[fl.keys()[0]].index(pl_ID)
+        for k in fl.keys():
             pl.metadata[k] = fl[k][index]
-            #pl.metadata["filelist"] = {k:fl[k][index] for k in fl.keys()}
 
-            for tag_name in ["replicate", "replicates", "batch", "injectionOrder", "classLabel"]:
-                if tag_name in fl.keys():
-                    if pl.tags.has_tag_type(tag_name):
-                        pl.tags.drop_tag_type(tag_name)
-                    pl.tags.add_tag(fl[tag_name][index], tag_name)
+        for tag_name in ["replicate", "replicates", "batch", "injectionOrder", "classLabel"]:
+            if tag_name in fl.keys():
+                if pl.tags.has_tag_type(tag_name):
+                    pl.tags.drop_tag_type(tag_name)
+                pl.tags.add_tag(fl[tag_name][index], tag_name)
 
     return peaklists
 

@@ -105,6 +105,9 @@ def process_scans(source, function_noise, snr_thres, ppm, min_fraction=None, rsd
             if len(pls_scans[h]) >= 1:
                 if sum(pl.shape[0] for pl in pls_scans[h]) == 0:
                     logging.warning("No scan data available for {}".format(h))
+                    d = dict((k, [pls_scans[h][0].metadata[k]]) for k in pls_scans[h][0].metadata)
+                    pls_avg.append(PeakList(ID=h, mz=[], intensity=[], **d))
+                    n_peaks, median_rsd = 0, "NA"
                 else:
                     pl_avg = average_replicate_scans(h, pls_scans[h], ppm, min_fraction, rsd_thres, "intensity", block_size, ncpus)
                     pls_avg.append(pl_avg)
@@ -115,21 +118,26 @@ def process_scans(source, function_noise, snr_thres, ppm, min_fraction=None, rsd
             if report is not None:
                 out.write("{}\t{}\t{}\t{}\t{}\n".format(os.path.basename(filenames[i]), h, nscans, n_peaks, median_rsd))
 
-        if len(pls_avg) == 0:
-            raise IOError("No peaks remaining after filtering. Remove file from Study (filelist).")
+        if sum(pl.shape[0] for pl in pls_avg) == 0:
+            logging.warning("No peaks remaining after filtering. Remove file from Study (filelist).")
 
         if not skip_stitching or len(pls_scans.keys()) == 1:
             pl = join_peaklists(os.path.basename(filenames[i]), pls_avg)
             pl = update_metadata_and_labels([pl], fl)
             pls.extend(pl)
+
+            if hasattr(pl[0], 'rsd'):
+                median_rsd = np.nanmedian(pl[0].rsd)
+            else:
+                median_rsd = "NA"
+
             if len(pls_scans.keys()) > 1 and report is not None:
-                out.write("{}\t{}\t{}\t{}\t{}\n".format(os.path.basename(filenames[i]), "SIM-Stitch", "NA", pl[0].shape[0], np.nanmedian(pl[0].rsd)))
+                out.write("{}\t{}\t{}\t{}\t{}\n".format(os.path.basename(filenames[i]), "SIM-Stitch", "NA", pl[0].shape[0], median_rsd))
         else:
             for pl in pls_avg:
-                pl = update_metadata_and_labels([pl], fl)
-                pl = join_peaklists("{}#{}".format(os.path.basename(filenames[i]), pl[0].metadata["header"][0]), pl)
-                pls.append(pl)
-
+                pl = join_peaklists("{}#{}".format(os.path.basename(filenames[i]), pl.metadata["header"][0]), [pl])
+                pl = update_metadata_and_labels([pl], fl, os.path.basename(filenames[i]))
+                pls.extend(pl)
     return pls
 
 
@@ -244,9 +252,10 @@ def replicate_filter(source, ppm, replicates, min_peaks, rsd_thres=None, filelis
 
         if sum([comb[-1] for comb in temp]) == 0.0:
             logging.warning("insufficient data available to calculate scores for {}".format(str([comb[0].ID for comb in temp])))
-
-        # sort the scores from high to low
-        temp.sort(key=operator.itemgetter(-1), reverse=True)
+            temp.sort(key=operator.itemgetter(1), reverse=True)
+        else:
+            # sort the scores from high to low
+            temp.sort(key=operator.itemgetter(-1), reverse=True)
         # select the replicate filtered peaklist that is ranked first
         pls_rep_filt.append(temp[0][0])
 
