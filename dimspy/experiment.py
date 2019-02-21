@@ -186,9 +186,9 @@ def update_metadata_and_labels(peaklists, fl, pl_id=""):
     for pl in peaklists:
 
         if pl_id == "":
-            pl_ID = pl_id
-        else:
             pl_ID = pl.ID
+        else:
+            pl_ID = pl_id
 
         if pl_ID not in fl[fl.keys()[0]]:
             raise IOError("filelist and peaklist do not match {}".format(pl_ID))
