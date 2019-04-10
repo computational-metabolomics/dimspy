@@ -1,7 +1,7 @@
-numpy==1.13.3
-scipy==1.0.0
+numpy==1.14.3
+scipy==1.1.0
 fastcluster==1.1.23
 plotly==2.5.1
 pymzml==0.7.10
-h5py==2.7.0
-pythonnet>=2.3.0
+h5py==2.8.0
+pythonnet==2.4.0

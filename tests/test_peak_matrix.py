@@ -18,7 +18,7 @@ from dimspy.models.peak_matrix import PeakMatrix
 from dimspy.models.peak_matrix import mask_peakmatrix, unmask_peakmatrix, mask_all_peakmatrix, unmask_all_peakmatrix
 
 
-class PeakListTestCase(unittest.TestCase):
+class PeakMatrixTestCase(unittest.TestCase):
     @staticmethod
     def _createPeakMatrix():
         pids, tags = list(zip(*[
@@ -81,7 +81,7 @@ class PeakListTestCase(unittest.TestCase):
         self.assertTrue(np.isclose(pm.purity[1], 0.4))
         ics[0, 1] = ics[2, 1] = 2
 
-        pm.add_flag('odd_flag', [1, 0] * 5)
+        pm.add_flag('odd_flag', [True, False] * 5)
         self.assertTrue(np.all(pm.property('present') == [5, 0, 5, 6, 6]))
         self.assertTrue(np.all(pm.property('present', flagged_only = False) == [5]*2+[0]+[5]*3+[6]*4))
         pm.drop_flag('odd_flag')
@@ -161,8 +161,8 @@ class PeakListTestCase(unittest.TestCase):
 
         self.assertTrue(np.sum(pm.flags) == 10)
 
-        pm.add_flag('qua_flag', [1, 1, 0, 1] * 2 + [1, 1], flagged_only = True)
-        pm.add_flag('odd_flag', [1, 0] * 5, flagged_only = False)
+        pm.add_flag('qua_flag', [True, True, False, True] * 2 + [True, True], flagged_only = True)
+        pm.add_flag('odd_flag', [True, False] * 5, flagged_only = False)
 
         self.assertTupleEqual(pm.flag_names, ('qua_flag', 'odd_flag'))
         self.assertTrue(np.all(pm.flags == [1, 0, 0, 0, 1, 0, 0, 0, 1, 0]))
@@ -186,7 +186,7 @@ class PeakListTestCase(unittest.TestCase):
     def test_pm_access(self):
         pm = self._createPeakMatrix()
 
-        pm.add_flag('even_flag', [0, 1] * 5)
+        pm.add_flag('even_flag', [False, True] * 5)
         self.assertTrue(np.allclose(pm.attr_mean_vector('mz'),
                                     [101.0, 301.0, 501.0, 701.0, 901.0]))
         self.assertTrue(np.allclose(*list(map(np.nan_to_num, (pm.attr_mean_vector('mz', flagged_only = False),
@@ -215,7 +215,7 @@ class PeakListTestCase(unittest.TestCase):
     def test_pm_exports(self):
         pm = self._createPeakMatrix()
 
-        pm.add_flag('even_flag', [0, 1] * 5)
+        pm.add_flag('even_flag', [False, True] * 5)
         with mask_peakmatrix(pm, plate = 1):
             peaklists = pm.extract_peaklists()
         self.assertListEqual([x.ID for x in peaklists], ['sample_2_1', 'sample_2_2', 'QC_2'])

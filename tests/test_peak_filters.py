@@ -11,9 +11,8 @@ origin: 05-14-2017
 
 
 import unittest
+from copy import deepcopy
 from dimspy.models.peaklist_tags import PeakList_Tags
-from dimspy.models.peaklist import PeakList
-from dimspy.models.peak_matrix import PeakMatrix
 from dimspy.process.peak_filters import *
 
 
@@ -91,9 +90,6 @@ class PeakFiltersTestCase(unittest.TestCase):
             [61.48754619, 60.17930052, 58.92556509, 57.72300254]))
 
         self.assertRaises(AttributeError, lambda: filter_rsd(pm, 45, 'not_QC'))
-        def _maskedcall():
-            with mask_peakmatrix('qc'): filter_rsd(pm, 45, 'qc')
-        self.assertRaises(AttributeError,  _maskedcall)
 
     def test_peak_matrix_fraction_filter(self):
         pm = self._createPeakMatrix()

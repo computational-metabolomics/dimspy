@@ -14,11 +14,11 @@ The PeakMatrix data object class.
 
 import logging
 import numpy as np
-from collections import OrderedDict, Iterable
-from string import join
-from .peaklist_tags import Tag
-from .peaklist import PeakList
+from typing import  Sequence, Tuple, Any, Union
 from functools import reduce
+from collections import OrderedDict, Iterable
+from .peaklist_tags import Tag, PeakList_Tags
+from .peaklist import PeakList
 
 
 class PeakMatrix(object):
@@ -84,7 +84,7 @@ class PeakMatrix(object):
 
     """
 
-    def __init__(self, peaklist_ids, peaklist_tags, peaklist_attributes):
+    def __init__(self, peaklist_ids: Sequence[str], peaklist_tags: Sequence[PeakList_Tags], peaklist_attributes: Sequence[Tuple[str, Any]]):
         if len(set(peaklist_ids)) != len(peaklist_ids):
             raise ValueError('duplicate peaklist IDs found')
         self._pids = np.array(peaklist_ids)
@@ -401,7 +401,7 @@ class PeakMatrix(object):
         Calculates relative standard deviation (RSD) array.
 
         :param args: tags or untyped tag values for RSD calculation, no value = calculate over all samples
-        :param kwargs: typed tags for RSD calculation, , no value = calculate over all samples
+        :param kwargs: typed tags for RSD calculation, no value = calculate over all samples
         :param on_attr: calculate RSD on given attribute. Default = "intensity"
         :param flagged_only: whether to calculate on flagged peaks only. Default = True
         :type: numpy array
@@ -425,7 +425,7 @@ class PeakMatrix(object):
         with (unmask_all_peakmatrix(self) if len(args) + len(kwargs) == 0 else
               unmask_peakmatrix(self, *args, **kwargs)) as m:
             if m.shape[0] == 0: raise AttributeError('peak matrix does not have label(s) [%s]' %
-                                                     join([str(x)[1:-1] for x in (args, kwargs)], ', '))
+                                                     str.join(', ', [str(x)[1:-1] for x in (args, kwargs)]))
             ints = m.attr_matrix(on_attr, flagged_only)
             rsd = m._present_std(ints, 0, flagged_only) / m._present_mean(ints, 0, flagged_only) * 100
 
@@ -434,7 +434,7 @@ class PeakMatrix(object):
 
     # publics
     # tags and mask
-    def tags_of(self, tag_type=None):
+    def tags_of(self, tag_type: Union[str, None] = None):
         """
         Obtains tags of the peaklist_tags with particular tag type.
 
@@ -469,7 +469,7 @@ class PeakMatrix(object):
         if any([isinstance(x, Tag) for x in list(kwargs.values())]):
             logging.warning('setting additional type for Tag object in kwargs will be ignored')
         mask = [all([x.has_tag(t) for t in args]) and
-                             all([x.has_tag(t[1], tag_type = t[0]) for t in list(kwargs.items())]) for x in self._tags]
+                all([x.has_tag(t[1], tag_type = t[0]) for t in list(kwargs.items())]) for x in self._tags]
         self.mask = np.logical_or(False if override else self._mask, mask)
         return self
 
@@ -500,7 +500,7 @@ class PeakMatrix(object):
         return self
 
     # flags
-    def add_flag(self, flag_name, flag_values, flagged_only = True):
+    def add_flag(self, flag_name: str, flag_values: Sequence[bool], flagged_only: bool = True):
         """
         Adds a flag to the peak matrix peaks.
 
@@ -526,7 +526,7 @@ class PeakMatrix(object):
             if not len(flag_values) == self.full_shape[1]: raise ValueError('flag values and peak matrix shape not match')
             self._flags_dict[flag_name] = np.array(flag_values, dtype = bool)
 
-    def drop_flag(self, flag_name):
+    def drop_flag(self, flag_name: str):
         """
         Drops a existing flag from the peak matrix.
 
@@ -541,7 +541,7 @@ class PeakMatrix(object):
             raise KeyError('flag name [%s] does not exist' % flag_name)
         del self._flags_dict[flag_name]
 
-    def flag_values(self, flag_name):
+    def flag_values(self, flag_name: str):
         """
         Obtains values of an existing flag.
 
@@ -556,7 +556,7 @@ class PeakMatrix(object):
         return self._flags_dict[flag_name]
 
     # access
-    def property(self, prop_name, flagged_only = True):
+    def property(self, prop_name: str, flagged_only: bool = True):
         """
         Obtains an existing attribute matrix.
 
@@ -598,7 +598,7 @@ class PeakMatrix(object):
         if _prop is None: raise ValueError('unknown property name [%s]' % prop_name)
         return _prop()
 
-    def attr_matrix(self, attr_name, flagged_only = True):
+    def attr_matrix(self, attr_name: str, flagged_only: bool = True):
         """
         Obtains an existing attribute matrix.
 
@@ -612,7 +612,7 @@ class PeakMatrix(object):
         aM = self._attr_dict[attr_name][~self._mask]
         return aM[:,self.flags] if flagged_only else aM
 
-    def attr_mean_vector(self, attr_name, flagged_only = True):
+    def attr_mean_vector(self, attr_name: str, flagged_only: bool = True):
         """
         Obtains the mean array of an existing attribute matrix.
 
@@ -626,10 +626,10 @@ class PeakMatrix(object):
         """                                
         aM = self.attr_matrix(attr_name, flagged_only)
         aV = self._present_mean(aM, 0, flagged_only) if aM.dtype.kind in ('i', 'u', 'f') else \
-             np.array([join([str(v) for v,p in zip(ln,self.present_matrix[:,j]) if p],';') for j,ln in enumerate(zip(*aM))]) # for strings
+             np.array([str.join(';', [str(v) for v,p in zip(ln,self.present_matrix[:,j]) if p]) for j,ln in enumerate(zip(*aM))]) # for strings
         return aV
 
-    def remove_samples(self, sample_ids, masked_only=True):
+    def remove_samples(self, sample_ids, masked_only: bool = True):
         """
         Removes samples from the peak matrix.
 
@@ -648,7 +648,7 @@ class PeakMatrix(object):
         if self.is_empty(): logging.warning('matrix is empty after removal')
         return self
 
-    def remove_peaks(self, peak_ids, flagged_only = True):
+    def remove_peaks(self, peak_ids, flagged_only: bool = True):
         """
         Removes peaks from the peak matrix.
 
@@ -688,7 +688,7 @@ class PeakMatrix(object):
         return 0 in self.shape
 
     # exports
-    def extract_peaklist(self, peaklist_id):
+    def extract_peaklist(self, peaklist_id: str):
         """
         Extracts one peaklist from the peak matrix.
 
@@ -717,7 +717,7 @@ class PeakMatrix(object):
         """
         return list(map(self.extract_peaklist, self.peaklist_ids))
 
-    def to_peaklist(self, ID):
+    def to_peaklist(self, ID: str):
         """
         Averages the peak matrix into a single peaklist.
 
@@ -746,7 +746,7 @@ class PeakMatrix(object):
         pl.add_attribute('purity', self.purity[presids])
         return pl
 
-    def to_str(self, attr_name='intensity', delimiter='\t', samples_in_rows=True, comprehensive=True, rsd_tags=()):
+    def to_str(self, attr_name: str = 'intensity', delimiter: str = '\t', samples_in_rows: bool = True, comprehensive: bool = True, rsd_tags: Sequence = ()):
         """
         Exports the peak matrix to a string.
 
@@ -773,7 +773,7 @@ class PeakMatrix(object):
             dm = [dm[0]] + \
                  [list(map(str, self.missing_values))] + \
                  [[(lambda v: str(v.value) if v else '')(x.tag_of(t)) for x in self.peaklist_tags] for t in ttypes] + \
-                 [[join((lambda v: list(map(str,v)) if v else ())(x.tag_of(None)), ';') for x in self.peaklist_tags]] + \
+                 [[str.join(';', (lambda v: map(str,v) if v else ())(x.tag_of(None))) for x in self.peaklist_tags]] + \
                  dm[1:]
 
             rsd_tags = tuple(rsd_tags) if isinstance(rsd_tags, Iterable) else (rsd_tags,)
@@ -788,7 +788,7 @@ class PeakMatrix(object):
             dm = list(zip(*([prelst, ocrlst, puplst] + rsdmtx + [rsdlst] + flgmtx + [flglst] + list(zip(*dm)))))
 
         lm = [hd] + list(zip(*dm))
-        return join(map(lambda x: join(x, delimiter), lm if samples_in_rows else zip(*lm)), '\n')
+        return str.join('\n', map(lambda x: str.join(delimiter, x), lm if samples_in_rows else zip(*lm)))
 
 
 # with statements
@@ -814,12 +814,12 @@ class mask_peakmatrix:
 
     """
 
-    def __init__(self, pm, *args, **kwargs):
+    def __init__(self, pm: PeakMatrix, *args, **kwargs):
         self._pm = pm
         self._args = args
         self._kwargs = kwargs
         if 'override' not in self._kwargs: self._kwargs['override'] = True  # default for with statement
-        self._oldmask = dict(list(zip(pm._pids, pm._mask)))
+        self._oldmask = dict(zip(pm._pids, pm._mask))
 
     def __enter__(self):
         self._pm.mask_tags(*self._args, **self._kwargs)
@@ -851,12 +851,12 @@ class unmask_peakmatrix:
 
     """
 
-    def __init__(self, pm, *args, **kwargs):
+    def __init__(self, pm: PeakMatrix, *args, **kwargs):
         self._pm = pm
         self._args = args
         self._kwargs = kwargs
         if 'override' not in self._kwargs: self._kwargs['override'] = True  # default for with statement
-        self._oldmask = dict(list(zip(pm._pids, pm._mask)))
+        self._oldmask = dict(zip(pm._pids, pm._mask))
 
     def __enter__(self):
         self._pm.unmask_tags(*self._args, **self._kwargs)
@@ -885,9 +885,9 @@ class mask_all_peakmatrix:
 
     """
 
-    def __init__(self, pm):
+    def __init__(self, pm: PeakMatrix):
         self._pm = pm
-        self._oldmask = dict(list(zip(pm._pids, pm._mask)))
+        self._oldmask = dict(zip(pm._pids, pm._mask))
 
     def __enter__(self):
         self._pm.mask = [True] * self._pm.full_shape[0]
@@ -916,9 +916,9 @@ class unmask_all_peakmatrix:
 
     """
 
-    def __init__(self, pm):
+    def __init__(self, pm: PeakMatrix):
         self._pm = pm
-        self._oldmask = dict(list(zip(pm._pids, pm._mask)))
+        self._oldmask = dict(zip(pm._pids, pm._mask))
 
     def __enter__(self):
         self._pm.mask = None

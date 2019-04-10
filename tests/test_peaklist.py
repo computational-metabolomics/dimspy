@@ -153,7 +153,7 @@ class PeakListTestCase(unittest.TestCase):
         self.assertListEqual(np.arange(0, 1000, step = 100).tolist(), pl.mz_all.tolist())
 
         self.assertListEqual([0, 200, 400, 600, 800], pl['mz'].tolist())
-        self.assertListEqual([0, 200, 400], list(zip(*pl[:3].tolist())[0]))
+        self.assertListEqual([0, 200, 400], list(list(zip(*pl[:3].tolist()))[0]))
 
     def test_pl_exports(self):
         pl = self._createPeakList()
@@ -169,7 +169,7 @@ class PeakListTestCase(unittest.TestCase):
         except Exception as e:
             self.fail('to_str function failed: ' + str(e))
         self.assertListEqual(np.arange(0, 1000, step = 100).tolist(),
-                             list(map(float, zip(*[x.split(',') for x in psr.split('\n')[1:]])[0])))
+                             list(map(float, list(zip(*[x.split(',') for x in psr.split('\n')[1:]]))[0])))
 
     def test_pl_pickle(self):
         pl = self._createPeakList()

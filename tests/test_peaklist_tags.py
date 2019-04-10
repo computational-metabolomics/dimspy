@@ -27,9 +27,6 @@ class TagTestCase(unittest.TestCase):
         self.assertTrue(tag1.value == '1' and tag1.ttype is None)
         self.assertTrue(tag2.value == 2 and tag2.ttype == 'batch')
         self.assertTrue(tag3.value == 2 and tag3.ttype == 'batch')
-
-        self.assertRaises(TypeError, lambda: Tag((3,4,5)))
-        self.assertRaises(TypeError, lambda: Tag(6, ttype = [7,8]))
         self.assertRaises(KeyError, lambda: Tag(9, ttype = 'None'))
 
     def test_tag_property(self):
@@ -41,10 +38,7 @@ class TagTestCase(unittest.TestCase):
         self.assertTrue(tag.value == 1 and tag.ttype is None)
         self.assertFalse(tag.typed)
 
-        def _assign_val(): tag.value = (1,2,3)
-        self.assertRaises(TypeError, _assign_val)
         def _assign_type(t): tag.ttype = t
-        self.assertRaises(TypeError, lambda: _assign_type([4,5]))
         self.assertRaises(KeyError, lambda: _assign_type('None'))
 
     def test_tag_magic(self):

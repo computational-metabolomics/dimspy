@@ -10,9 +10,10 @@ origin: 04-29-2017
 """
 
 
-import unittest, os
-from . import test_peak_alignment, test_peak_filters
-from .test_suite_runner import runTestSuite
+import unittest, sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent.resolve()))
+import test_peak_alignment, test_peak_filters
 
 
 if __name__ == '__main__':
@@ -21,5 +22,5 @@ if __name__ == '__main__':
     suite.addTest(unittest.findTestCases(test_peak_alignment))
     suite.addTest(unittest.findTestCases(test_peak_filters))
 
-    report = os.path.join(os.path.abspath(os.path.join(__file__, os.pardir)), 'test_results', 'results_test_suite_process')
-    runTestSuite(suite, report, title = 'Process Test Suite Report', verbosity = 2)
+    runner = unittest.TextTestRunner()
+    runner.run(suite)

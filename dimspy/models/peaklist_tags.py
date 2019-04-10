@@ -14,8 +14,8 @@ The PeakList tags class.
 """
 
 
-from string import join
-from types import NoneType
+from __future__ import annotations
+from typing import Union
 
 
 class Tag(object):
@@ -37,10 +37,8 @@ class Tag(object):
     False
 
     """
-    _value_valid_types = (int, float, str, str)
-    _ttype_valid_types = (NoneType, str, str)
 
-    def __init__(self, value, ttype = None):
+    def __init__(self, value: Union[int, float, str, Tag], ttype: Union[str, None] = None):
         self._value, self._type = None, None
         self.value, self.ttype = (value.value, value.ttype) if isinstance(value, Tag) else (value, ttype)
 
@@ -57,10 +55,7 @@ class Tag(object):
         return self._value
 
     @value.setter
-    def value(self, value): # numpy types should be manually converted
-        print(value, Tag._value_valid_types)
-        if not isinstance(value, Tag._value_valid_types):
-            raise TypeError('Tag value must be string or number')
+    def value(self, value: Union[int, float, str]): # numpy types should be manually converted
         self._value = value
 
     @property
@@ -76,12 +71,10 @@ class Tag(object):
         return self._type
 
     @ttype.setter
-    def ttype(self, value):
-        if not isinstance(value, Tag._ttype_valid_types):
-            raise TypeError('Tag type must be string or None')
+    def ttype(self, value: Union[str, None]):
         if value in ('None', ''): # reserve for hdf5 protal
-            raise KeyError('["%s"] is not an acceptable tag type' % str(value))
-        self._type = None if value is None else str(value)
+            raise KeyError('["%s"] is not an acceptable tag type' % value)
+        self._type = None if value is None else value
 
     @property
     def typed(self):
@@ -94,15 +87,11 @@ class Tag(object):
         """
         return not self._type is None
 
-    def __eq__(self, other):
-        if not isinstance(other, Tag) and not isinstance(other, Tag._value_valid_types):
-            raise TypeError('undefined comparison between Tag and %s' % type(other).__name__)
+    def __eq__(self, other: Union[int, float, str, Tag]):
         v, t = (other.value, other.ttype) if isinstance(other, Tag) else (other, None)
-        # Tag.ttype can only be str or None. It should be safe to use == for None comparison here
-        # But still need to be aware that it (although highly unlikely) may fail
-        return v == self.value and t == self.ttype
+        return v == self.value and ((t is None and self.ttype is None) or (t == self.ttype))
 
-    def __ne__(self, other):
+    def __ne__(self, other: Union[int, float, str, Tag]):
         return not self.__eq__(other)
 
     def __str__(self):
@@ -135,7 +124,7 @@ class PeakList_Tags(object):
     def __str__(self):
         return self.to_str()
 
-    def __contains__(self, item):
+    def __contains__(self, item: Union[int, float, str, Tag]):
         return item in self._tags
 
     def __len__(self):
@@ -198,7 +187,7 @@ class PeakList_Tags(object):
         return tuple([x for x in self._tags if not x.typed])
 
     # methods
-    def has_tag(self, tag, tag_type = None):
+    def has_tag(self, tag: Union[int, float, str, Tag], tag_type: Union[str, None] = None):
         """
         Checks whether there exists a specific tag.
 
@@ -220,7 +209,7 @@ class PeakList_Tags(object):
         return (tag in self._tags) if isinstance(tag, Tag) or tag_type is None else \
                (Tag(tag, tag_type) in self._tags)
 
-    def has_tag_type(self, tag_type = None):
+    def has_tag_type(self, tag_type: Union[str, None] = None):
         """
         Checks whether there exists a specific tag type.
 
@@ -230,7 +219,7 @@ class PeakList_Tags(object):
         """
         return tag_type in self.tag_types
 
-    def tag_of(self, tag_type = None):
+    def tag_of(self, tag_type: Union[str, None] = None):
         """
         Returns tag value of the given tag type, or tuple of untyped tags if tag_type is None.
 
@@ -241,7 +230,7 @@ class PeakList_Tags(object):
         t = [x for x in self._tags if x.ttype == tag_type]
         return None if len(t) == 0 else tuple(t) if tag_type is None else t[0]
 
-    def add_tag(self, tag, tag_type = None):
+    def add_tag(self, tag: Union[int, float, str, Tag], tag_type: Union[str, None] = None):
         """
         Adds typed or untyped tag.
 
@@ -261,7 +250,7 @@ class PeakList_Tags(object):
             raise ValueError('tag already exist')
         self._tags += [tag]
 
-    def drop_tag(self, tag, tag_type = None):
+    def drop_tag(self, tag: Union[int, float, str, Tag], tag_type: Union[str, None] = None):
         """
         Drops typed and untyped tag.
 
@@ -270,14 +259,14 @@ class PeakList_Tags(object):
 
         >>> tags = PeakList_Tags('untyped_tag1', tag_type1 = 'tag_value1')
         >>> tags.drop_tag(Tag('tag_value1', 'tag_type1'))
-        >>> print tags
+        >>> print(tags)
         untyped_tag1
 
         """
         t = Tag(tag, tag_type)
         self._tags = [x for x in self._tags if x != t]
 
-    def drop_tag_type(self, tag_type = None):
+    def drop_tag_type(self, tag_type: Union[str, None] = None):
         """
         Drops the tag with the given type.
 
@@ -312,10 +301,10 @@ class PeakList_Tags(object):
         Exports tags to a string. It can also be used inexplicitly as
 
         >>> tags = PeakList_Tags('untyped_tag1', tag_type1 = 'tag_value1')
-        >>> print tags
+        >>> print(tags)
         untyped_tag1, tag_type1:tag_value1
 
         :rtype: str
 
         """
-        return join(list(map(str, self._tags)), ', ')
+        return str.join(', ', map(str, self._tags))

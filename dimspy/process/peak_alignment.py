@@ -15,18 +15,19 @@ Cluster and align peaklists into peak matrix.
 import logging
 import numpy as np
 import fastcluster as fc
-from string import join
+from functools import reduce
 from operator import itemgetter
 from multiprocessing import Pool, cpu_count
 from collections import Counter
+from typing import Sequence, List, Union
 from scipy import cluster
 from scipy.spatial.distance import squareform
+from dimspy.models.peaklist import PeakList
 from dimspy.models.peak_matrix import PeakMatrix
-from functools import reduce
 
 
 # single cluster
-def _cluster_peaks(mzs, ppm, distype='euclidean', linkmode='centroid'):
+def _cluster_peaks(mzs: Sequence[float], ppm: float, distype: str = 'euclidean', linkmode: str = 'centroid'):
     if len(mzs) == 0:
         return np.array([])
     if len(mzs) == 1:
@@ -68,7 +69,7 @@ def _cluster_peaks_mp(params):
     return _cluster_peaks(*params)
 
 
-def _cluster_peaks_map(mzs, ppm, block_size, fixed_block, edge_extend, ncpus):
+def _cluster_peaks_map(mzs: Sequence[float], ppm: float, block_size: int, fixed_block: bool, edge_extend: Union[int, float], ncpus: Union[int, None]) -> List[List[int]]:
     if not np.all(mzs[1:] >= mzs[:-1]):
         raise ValueError('mz values not in ascending order')
     if not 1 <= block_size <= len(mzs):
@@ -89,7 +90,7 @@ def _cluster_peaks_map(mzs, ppm, block_size, fixed_block, edge_extend, ncpus):
         ppool = Pool(cpu_count() - 1 if ncpus is None else ncpus)
         rets = ppool.map(f, p)
         ppool.close()  # close after parallel finished
-        return rets
+        return list(rets)
 
     def _smap(f, p):
         return list(map(f, p))
@@ -98,7 +99,7 @@ def _cluster_peaks_map(mzs, ppm, block_size, fixed_block, edge_extend, ncpus):
         largechk = [x for x in p if len(x[0]) > 1E+5]
         if len(largechk) > 0:
             raise RuntimeError('Some of the clustering chunks contain too many peaks: \n%s' %
-                join(['mz range [%.5f - %.5f] ... [%d] peaks' % (min(x[0]),max(x[0]),len(x[0])) for x in largechk], '\n'))
+                str.join('\n', ['mz range [%.5f - %.5f] ... [%d] peaks' % (min(x[0]),max(x[0]),len(x[0])) for x in largechk]))
         return (_smap if ncpus == 1 or cpu_count() <= 2 else _mmap)(f, p)
 
     # align edges
@@ -110,7 +111,7 @@ def _cluster_peaks_map(mzs, ppm, block_size, fixed_block, edge_extend, ncpus):
     if True in overlap:
         logging.warning('[%d] edge blocks overlapped, consider increasing the block size' % (sum(overlap) + 1))
         erngs = reduce(lambda x, y: (x[:-1] + [np.unique(np.hstack((x[-1], y[0])))]) if y[1] else x + [y[0]],
-                       list(zip(erngs[1:], overlap)), [erngs[0]])
+                       zip(erngs[1:], overlap), [erngs[0]])
         sids = [sids[0]] + [s for s, o in zip(sids[1:], overlap) if not o]
 
     _cids = _pmap(_cluster_peaks_mp, [(mzs[r], ppm) for r in erngs])
@@ -131,21 +132,22 @@ def _cluster_peaks_map(mzs, ppm, block_size, fixed_block, edge_extend, ncpus):
         pblns = ['block %d' % i + ': [%f, %f]' % itemgetter(*r)(mzs)
                  for i, (s, r) in enumerate(zip(slimbk, pbrngs)) if s]
         logging.warning('[%d] empty / slim clustering block(s) found, consider increasing the block size\n%s' %
-                        (np.sum(slimbk), join(pblns, '\n')))
+                        (np.sum(slimbk), str.join('\n', pblns)))
     bcids = _pmap(_cluster_peaks_mp, [(m, ppm) for m in bkmzs])
 
     # combine
     cids = [None] * (len(bcids) + len(ecids))
     cids[::2], cids[1::2] = bcids, ecids
+    if any(map(lambda x: x is None, cids)): raise RuntimeError('class index not assigned')
     return cids
 
 
-def _cluster_peaks_reduce(clusters):
+def _cluster_peaks_reduce(clusters: List[List]):
     return reduce(lambda x, y: np.vstack((x, y + np.max(x) + 1)), [x for x in clusters if len(x) > 0]).flatten()
 
 
 # alignment
-def _align_peaks(cids, pids, *attrs):
+def _align_peaks(cids: np.ndarray, pids: np.ndarray, *attrs):
     if not all([x.shape == cids.shape == pids.shape for x in attrs]):
         raise ValueError('attributes shape not match')
 
@@ -155,17 +157,17 @@ def _align_peaks(cids, pids, *attrs):
         sri = np.argsort(ri)  # ensure order
         return np.argsort(sri)[vi], ids[ri[sri]]
 
-    (mcids, mpids), (ucids, upids) = list(zip(*list(map(_idsmap, (cids, pids)))))
+    (mcids, mpids), (ucids, upids) = list(zip(*map(_idsmap, (cids, pids))))
 
     # count how many peaks from same sample being clustered into one peak
-    cM = np.zeros(list(map(len, (upids, ucids))))
-    for pos, count in list(Counter(list(zip(mpids, mcids))).items()):
+    cM = np.zeros((len(upids), len(ucids)))
+    for pos, count in Counter(zip(mpids, mcids)).items():
         cM[pos] = count
 
     # fill all the attributes into matrix
     def _avg_am(a):
-        aM = np.zeros(list(map(len, (upids, ucids))))
-        for p, v in zip(list(zip(mpids, mcids)), a):
+        aM = np.zeros((len(upids), len(ucids)))
+        for p, v in zip(zip(mpids, mcids), a):
             aM[p] += v
         with np.errstate(divide='ignore', invalid='ignore'):
             aM /= cM
@@ -174,9 +176,9 @@ def _align_peaks(cids, pids, *attrs):
 
     def _cat_am(a):
         aM = [[[] for _ in ucids] for _ in upids]
-        for (r, c), v in zip(list(zip(mpids, mcids)), a):
+        for (r, c), v in zip(zip(mpids, mcids), a):
             aM[r][c] += [str(v)]
-        aM = [[join(val, ',') for val in ln] for ln in aM]
+        aM = [[str.join(',', val) for val in ln] for ln in aM]
         return np.array(aM)
 
     def _fillam(a):
@@ -193,7 +195,7 @@ def _align_peaks(cids, pids, *attrs):
 
 
 # interface
-def align_peaks(peaks, ppm=2.0, block_size=5000, fixed_block=True, edge_extend=10, ncpus=None):
+def align_peaks(peaks: Sequence[PeakList], ppm: float = 2.0, block_size: int = 5000, fixed_block: bool = True, edge_extend: Union[int, float] = 10, ncpus: Union[int, None]  = None):
     """
     Cluster and align peaklists into a peak matrix.
 
@@ -225,7 +227,7 @@ def align_peaks(peaks, ppm=2.0, block_size=5000, fixed_block=True, edge_extend=1
     emlst = np.array([x.size == 0 for x in peaks])
     if np.sum(emlst) > 0:
         logging.warning(
-            'droping empty peaklist(s) [%s]' % join(list(map(str, [p.ID for e, p in zip(emlst, peaks) if e])), ','))
+            'droping empty peaklist(s) [%s]' % str.join(',', map(str, [p.ID for e, p in zip(emlst, peaks) if e])))
         peaks = [p for e, p in zip(emlst, peaks) if not e]
     if len(peaks) == 0: raise ValueError('all input peaklists for alignment are empty')
 

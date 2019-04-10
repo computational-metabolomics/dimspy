@@ -15,12 +15,14 @@ PeakList and PeakMatrix filters.
 
 import logging
 import numpy as np
-from dimspy.models.peak_matrix import mask_peakmatrix, unmask_peakmatrix
 from functools import reduce
+from typing import Union, Sequence, Tuple, Any
+from dimspy.models.peaklist import PeakList
+from dimspy.models.peak_matrix import PeakMatrix, mask_peakmatrix, unmask_peakmatrix
 
 
 # peaklist filters
-def filter_attr(pl, attr_name, max_threshold=None, min_threshold=None, flag_name=None, flag_index=None):
+def filter_attr(pl: PeakList, attr_name: str, max_threshold: Union[int,float,None] = None, min_threshold: [int,float,None] = None, flag_name: Union[str,None] = None, flag_index: Union[int,None] = None):
     """
     Peaklist attribute values filter.
 
@@ -45,7 +47,7 @@ def filter_attr(pl, attr_name, max_threshold=None, min_threshold=None, flag_name
     return pl.add_attribute(flag_name, flt(pl[attr_name]), is_flag=True, on_index=flag_index)
 
 
-def filter_ringing(pl, threshold, bin_size=1.0, flag_name='ringing_flag', flag_index=None):
+def filter_ringing(pl: PeakList, threshold: float, bin_size: Union[int,float] = 1.0, flag_name: str = 'ringing_flag', flag_index: Union[int,None] = None):
     """
     Peaklist ringing filter.
 
@@ -68,7 +70,7 @@ def filter_ringing(pl, threshold, bin_size=1.0, flag_name='ringing_flag', flag_i
     return pl.add_attribute(flag_name, pl.intensity > (mask * threshold), is_flag=True, on_index=flag_index)
 
 
-def filter_mz_ranges(pl, mz_ranges, flag_name='mz_ranges_flag', flagged_only=False, flag_index=None):
+def filter_mz_ranges(pl: PeakList, mz_ranges: Sequence[Tuple[float,float]], flag_name: str = 'mz_ranges_flag', flagged_only: bool = False, flag_index: Union[int,None] = None):
     """
     Peaklist mz range filter.
     :param pl: the target peaklist
@@ -94,7 +96,7 @@ def filter_mz_ranges(pl, mz_ranges, flag_name='mz_ranges_flag', flagged_only=Fal
 
 
 # PeakMatrix filters
-def filter_rsd(pm, rsd_threshold, qc_tag, on_attr = 'intensity', flag_name='rsd_flag'):
+def filter_rsd(pm: PeakMatrix, rsd_threshold: Union[int,float], qc_tag: Any, on_attr: str = 'intensity', flag_name: str = 'rsd_flag'):
     """
     PeakMatrix RSD filter.
 
@@ -117,7 +119,7 @@ def filter_rsd(pm, rsd_threshold, qc_tag, on_attr = 'intensity', flag_name='rsd_
     return pm
 
 
-def filter_fraction(pm, fraction_threshold, within_classes=False, class_tag_type=None, flag_name='fraction_flag'):
+def filter_fraction(pm: PeakMatrix, fraction_threshold: float, within_classes: bool = False, class_tag_type: Any = None, flag_name: str = 'fraction_flag'):
     """
     PeakMatrix fraction filter.
 
@@ -147,7 +149,8 @@ def filter_fraction(pm, fraction_threshold, within_classes=False, class_tag_type
     return pm
 
 
-def filter_blank_peaks(pm, blank_tag, fraction_threshold=1, fold_threshold=1, method='mean', rm_blanks=True, flag_name='blank_flag'):
+def filter_blank_peaks(pm: PeakMatrix, blank_tag: Any, fraction_threshold: Union[int,float] = 1, fold_threshold: Union[int,float] = 1,
+                       method: str = 'mean', rm_blanks: bool = True, flag_name: str = 'blank_flag'):
     """
     PeakMatrix blank filter.
 

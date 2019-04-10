@@ -10,9 +10,10 @@ origin: 05-14-2017
 """
 
 
-import unittest, os
-from . import test_txt_portal, test_hdf5_portal, test_paths_portal
-from .test_suite_runner import runTestSuite
+import unittest, sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent.resolve()))
+import test_txt_portal, test_hdf5_portal, test_paths_portal
 
 
 if __name__ == '__main__':
@@ -22,5 +23,5 @@ if __name__ == '__main__':
     suite.addTest(unittest.findTestCases(test_hdf5_portal))
     suite.addTest(unittest.findTestCases(test_paths_portal))
 
-    report = os.path.join(os.path.abspath(os.path.join(__file__, os.pardir)), 'test_results', 'results_test_suite_portals')
-    runTestSuite(suite, report, title = 'Portals Test Suite Report', verbosity = 2)
+    runner = unittest.TextTestRunner()
+    runner.run(suite)
