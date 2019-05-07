@@ -13,7 +13,6 @@ The PeakList and PeakMatrix plain text portals.
 import os
 import logging
 import numpy as np
-from string import strip
 from ast import literal_eval
 from dimspy.models.peaklist_tags import PeakList_Tags
 from dimspy.models.peaklist import PeakList
@@ -29,7 +28,7 @@ def _evalv(vect):
 
 
 # peaklist portals
-def save_peaklist_as_txt(pkl, filename, *args, **kwargs):
+def save_peaklist_as_txt(pkl: PeakList, filename: str, *args, **kwargs):
     """
     Saves a peaklist object to a plain text file.
 
@@ -44,7 +43,7 @@ def save_peaklist_as_txt(pkl, filename, *args, **kwargs):
     with open(filename, 'w') as f: f.write(pkl.to_str(*args, **kwargs))
 
 
-def load_peaklist_from_txt(filename, ID, delimiter=',', flag_names='auto', has_flag_col=True):
+def load_peaklist_from_txt(filename: str, ID: any, delimiter: str = ',', flag_names: str = 'auto', has_flag_col: bool = True):
     """
     Loads a peaklist from plain text file.
 
@@ -60,10 +59,10 @@ def load_peaklist_from_txt(filename, ID, delimiter=',', flag_names='auto', has_f
     """
     if not os.path.isfile(filename):
         raise IOError('plain text file [%s] does not exist' % filename)
-    with open(filename, 'rU') as f:
-        rlns = [x for x in map(strip, f.readlines()) if x != '']
+    with open(filename, 'r') as f:
+        rlns = [x for x in map(str.strip, f.readlines()) if x != '']
 
-    dlns = [list(map(strip, x.split(delimiter))) for x in rlns]
+    dlns = [list(map(str.strip, x.split(delimiter))) for x in rlns]
     if any([len(x) != len(dlns[0]) for x in dlns[1:]]):
         raise IOError('data matrix size not match')
 
@@ -84,7 +83,7 @@ def load_peaklist_from_txt(filename, ID, delimiter=',', flag_names='auto', has_f
 
 
 # peak matrix portals
-def save_peak_matrix_as_txt(pm, filename, *args, **kwargs):
+def save_peak_matrix_as_txt(pm: PeakMatrix, filename: str, *args, **kwargs):
     """
     Saves a peak matrix in plain text file.
 
@@ -100,7 +99,7 @@ def save_peak_matrix_as_txt(pm, filename, *args, **kwargs):
         with unmask_all_peakmatrix(pm) as m: f.write(m.to_str(*args, **kwargs))
 
 
-def load_peak_matrix_from_txt(filename, delimiter='\t', samples_in_rows=True, comprehensive='auto'):
+def load_peak_matrix_from_txt(filename: str, delimiter: str = '\t', samples_in_rows: bool = True, comprehensive: str = 'auto'):
     """
     Loads a peak matrix from plain text file.
 
@@ -113,17 +112,17 @@ def load_peak_matrix_from_txt(filename, delimiter='\t', samples_in_rows=True, co
     """
     if not os.path.isfile(filename):
         raise IOError('plain text file [%s] does not exist' % filename)
-    with open(filename, 'rU') as f:
+    with open(filename, 'r') as f:
         rlns = [x for x in f.readlines() if x != '']
 
-    dlns = [list(map(strip, x.split(delimiter))) for x in rlns]
+    dlns = [list(map(str.strip, x.split(delimiter))) for x in rlns]
     if any([len(x) != len(dlns[0]) for x in dlns[1:]]):
         raise IOError('data matrix size not match')
 
     if samples_in_rows: dlns = list(zip(*dlns))
     if comprehensive == 'auto': comprehensive = ('flags' in dlns[0])
     rdlns = list(zip(*dlns))
-    rsdrow = filter(lambda x: x[1][0] == 'rsd_all', enumerate(rdlns))[0][0]
+    rsdrow = list(filter(lambda x: x[1][0] == 'rsd_all', enumerate(rdlns)))[0][0]
 
     def _parseflags():
         fgs = []
@@ -138,6 +137,7 @@ def load_peak_matrix_from_txt(filename, delimiter='\t', samples_in_rows=True, co
     pids = dlns[0][pcol:]
 
     def _parsetags(tgs):
+        l = 0
         for l, ln in enumerate(dlns[2:]):  # line 1 = missing
             if not ln[0].startswith('tags_'): break
             tn, tv = ln[0][5:], ln[pcol:]

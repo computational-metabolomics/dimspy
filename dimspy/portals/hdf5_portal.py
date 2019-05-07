@@ -14,6 +14,7 @@ The PeakList and PeakMatrix HDF5 portals.
 import os, logging, zlib, h5py
 import pickle as cp
 import numpy as np
+from typing import Sequence
 from ast import literal_eval
 from dimspy.models.peaklist_tags import Tag, PeakList_Tags
 from dimspy.models.peaklist import PeakList
@@ -26,12 +27,12 @@ def _eval(v):
     except (ValueError, SyntaxError):
         return str(v)
 
-_packMeta = lambda x: np.array(zlib.compress(cp.dumps(x)) + '\xFF') # numpy truncates right-side \x00
+_packMeta = lambda x: np.string_(zlib.compress(cp.dumps(x)) + b'\xFF') # numpy truncates right-side \x00
 _unpackMeta = lambda x: cp.loads(zlib.decompress(x[:-1]))
 
 
 # peaklists portals
-def save_peaklists_as_hdf5(pkls, filename):
+def save_peaklists_as_hdf5(pkls: Sequence[PeakList], filename: str):
     """
     Saves multiple peaklists in a HDF5 file.
 
@@ -47,26 +48,25 @@ def save_peaklists_as_hdf5(pkls, filename):
     f = h5py.File(filename, 'w')
 
     def _savepkl(i, pkl):
-        if pkl.ID in list(f.keys()):
+        if pkl.ID in f.keys():
             raise IOError('peaklist [%s] already exists' % pkl.ID)
-        dm = [list(map(str,l)) for l in pkl.to_list()[:-1]]
-        dt = 'S%d' % np.max([list(map(len,l)) for l in dm])
 
-        dset = f.create_dataset(pkl.ID, pkl.full_shape[::-1], dtype=dt)
+        dm = np.string_(pkl.to_list()[:-1])
+        dset = f.create_dataset(pkl.ID, pkl.full_shape[::-1], dtype=dm.dtype)
         dset.attrs['class'] = 'PeakList'
         dset.attrs['order'] = i
 
-        dset[...] = np.array(dm, dtype=dt) # skip flags
-        dset.attrs['dtable_names'], dset.attrs['dtable_types'] = list(zip(*pkl.dtable.dtype.descr))
+        dset[...] = np.array(dm) # skip flags
+        dset.attrs['dtable_names'], dset.attrs['dtable_types'] = list(map(np.string_, zip(*pkl.dtable.dtype.descr)))
 
-        dset.attrs['flag_attrs'] = pkl.flag_attributes
-        dset.attrs['tags'] = [(t or 'None', v) for v,t in pkl.tags.to_list()]
-        for k, v in list(pkl.metadata.items()): dset.attrs['metadata_' + k] = _packMeta(v)
+        dset.attrs['flag_attrs'] = np.string_(pkl.flag_attributes)
+        dset.attrs['tags'] = np.string_([(t or 'None', v) for v,t in pkl.tags.to_list()])
+        for k, v in pkl.metadata.items(): dset.attrs['metadata_' + k] = _packMeta(v)
 
-    map(lambda x: _savepkl(*x), enumerate(pkls))
+    for pl in enumerate(pkls): _savepkl(*pl)
 
 
-def load_peaklists_from_hdf5(filename):
+def load_peaklists_from_hdf5(filename: str):
     """
     Loads a list of peaklist objects from a HDF5 file.
 
@@ -88,8 +88,8 @@ def load_peaklists_from_hdf5(filename):
             raise IOError('unknown object found in the database')
 
         dm = dset.value
-        dn = dset.attrs['dtable_names']
-        dt = dset.attrs['dtable_types']
+        dn = dset.attrs['dtable_names'].astype(str)
+        dt = dset.attrs['dtable_types'].astype(str)
 
         if dn[0] != 'mz' or dn[1] != 'intensity':
             raise IOError('PANIC: HDF5 dataset matrix not in order')
@@ -97,16 +97,16 @@ def load_peaklists_from_hdf5(filename):
                        **{k[9:]: _unpackMeta(v) for k,v in list(dset.attrs.items()) if k.startswith('metadata_')})
 
         for n, v, t in zip(dn[2:], dm[2:], dt[2:]):
-            pkl.add_attribute(n, v, t, is_flag=(n in dset.attrs['flag_attrs']), flagged_only=False)
+            pkl.add_attribute(n, v, t, is_flag=(n in dset.attrs['flag_attrs'].astype(str)), flagged_only=False)
 
-        for t,v in dset.attrs['tags']: pkl.tags.add_tag(_eval(v), None if t == 'None' else t)
+        for t,v in map(lambda x: x.astype(str), dset.attrs['tags']): pkl.tags.add_tag(_eval(v), None if t == 'None' else t)
         return dset.attrs['order'], pkl
 
-    return zip(*sorted(map(_loadpkl, list(f.keys()))))[1]
+    return list(zip(*sorted(map(_loadpkl, f.keys()))))[1]
 
 
 # peak matrix portals
-def save_peak_matrix_as_hdf5(pm, filename):
+def save_peak_matrix_as_hdf5(pm: PeakMatrix, filename: str):
     """
     Saves a peak matrix object to a HDF5 file.
 
@@ -121,7 +121,7 @@ def save_peak_matrix_as_hdf5(pm, filename):
     f = h5py.File(filename, 'w')
 
     def _saveattr(attr):
-        if attr in list(f.keys()):
+        if attr in f.keys():
             raise IOError('attribute [%s] already exists' % attr)
 
         with unmask_all_peakmatrix(pm) as m:
@@ -135,19 +135,19 @@ def save_peak_matrix_as_hdf5(pm, filename):
         ds[...] = dm.astype(dt)
         ds.attrs['dtype'] = dm.dtype.str
 
-    map(_saveattr, pm.attributes)
+    for a in pm.attributes: _saveattr(a)
 
     dset = f['mz']  # must exists in pm
     dset.attrs['class'] = 'PeakMatrix'
-    dset.attrs['attributes'] = pm.attributes
+    dset.attrs['attributes'] = np.string_(pm.attributes)
     dset.attrs['mask'] = pm.mask
 
     with unmask_all_peakmatrix(pm):
-        dset.attrs['peaklist_ids'] = pm.peaklist_ids
+        dset.attrs['peaklist_ids'] = np.string_(pm.peaklist_ids)
         for i, tags in enumerate(pm.peaklist_tags):
-            dset.attrs['peaklist_tags_%d' % i] = [(t or 'None', v) for v,t in tags.to_list()]
+            dset.attrs['peaklist_tags_%d' % i] = np.string_([(t or 'None', v) for v,t in tags.to_list()])
 
-        dset.attrs['flag_names'] = pm.flag_names
+        dset.attrs['flag_names'] = np.string_(pm.flag_names)
         for fn in pm.flag_names:
             dset.attrs[fn] = pm.flag_values(fn)
 
@@ -172,14 +172,14 @@ def load_peak_matrix_from_hdf5(filename):
     dset = f['mz']
     if dset.attrs.get('class', '') != 'PeakMatrix':
         raise IOError('input database is not a valid PeakMatrix')
-    attl = dset.attrs['attributes']
-    pids = dset.attrs['peaklist_ids']
+    attl = dset.attrs['attributes'].astype(str)
+    pids = dset.attrs['peaklist_ids'].astype(str)
     mask = dset.attrs['mask']
 
-    tatt = sorted([x for x in list(dset.attrs.keys()) if x.startswith('peaklist_tags_')], key=lambda x: int(x[14:]))
-    ptgs = [PeakList_Tags(*[Tag(_eval(v), None if t == 'None' else t) for t,v in tags]) for tags in [dset.attrs[x] for x in tatt]]
+    tatt = sorted([x for x in dset.attrs.keys() if x.startswith('peaklist_tags_')], key=lambda x: int(x[14:]))
+    ptgs = [PeakList_Tags(*[Tag(_eval(v), None if t == 'None' else t) for t,v in map(lambda x: x.astype(str), tags)]) for tags in [dset.attrs[x] for x in tatt]]
 
-    flgs = [(fn, dset.attrs[fn]) for fn in dset.attrs['flag_names']]
+    flgs = [(fn, dset.attrs[fn]) for fn in dset.attrs['flag_names'].astype(str)]
     alst = [(attr, np.array(f[attr]).astype(f[attr].attrs['dtype'])) for attr in attl]
 
     pm = PeakMatrix(pids, ptgs, alst)

@@ -11,7 +11,6 @@ origin: 05-14-2017
 
 
 import unittest
-from copy import deepcopy
 from dimspy.models.peaklist_tags import PeakList_Tags
 from dimspy.process.peak_filters import *
 
