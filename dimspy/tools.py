@@ -2,6 +2,9 @@
 # -*- coding: utf-8 -*-
 
 
+import warnings
+warnings.filterwarnings("ignore", category=ResourceWarning)
+
 import os
 import logging
 import operator
@@ -130,6 +133,9 @@ def process_scans(source, function_noise, snr_thres, ppm, min_fraction=None, rsd
                 pl = join_peaklists("{}#{}".format(os.path.basename(filenames[i]), pl[0].metadata["header"][0]), pl)
                 pls.append(pl)
 
+    if report is not None:
+        out.close()
+
     return pls
 
 
@@ -168,7 +174,7 @@ def replicate_filter(source, ppm, replicates, min_peaks, rsd_thres=None, filelis
         out = open(report, "w")
 
     idxs_peaklists = idxs_reps_from_filelist([pl.metadata.replicate for pl in peaklists])
-    unique, counts = np.unique([pl.metadata.replicate for pl in peaklists], return_counts=True)
+    unique, counts = np.unique([int(pl.metadata.replicate) for pl in peaklists], return_counts=True)
 
     if len(counts) <= 1:
         raise ValueError("No technical replicates available (single) - Skip 'replicate filter'")
@@ -206,7 +212,7 @@ def replicate_filter(source, ppm, replicates, min_peaks, rsd_thres=None, filelis
 
             reps = [_pl.metadata["replicate"] for _pl in pls_comb]
             pl.metadata["replicates"] = reps
-            pl.tags.add_tag("_".join(map(str, reps)), "replicates")
+            pl.tags.add_tag("-".join(map(str, reps)), "replicates")
 
             for t in pls_comb[0].tags.tags:
                 if t.ttype != "replicate":
@@ -256,7 +262,10 @@ def replicate_filter(source, ppm, replicates, min_peaks, rsd_thres=None, filelis
                     out.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(idxs_pls+1, p+1, temp[p][0].ID, temp[p][1], temp[p][2], temp[p][3], temp[p][-1]))
                 else:
                     out.write("{}\t{}\t{}\t{}\n".format(temp[p][0].ID, temp[p][1], temp[p][2], temp[p][3]))
-
+    
+    if report is not None:
+        out.close()
+    
     return pls_rep_filt
 
 

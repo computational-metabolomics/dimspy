@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python 
 # -*- coding: utf-8 -*-
 
 """
@@ -9,42 +9,38 @@
 
 """
 
+
 import os
 import collections
-import pymzml
 import numpy as np
 import zipfile
 from copy import deepcopy
 from dimspy.models.peaklist import PeakList
 from dimspy.experiment import mz_range_from_header
 
+import warnings
+warnings.simplefilter("ignore", category=ResourceWarning)
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore", category=DeprecationWarning)
+    import pymzml
 
 class Mzml:
-    def __init__(self, filename="", archive=None, preload=True):
+    def __init__(self, filename="", preload=True):
         self.filename = filename
-        self.archive = archive
         self._preload = preload
         self._cache = None
 
     def run(self):
-        if self._cache is not None: return self._cache
+        # if self._cache is not None: return self._cache
 
-        if not self.filename.lower().endswith(".mzml") and not self.filename.lower().endswith(".mzml.gz") and not self.filename.lower().endswith(".zip"):
+        if not self.filename.lower().endswith(".mzml") and not self.filename.lower().endswith(".mzml.gz"):
             raise IOError('Incorrect file format for mzML parser')
-        if self.archive is not None:
-            if not zipfile.is_zipfile(self.archive):
-                raise IOError('Input file [%s] is not a valid zip archive' % self.archive)
-            zf = zipfile.ZipFile(self.archive, 'r')
-            if self.filename not in zf.namelist():
-                raise IOError("{} does not exist in zip file".format(self.filename))
-            dat = pymzml.run.Reader('', file_object=zf.open(self.filename))
-            if self._preload: dat = self._cache = tuple(map(deepcopy, dat))
-            return dat
-        elif self.filename.lower().endswith(".mzml") or self.filename.lower().endswith(".mzml.gz"):
+        
+        if self.filename.lower().endswith(".mzml") or self.filename.lower().endswith(".mzml.gz"):
             if not os.path.isfile(self.filename):
                 raise IOError("{} does not exist".format(self.filename))
             dat = pymzml.run.Reader(self.filename)
-            if self._preload: dat = self._cache = tuple(map(deepcopy, dat))
+            # if self._preload: dat = self._cache = tuple(map(deepcopy, dat))
             return dat
         else:
             return None
@@ -70,9 +66,9 @@ class Mzml:
 
         for scan in self.run():
             if scan["id"] == scan_id:
-
-                if len(scan.peaks) > 0:
-                    mzs, ints = list(zip(*scan.peaks))
+                peaks = scan.peaks("raw")
+                if len(peaks) > 0:
+                    mzs, ints = list(zip(*peaks))
                 else:
                     mzs, ints = [], []
 
@@ -94,7 +90,7 @@ class Mzml:
                               scan_time=scan_time,
                               tic=tic,
                               function_noise=function_noise)
-                snr = np.divide(ints, scan.estimatedNoiseLevel(mode=function_noise))
+                snr = np.divide(ints, scan.estimated_noise_level(mode=function_noise))
                 pl.add_attribute('snr', snr)
                 return pl
         return None
@@ -113,7 +109,7 @@ class Mzml:
         # print self.run()[2]
         for scan in self.run():
             if scan["id"] == "TIC":
-                return zip(*scan.peaks)[1]
+                return zip(*scan.peaks("raw"))[1]
         return
 
     def injection_times(self):

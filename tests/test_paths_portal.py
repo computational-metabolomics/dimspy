@@ -27,6 +27,7 @@ class PathsPortalsTestCase(unittest.TestCase):
         self.assertListEqual(fns, fns_c)
 
         fn_filelist = os.path.join(path, "filelist_mzml_triplicates.txt")
+        print(path)
         fns = paths.check_paths(fn_filelist, source)
         fns_c = ['batch04_B02_rep01_301.mzML', 'batch04_B02_rep02_302.mzML', 'batch04_B02_rep03_303.mzML',
                  'batch04_QC17_rep01_262.mzML', 'batch04_QC17_rep02_263.mzML', 'batch04_QC17_rep03_264.mzML',

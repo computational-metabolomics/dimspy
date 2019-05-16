@@ -146,3 +146,6 @@ class ThermoRaw:
                 for i, d in enumerate(gsd.ScanDependentDetailArray):
                     l.append([scan_id, d.ScanIndex])
         return l
+
+    def close(self):
+        self.run.Close()

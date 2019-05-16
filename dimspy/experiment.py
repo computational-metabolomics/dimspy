@@ -4,6 +4,7 @@ import os
 import warnings
 import collections
 import re
+import csv
 import numpy as np
 from .models.peaklist import PeakList
 
@@ -116,15 +117,12 @@ def interpret_experiment(mzrs):
 
 def check_metadata(fn_tsv):
 
-    assert os.path.isfile(fn_tsv.encode('string-escape')), "{} does not exist".format(fn_tsv)
-
-    fm = np.genfromtxt(fn_tsv.encode('string-escape'), dtype=None, delimiter="\t", names=True)
-    if len(fm.shape) == 0:
-        fm = np.array([fm])
-
-    fm_dict = collections.OrderedDict()
-    for k in fm.dtype.names:
-        fm_dict[k] = list(fm[k])
+    assert os.path.isfile(fn_tsv.encode('unicode_escape')), "{} does not exist".format(fn_tsv)
+    with open(fn_tsv.encode('unicode_escape')) as tsv:
+        fm_dict = collections.OrderedDict()
+        for row in csv.DictReader(tsv, delimiter="\t"):
+            for k, v in row.items():
+                fm_dict.setdefault(k, []).append(v)
 
     if "filename" not in fm_dict:
         raise IOError("Column 'filename' missing.")
@@ -133,12 +131,12 @@ def check_metadata(fn_tsv):
     if len(unique) != sum(counts):
         raise ValueError("Duplicate filename in list")
 
-    if "replicate" in fm.dtype.names:
+    if "replicate" in fm_dict.keys():
 
-        if 0 in fm["replicate"]:
-            raise IOError("Incorrect replicate number in list. Row {}".format(list(fm["replicate"]).index(0)))
+        if 0 in fm_dict["replicate"]:
+            raise IOError("Incorrect replicate number in list. Row {}".format(list(fm_dict["replicate"]).index(0)))
 
-        idxs_replicates = idxs_reps_from_filelist(fm["replicate"])
+        idxs_replicates = idxs_reps_from_filelist(fm_dict["replicate"])
         counts = {}
         for idxs in idxs_replicates:
             if len(idxs) not in counts:
@@ -150,23 +148,23 @@ def check_metadata(fn_tsv):
     else:
         print("Column for replicate numbers missing. Only required for replicate filter.")
 
-    if "batch" in fm.dtype.names:
-        unique_batches, counts = np.unique(fm["batch"], return_counts=True)
+    if "batch" in fm_dict.keys():
+        unique_batches, counts = np.unique(fm_dict["batch"], return_counts=True)
         print("Batch numbers:", unique_batches)
         print("Number of samples in each Batch:", dict(list(zip(unique_batches, counts))))
     else:
         print("Column for batch number missing. Not required.")
 
-    if "injectionOrder" in fm.dtype.names:
-        assert np.array_equal(fm["injectionOrder"], sorted(fm["injectionOrder"])), "Check the injectionOrder column - samples not in order"
+    if "injectionOrder" in fm_dict:
+        assert np.array_equal(fm_dict["injectionOrder"], sorted(fm_dict["injectionOrder"])), "Check the injectionOrder column - samples not in order"
     else:
         print("Column for sample injection order missing. Not required.")
 
-    if "classLabel" in fm.dtype.names:
-        if "replicate" in fm.dtype.names:
+    if "classLabel" in fm_dict:
+        if "replicate" in fm_dict:
             for i in range(len(idxs_replicates)):
-                assert len(np.unique(fm["classLabel"][min(idxs_replicates[i]):max(idxs_replicates[i])+1])) == 1, "class names do not match with number of replicates"
-        unique, counts = np.unique(fm["classLabel"], return_counts=True)
+                assert len(np.unique(fm_dict["classLabel"][min(idxs_replicates[i]):max(idxs_replicates[i])+1])) == 1, "class names do not match with number of replicates"
+        unique, counts = np.unique(fm_dict["classLabel"], return_counts=True)
         cls = dict(list(zip(unique, counts)))
         print("Classes:", cls)
     else:
@@ -200,27 +198,31 @@ def update_metadata_and_labels(peaklists, fl):
 
 def update_labels(pm, fn_tsv):
 
-    assert os.path.isfile(fn_tsv.encode('string-escape')), "{} does not exist".format(fn_tsv)
+    assert os.path.isfile(fn_tsv.encode('unicode_escape')), "{} does not exist".format(fn_tsv)
 
-    fm = np.genfromtxt(fn_tsv.encode('string-escape'), dtype=None, delimiter="\t", names=True)
-    if len(fm.shape) == 0:
-        fm = np.array([fm])
+    assert os.path.isfile(fn_tsv.encode('unicode_escape')), "{} does not exist".format(fn_tsv)
+    with open(fn_tsv.encode('unicode_escape')) as tsv:
+        fm_dict = collections.OrderedDict()
+        for row in csv.DictReader(tsv, delimiter="\t"):
+            for k, v in row.items():
+                fm_dict.setdefault(k, []).append(v)
 
-    assert "sample_id" == fm.dtype.names[0] or "filename" == fm.dtype.names[0], "Column for class labels not available"
-    assert "classLabel" in fm.dtype.names, "Column for class label (classLabel) not available"
-    assert (fm[fm.dtype.names[0]] == pm.peaklist_ids).all(), "Sample ids do not match {}".format(np.setdiff1d(fm[fm.dtype.names[0]], pm.peaklist_ids))
+    assert "sample_id" == list(fm_dict.keys())[0] or "filename" == list(fm_dict.keys())[0], "Column for class labels not available"
+    assert "classLabel" in fm_dict.keys(), "Column for class label (classLabel) not available"
+    assert (fm_dict[list(fm_dict.keys())[0]] == pm.peaklist_ids).all(), "Sample ids do not match {}".format(np.setdiff1d(fm_dict[list(fm_dict.keys())[0]], pm.peaklist_ids))
 
     for tag_name in ["replicate", "replicates", "batch", "injectionOrder", "classLabel"]:
-        if tag_name in fm.dtype.names:
-            for i in range(len(fm[tag_name])):
+        if tag_name in fm_dict:
+            for i in range(len(fm_dict[tag_name])):
                 if pm.peaklist_tags[i].has_tag_type(tag_name):
                     pm.peaklist_tags[i].drop_tag_type(tag_name)
-                pm.peaklist_tags[i].add_tag(fm[tag_name][i], tag_name)
+                pm.peaklist_tags[i].add_tag(fm_dict[tag_name][i], tag_name)
     return pm
 
 
 def idxs_reps_from_filelist(replicates):
     idxs, temp = [], [0]
+    replicates = [int(r) for r in replicates]
     for i in range(1, len(replicates)):
         if (replicates[i-1] == replicates[i] or replicates[i-1] > replicates[i]) and replicates[i] == 1:
             idxs.append(temp)

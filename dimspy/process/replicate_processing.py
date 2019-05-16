@@ -12,7 +12,6 @@ from dimspy.portals import thermo_raw_portal
 from dimspy.process.peak_alignment import align_peaks
 from dimspy.experiment import scan_type_from_header
 from dimspy.experiment import mz_range_from_header
-from string import join
 from functools import reduce
 
 
@@ -117,6 +116,10 @@ def read_scans(fn, source, function_noise, min_scans=1, filter_scan_events=None)
             scans[h] = run.peaklists(sids, function_noise)
         else:
             logging.warning('Not enough scans for [{}] [{} < {}]. Scan event {} has been removed.'.format(h, len(scans), min_scans, h))
+
+    if fn.lower().endswith(".raw"):
+        run.close()
+
     return scans
 
 
@@ -124,7 +127,7 @@ def average_replicate_scans(name, pls, ppm=2.0, min_fraction=0.8, rsd_thres=30.0
 
     emlst = np.array([x.size == 0 for x in pls])
     if np.sum(emlst) > 0:
-        logging.warning('No scan data available for [%s]' % join(list(map(str, [p.ID for e, p in zip(emlst,  pls) if e])), ','))
+        logging.warning('No scan data available for {}'.format(str([p.ID for e, p in zip(emlst,  pls) if e])))
         pls = [p for e, p in zip(emlst,  pls) if not e]
 
     pm = align_peaks(pls, ppm=ppm, block_size=block_size, ncpus=ncpus)
