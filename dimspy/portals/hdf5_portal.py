@@ -31,6 +31,9 @@ _packMeta = lambda x: np.string_(zlib.compress(cp.dumps(x)) + b'\xFF') # numpy t
 _unpackMeta = lambda x: cp.loads(zlib.decompress(x[:-1]))
 
 
+_convByteStr = lambda x: x if isinstance(x, str) else x.decode('utf-8')
+
+
 # peaklists portals
 def save_peaklists_as_hdf5(pkls: Sequence[PeakList], filename: str):
     """
@@ -84,7 +87,7 @@ def load_peaklists_from_hdf5(filename: str):
 
     def _loadpkl(ID):
         dset = f[ID]
-        if dset.attrs.get('class', '') != 'PeakList':
+        if _convByteStr(dset.attrs.get('class', '')) != 'PeakList':
             raise IOError('unknown object found in the database')
 
         dm = dset.value
@@ -170,7 +173,7 @@ def load_peak_matrix_from_hdf5(filename):
         raise IOError('input database missing crucial attribute [mz]')
 
     dset = f['mz']
-    if dset.attrs.get('class', '') != 'PeakMatrix':
+    if _convByteStr(dset.attrs.get('class', '')) != 'PeakMatrix':
         raise IOError('input database is not a valid PeakMatrix')
     attl = dset.attrs['attributes'].astype(str)
     pids = dset.attrs['peaklist_ids'].astype(str)
