@@ -7,9 +7,6 @@ import dimspy
 
 def main():
 
-    if sys.version_info[0] != 2 and sys.version_info[1] <= 7:
-        sys.exit("Python-2.7.8 is required ")
-
     setuptools.setup(name="dimspy",
         version=dimspy.__version__,
         description="Python package for data processing of direct-infusion mass spectrometry-based metabolomics and lipidomics data",
@@ -22,11 +19,12 @@ def main():
         keywords=['Metabolomics', 'Lipidomics', 'Mass spectrometry', 'Data Processing', 'Direct-Infusion Mass Spectrometry'],
         packages=setuptools.find_packages(),
         test_suite='tests.suite',
+        python_requires='>=3.7',
         install_requires=open('requirements.txt').read().splitlines(),
         include_package_data=True,
         classifiers=[
-          "Programming Language :: Python :: 2",
-          "Programming Language :: Python :: 2.7",
+          "Programming Language :: Python :: 3",
+          "Programming Language :: Python :: 3.7",
           "Topic :: Scientific/Engineering :: Bio-Informatics",
           "Topic :: Scientific/Engineering :: Chemistry",
           "Topic :: Utilities",
