@@ -2,7 +2,7 @@ build: false
 
 environment:
   matrix:
-    - PYTHON_VERSION: 2.7
+    - PYTHON_VERSION: 3.7
       MINICONDA: C:\Miniconda-x64
 
 init:
@@ -13,9 +13,9 @@ install:
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
   - conda info -a
-  - "conda create -q -n test-environment python=%PYTHON_VERSION% numpy=1.13.0 scipy=0.19.1 pythonnet=2.3.0 h5py=2.7.0 fastcluster=1.1.23 -c conda-forge -c bioconda -c pythonnet"
+  - "conda create -q -n test-environment python=%PYTHON_VERSION% numpy=1.16.2 scipy=1.1.0 pythonnet=2.4.0 h5py=2.8.0 fastcluster=1.1.25 -c conda-forge -c bioconda -c pythonnet"
   - activate test-environment
-  - pip install pymzml==0.7.8
+  - pip install pymzml==2.0.6
   - python setup.py install
 
 test_script:
