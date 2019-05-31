@@ -42,10 +42,9 @@ class WorkflowTestCase(unittest.TestCase):
         pls_comp = load_peaklists_from_hdf5(to_test_data("MTBLS79_mzml_single.hdf5"))
         # with open(to_test_result("test_pm_mzml.txt"), "w") as out: out.write(pls[0].to_str("\t"))  # creating test set
         # with open(to_test_result("test_pm_mzml_comp.txt"), "w") as out: out.write(pls_comp[0].to_str("\t"))  # creating test set
-        self.assertEqual([pl.to_str() for pl in pls], [pl.to_str() for pl in pls_comp])
         with open(to_test_result("MTBLS79_mzml_single_report.txt"), "r", newline=None) as test_result:
             with open(to_test_data("MTBLS79_mzml_single_report.txt"), "r", newline=None) as comp:
-                self.assertEqual(test_result.read(), comp.read())
+                self.assertMultiLineEqual(test_result.read(), comp.read())
 
         pls = process_scans(to_test_result("zip_data"), function_noise="median",
                             snr_thres=3.0, min_scans=1, ppm=2.0, min_fraction=0.5, rsd_thres=30.0,
@@ -56,7 +55,8 @@ class WorkflowTestCase(unittest.TestCase):
         pls_comp = load_peaklists_from_hdf5(to_test_data("MTBLS79_mzml_frac_rsd.hdf5"))
         # with open(to_test_result("test_pl_frac_rsd.txt"), "w") as out: out.write(pls[0].to_str("\t"))  # creating test set
         # with open(to_test_result("test_pl_frac_rsd_comp.txt"), "w") as out: out.write(pls_comp[0].to_str("\t"))  # creating test set
-        self.assertEqual([pl.to_str() for pl in pls], [pl.to_str() for pl in pls_comp])
+        for i, pl in enumerate(pls):
+            self.assertMultiLineEqual(pls[i].to_str(), pls_comp[i].to_str())
 
     def test_process_scans_raw_path(self):
         pls = process_scans(to_test_data("raw", "batch04_QC17_rep01_262.RAW"), function_noise="noise_packets",
@@ -69,9 +69,8 @@ class WorkflowTestCase(unittest.TestCase):
 
         # with open(to_test_result("test_pl_raw.txt"), "w") as out: out.write(pls[0].to_str("\t"))  # creating test set
         # with open(to_test_result("test_pl_comp_raw.txt"), "w") as out: out.write(pls_comp[0].to_str("\t"))  # creating test set
-    """
-        self.assertEqual([pl.to_str() for pl in pls], [pl.to_str() for pl in pls_comp])
-    """
+        for i, pl in enumerate(pls):
+            self.assertMultiLineEqual(pls[i].to_str(), pls_comp[i].to_str())
 
     def test_replicate_filter(self):
         # pls = process_scans(to_test_data("MTBLS79_mzml_triplicates.zip"), function_noise="median",  # creating test set
@@ -88,12 +87,15 @@ class WorkflowTestCase(unittest.TestCase):
         pls_rf_comp = load_peaklists_from_hdf5(to_test_data("MTBLS79_mzml_triplicates_rf.hdf5"))
         # with open(to_test_result("test_pl_rf.txt"), "w") as out: out.write(pls_rf[0].to_str("\t"))  # creating test set
         # with open(to_test_result("test_pl_rf_comp.txt"), "w") as out: out.write(pls_rf_comp[0].to_str("\t"))  # creating test set
-        """
-        self.assertEqual([pl.to_str() for pl in pls_rf], [pl.to_str() for pl in pls_rf_comp])
+
+        for i, pl in enumerate(pls_rf):
+            self.assertMultiLineEqual(pls_rf[i].to_str(), pls_rf_comp[i].to_str())
+
+        #self.assertMultiLineEqual([pl.to_str() for pl in pls_rf], [pl.to_str() for pl in pls_rf_comp])
         with open(to_test_result("MTBLS79_mzml_triplicates_report.txt"), "r", newline=None) as test_result:
             with open(to_test_data("MTBLS79_mzml_triplicates_report.txt"), "r", newline=None) as comp:
-                self.assertEqual(test_result.read(), comp.read())
-        """
+                self.assertMultiLineEqual(test_result.read(), comp.read())
+
         pls_rf = replicate_filter(pls, ppm=2.0, replicates=3, min_peaks=2, rsd_thres=None,
                                   filelist=to_test_data("filelist_mzml_triplicates.txt"),
                                   report=None, block_size=5000, ncpus=None)
@@ -101,9 +103,9 @@ class WorkflowTestCase(unittest.TestCase):
         pls_rf_comp = load_peaklists_from_hdf5(to_test_data("MTBLS79_mzml_triplicates_rf_2.hdf5"))
         # with open(to_test_result("test_pl_rf_2.txt"), "w") as out: out.write(pls_rf[0].to_str("\t"))  # creating test set
         # with open(to_test_result("test_pl_rf_2_comp.txt"), "w") as out: out.write(pls_rf_comp[0].to_str("\t"))  # creating test set
-    """
-        self.assertEqual([pl.to_str() for pl in pls_rf], [pl.to_str() for pl in pls_rf_comp])
-    """
+        for i, pl in enumerate(pls_rf):
+            self.assertMultiLineEqual(pls_rf[i].to_str(), pls_rf_comp[i].to_str())
+
     def test_align_samples(self):
         # pls = process_scans(to_test_data("MTBLS79_mzml_triplicates.zip"), function_noise="median",  # creating test set
         #                     snr_thres=3.0, min_scans=1, ppm=2.0, min_fraction=None, rsd_thres=None,  # creating test set
@@ -116,8 +118,8 @@ class WorkflowTestCase(unittest.TestCase):
         pm_comp = load_peak_matrix_from_hdf5(to_test_data("MTBLS79_mzml_peak_matrix.hdf5"))
         # with open(to_test_result("test_pm_as.txt"), "w") as out: out.write(pm.to_str())  # creating test set
         # with open(to_test_result("test_pm_as_comp.txt"), "w") as out: out.write(pm_comp.to_str())  # creating test set
-        self.assertEqual(pm.to_str(), pm_comp.to_str())
-        self.assertEqual(pm.to_peaklist("pl").to_str(), pm_comp.to_peaklist("pl").to_str())
+        self.assertMultiLineEqual(pm.to_str(), pm_comp.to_str())
+        self.assertMultiLineEqual(pm.to_peaklist("pl").to_str(), pm_comp.to_peaklist("pl").to_str())
 
         pls = load_peaklists_from_hdf5(to_test_data("MTBLS79_mzml_triplicates_rf.hdf5"))
         pm = align_samples(pls, ppm=2.0, filelist=None, block_size=5000, ncpus=None)
@@ -125,8 +127,8 @@ class WorkflowTestCase(unittest.TestCase):
         pm_comp = load_peak_matrix_from_hdf5(to_test_data("MTBLS79_mzml_peak_matrix_rf.hdf5"))
         # with open(to_test_result("test_pm_as_rf.txt"), "w") as out: out.write(pm.to_str())  # creating test set
         # with open(to_test_result("test_pm_as_rf_comp.txt"), "w") as out: out.write(pm_comp.to_str())  # creating test set
-        self.assertEqual(pm.to_str(), pm_comp.to_str())
-        self.assertEqual(pm.to_peaklist("pl").to_str(), pm_comp.to_peaklist("pl").to_str())
+        self.assertMultiLineEqual(pm.to_str(), pm_comp.to_str())
+        self.assertMultiLineEqual(pm.to_peaklist("pl").to_str(), pm_comp.to_peaklist("pl").to_str())
 
 
     def test_blank_filter(self):
@@ -137,8 +139,8 @@ class WorkflowTestCase(unittest.TestCase):
         pm_comp = load_peak_matrix_from_hdf5(to_test_data("MTBLS79_mzml_peak_matrix_bf.hdf5"))
         # with open(to_test_result("test_pm_bf.txt"), "w") as out: out.write(pm.to_str())  # creating test set
         # with open(to_test_result("test_pm_bf_comp.txt"), "w") as out: out.write(pm_comp.to_str())  # creating test set
-        self.assertEqual(pm_bf.to_str(), pm_comp.to_str())
-        self.assertEqual(pm_bf.to_peaklist("pl").to_str(), pm_comp.to_peaklist("pl").to_str())
+        self.assertMultiLineEqual(pm_bf.to_str(), pm_comp.to_str())
+        self.assertMultiLineEqual(pm_bf.to_peaklist("pl").to_str(), pm_comp.to_peaklist("pl").to_str())
 
     def test_sample_filter(self):
         pm = load_peak_matrix_from_hdf5(to_test_data("MTBLS79_mzml_peak_matrix_bf.hdf5"))
@@ -147,8 +149,8 @@ class WorkflowTestCase(unittest.TestCase):
         pm_comp = load_peak_matrix_from_hdf5(to_test_data("MTBLS79_mzml_peak_matrix_sf.hdf5"))
         # with open(to_test_result("test_pm_sf.txt"), "w") as out: out.write(pm.to_str())  # creating test set
         # with open(to_test_result("test_pm_sf_comp.txt"), "w") as out: out.write(pm_comp.to_str())  # creating test set
-        self.assertEqual(pm_sf.to_str(), pm_comp.to_str())
-        self.assertEqual(pm_sf.to_peaklist("pl").to_str(), pm_comp.to_peaklist("pl").to_str())
+        self.assertMultiLineEqual(pm_sf.to_str(), pm_comp.to_str())
+        self.assertMultiLineEqual(pm_sf.to_peaklist("pl").to_str(), pm_comp.to_peaklist("pl").to_str())
 
     def test_remove_samples(self):
         pm = load_peak_matrix_from_hdf5(to_test_data("MTBLS79_mzml_peak_matrix.hdf5"))
@@ -195,7 +197,8 @@ class WorkflowTestCase(unittest.TestCase):
         pls_merged = merge_peaklists([pls_rep_01, pls_rep_02, pls_rep_03])
         # save_peaklists_as_hdf5(pls_merged, to_test_data("MTBLS79__01_262_02_263.hdf5"))  # creating test set
         pls_comp = load_peaklists_from_hdf5(to_test_data("MTBLS79__01_262_02_263.hdf5"))
-        self.assertEqual([pl.to_str() for pl in pls_merged], [pl.to_str() for pl in pls_comp])
+        for i, pl in enumerate(pls_merged):
+            self.assertMultiLineEqual(pls_merged[i].to_str(), pls_comp[i].to_str())
 
     def test_merge_peaklist_multilist(self):
 
@@ -211,10 +214,13 @@ class WorkflowTestCase(unittest.TestCase):
         merged_comp_01 = load_peaklists_from_hdf5(to_test_data("merged_0.hdf5"))
         merged_comp_02 = load_peaklists_from_hdf5(to_test_data("merged_1.hdf5"))
 
-        self.assertEqual(len([pl.to_str() for pl in merged_peaklists[0]]), 2)
-        self.assertEqual(len([pl.to_str() for pl in merged_peaklists[1]]), 1)
-        self.assertEqual([pl.to_str() for pl in merged_peaklists[0]], [pl.to_str() for pl in merged_comp_01])
-        self.assertEqual([pl.to_str() for pl in merged_peaklists[1]], [pl.to_str() for pl in merged_comp_02])
+        self.assertEqual(len(merged_peaklists[0]), 2)
+        self.assertEqual(len(merged_peaklists[1]), 1)
+
+        for i, pl in enumerate(merged_peaklists[0]):
+            self.assertMultiLineEqual(merged_peaklists[0][i].to_str(), merged_comp_01[i].to_str())
+        for i, pl in enumerate(merged_peaklists[1]):
+            self.assertMultiLineEqual(merged_peaklists[1][i].to_str(), merged_comp_02[i].to_str())
 
     def test_hdf5_peaklists_to_txt(self):
         hdf5_peaklists_to_txt(to_test_data("MTBLS79_mzml_triplicates.hdf5"), to_test_result(""), delimiter="\t")
@@ -222,7 +228,6 @@ class WorkflowTestCase(unittest.TestCase):
             with open(to_test_result(fn), "r", newline=None) as test_result:
                 with open(to_test_data(fn), "r", newline=None) as comp:
                     self.assertEqual(test_result.read(), comp.read())
-
 
     def test_hdf5_peak_matrix_to_txt(self):
 
@@ -237,7 +242,7 @@ class WorkflowTestCase(unittest.TestCase):
                                 attr_name="intensity", rsd_tags=(Tag("QC", "classLabel"),), delimiter="\t", samples_in_rows=True, comprehensive=True)
         with open(to_test_result("pm_mzml_triplicates_comprehensive.txt"), "r", newline=None) as test_result:
             ln = test_result.readline().split("\t")[:8]
-            self.assertEqual(ln[:-2], ['mz', 'missing values', 'tags_batch', 'tags_replicate', 'tags_injectionOrder', 'tags_classLabel'])
+            self.assertEqual(set(ln[:-2]), set(['mz', 'missing values', 'tags_classLabel', 'tags_replicate', 'tags_injectionOrder', 'tags_batch']))
             self.assertTrue(np.isclose(float(ln[-1]), 74.0166655257))
 
         hdf5_peak_matrix_to_txt(to_test_data("MTBLS79_mzml_peak_matrix.hdf5"), to_test_result("pm_mzml_triplicates_snr.txt"),
@@ -250,25 +255,23 @@ class WorkflowTestCase(unittest.TestCase):
         hdf5_peak_matrix_to_txt(to_test_data("MTBLS79_mzml_peak_matrix.hdf5"), to_test_result("pm_mzml_triplicates_comprehensive_T.txt"),
                                 attr_name="intensity", rsd_tags=(Tag("QC", "classLabel"),), delimiter="\t", samples_in_rows=False, comprehensive=True)
         with open(to_test_result("pm_mzml_triplicates_comprehensive_T.txt"), "r", newline=None) as test_result:
-            self.assertEqual(test_result.readline().split("\t")[0:5],
-                              ['mz', 'present', 'occurrence', 'purity', 'rsd_QC'])
-
+            self.assertEqual(test_result.readline().split("\t")[0:5], ['mz', 'present', 'occurrence', 'purity', 'rsd_QC'])
 
     def test_create_sample_list(self):
         pls = load_peaklists_from_hdf5(to_test_data("MTBLS79_mzml_triplicates.hdf5"))
         create_sample_list(pls, to_test_result("filelist_csl_MTBLS79_mzml_triplicates.txt"))
         with open(to_test_result("filelist_csl_MTBLS79_mzml_triplicates.txt"), "r", newline=None) as test_result:
             with open(to_test_data("filelist_csl_MTBLS79_mzml_triplicates.txt"), "r", newline=None) as comp:
-                self.assertEqual(test_result.read(), comp.read())
+                self.assertMultiLineEqual(test_result.read(), comp.read())
 
         pm = load_peak_matrix_from_hdf5(to_test_data("MTBLS79_mzml_peak_matrix.hdf5"))
         create_sample_list(pm, to_test_result("filelist_csl_MTBLS79_mzml_peak_matrix.txt"))
         with open(to_test_result("filelist_csl_MTBLS79_mzml_peak_matrix.txt"), "r", newline=None) as test_result:
             with open(to_test_data("filelist_csl_MTBLS79_mzml_peak_matrix.txt"), "r", newline=None) as comp:
-                self.assertEqual(test_result.read(), comp.read())
+                self.assertMultiLineEqual(test_result.read(), comp.read())
 
         pm = load_peaklists_from_hdf5(to_test_data("MTBLS79_mzml_triplicates_rf.hdf5"))
         create_sample_list(pm, to_test_result("filelist_csl_MTBLS79_mzml_triplicates_rf.txt"))
         with open(to_test_result("filelist_csl_MTBLS79_mzml_triplicates_rf.txt"), "r", newline=None) as test_result:
             with open(to_test_data("filelist_csl_MTBLS79_mzml_triplicates_rf.txt"), "r", newline=None) as comp:
-                self.assertEqual(test_result.read(), comp.read())
+                self.assertMultiLineEqual(test_result.read(), comp.read())
