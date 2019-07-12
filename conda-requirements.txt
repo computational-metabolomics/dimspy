@@ -1,9 +1,9 @@
 # Use this file to create a conda environment using:
 # conda create -n dimspy python=2.7 --file conda-requirements.txt -c conda-forge -c bioconda
 
-numpy=1.13.0
-scipy=0.19.1
+numpy=1.13.3
+scipy=1.1.0
 fastcluster=1.1.23
-pymzml=0.7.8
+pymzml=0.7.10
 h5py=2.7.0
 pythonnet=2.3.0
