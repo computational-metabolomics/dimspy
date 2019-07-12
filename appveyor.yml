@@ -13,9 +13,9 @@ install:
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
   - conda info -a
-  - "conda create -q -n test-environment python=%PYTHON_VERSION% numpy=1.13.0 scipy=0.19.1 pythonnet=2.3.0 h5py=2.7.0 fastcluster=1.1.23 -c conda-forge -c bioconda -c pythonnet"
+  - "conda create -q -n test-environment python=%PYTHON_VERSION% numpy=1.13.3 scipy=1.1.0 pythonnet=2.3.0 h5py=2.7.0 fastcluster=1.1.23 -c conda-forge -c bioconda -c pythonnet"
   - activate test-environment
-  - pip install pymzml==0.7.8
+  - pip install pymzml==0.7.10
   - python setup.py install
 
 test_script:
