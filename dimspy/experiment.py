@@ -109,7 +109,7 @@ def interpret_experiment(mzrs):
         print "SIM-Stitch experiment - Overlapping m/z windows....."
         experiment = "overlapping"
     else:
-        raise IOError("SIM-Stitch cannot be applied; 'filter_scan_events' required or set 'skip_stitching' to False")
+        raise IOError("SIM-Stitch cannot be applied; 'filter_scan_events' required or set 'skip_stitching' to True")
 
     return experiment
 
