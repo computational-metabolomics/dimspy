@@ -6,4 +6,4 @@ scipy=1.1.0
 fastcluster=1.1.23
 pymzml=0.7.10
 h5py=2.7.0
-pythonnet=2.3.0
+pythonnet=2.4.0
