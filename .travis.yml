@@ -12,9 +12,9 @@ install:
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
   - conda info -a
-
-  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION coverage green codecov --file conda-requirements.txt -c conda-forge -c bioconda
+  - conda env create -n test-environment -f environment.yml
   - source activate test-environment
+  - conda install coverage green codecov -c conda-forge
   - python setup.py install
 
 script:
