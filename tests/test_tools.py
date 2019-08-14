@@ -84,7 +84,7 @@ class WorkflowTestCase(unittest.TestCase):
                                   block_size=5000, ncpus=None)
 
         # save_peaklists_as_hdf5(pls_rf, to_test_data("MTBLS79_mzml_triplicates_rf.hdf5"))  # creating test set
-        pls_rf_comp = load_peaklists_from_hdf5(to_test_data("MTBLS79_mzml_triplicates_rf.hdf5"))
+        pls_rf_comp = load_peaklists_from_hdf5(to_test_data("MTBLS79_mzml_triplicates_rf.hdf5"), compatibleMode=True)
         # with open(to_test_result("test_pl_rf.txt"), "w") as out: out.write(pls_rf[0].to_str("\t"))  # creating test set
         # with open(to_test_result("test_pl_rf_comp.txt"), "w") as out: out.write(pls_rf_comp[0].to_str("\t"))  # creating test set
 
@@ -115,7 +115,7 @@ class WorkflowTestCase(unittest.TestCase):
         pls = load_peaklists_from_hdf5(to_test_data("MTBLS79_mzml_triplicates.hdf5"), compatibleMode=True)
         pm = align_samples(pls, ppm=2.0, filelist=None, block_size=5000, ncpus=None)
         # save_peak_matrix_as_hdf5(pm, to_test_data("MTBLS79_mzml_peak_matrix.hdf5"), compatibleMode=True) # creating test set
-        pm_comp = load_peak_matrix_from_hdf5(to_test_data("MTBLS79_mzml_peak_matrix.hdf5"))
+        pm_comp = load_peak_matrix_from_hdf5(to_test_data("MTBLS79_mzml_peak_matrix.hdf5"), compatibleMode=True)
         # with open(to_test_result("test_pm_as.txt"), "w") as out: out.write(pm.to_str())  # creating test set
         # with open(to_test_result("test_pm_as_comp.txt"), "w") as out: out.write(pm_comp.to_str())  # creating test set
         self.assertMultiLineEqual(pm.to_str(), pm_comp.to_str())
