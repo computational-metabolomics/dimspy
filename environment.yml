@@ -11,3 +11,5 @@ dependencies:
  - h5py=2.8.0
  - pythonnet=2.4.0
  - fastcluster=1.1.25
+ - pytables=3.5.2
+ 
