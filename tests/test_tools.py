@@ -223,7 +223,7 @@ class WorkflowTestCase(unittest.TestCase):
             self.assertMultiLineEqual(merged_peaklists[1][i].to_str(), merged_comp_02[i].to_str())
 
     def test_hdf5_peaklists_to_txt(self):
-        hdf5_peaklists_to_txt(to_test_data("MTBLS79_mzml_triplicates.hdf5"), to_test_result(""), delimiter="\t")
+        hdf5_peaklists_to_txt(to_test_data("MTBLS79_mzml_triplicates.hdf5", compatibleMode=True), to_test_result(""), delimiter="\t")
         for fn in ["batch04_QC17_rep01_262.txt", "batch04_QC17_rep02_263.txt", "batch04_QC17_rep03_264.txt"]:
             with open(to_test_result(fn), "r", newline=None) as test_result:
                 with open(to_test_data(fn), "r", newline=None) as comp:
