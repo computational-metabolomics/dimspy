@@ -16,7 +16,8 @@ import logging
 import numpy as np
 from typing import  Sequence, Tuple, Any, Union
 from functools import reduce
-from collections import OrderedDict, Iterable
+from collections import OrderedDict
+from collections.abc import Iterable
 from .peaklist_tags import Tag, PeakList_Tags
 from .peaklist import PeakList
 
@@ -637,7 +638,7 @@ class PeakMatrix(object):
         :param masked_only: whether the indices are for unmasked samples or all samples. Default = True
         :rtype: PeakMatrix object (self)
 
-        """        
+        """
         if isinstance(sample_ids, Iterable): sample_ids = list(sample_ids)
         rmids = np.where(~self.mask)[0][sample_ids] if masked_only else sample_ids
         self._pids = np.delete(self._pids, rmids, axis=0)

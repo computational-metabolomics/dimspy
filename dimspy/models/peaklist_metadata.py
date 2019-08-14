@@ -45,9 +45,6 @@ class PeakList_Metadata(dict):
 
     """
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
     def __getattr__(self, item):
         return self[item] if item in self else super().__getattribute__(item)
 

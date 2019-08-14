@@ -185,5 +185,5 @@ def filter_blank_peaks(pm: PeakMatrix, blank_tag: Any, fraction_threshold: Union
         m.add_flag(flag_name, ~((ints > 0) & faild_int))
 
     if rm_blanks:
-        pm = pm.remove_samples(np.where([x.has_tag(blank_tag) for x in pm.peaklist_tags]))
+        pm = pm.remove_samples(np.where([x.has_tag(blank_tag) for x in pm.peaklist_tags])[0])
     return pm

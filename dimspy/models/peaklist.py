@@ -14,7 +14,8 @@ import logging, warnings
 import numpy as np
 import numpy.lib.recfunctions as rfn
 from typing import Callable, Sequence, Mapping, Union, Type
-from collections import OrderedDict, Iterable
+from collections import OrderedDict
+from collections.abc import Iterable
 from copy import deepcopy
 from .peaklist_metadata import PeakList_Metadata
 from .peaklist_tags import PeakList_Tags
@@ -305,7 +306,7 @@ class PeakList(object):
         """
         self._flags = np.ones_like(self._flags) if len(self._flag_attrs) == 0 else \
             np.sum(self._dtable[self._flag_attrs].tolist(), axis=1) == len(self._flag_attrs)
-        if self.size == 0: logging.warning('all peaks are removed for peaklist [%s]' % str(self.ID))
+        if self.size == 0: logging.warning('all peaks are removed for peaklist [%s]', str(self.ID))
         return self.flags
 
     # attribute operations
@@ -353,7 +354,7 @@ class PeakList(object):
         adt = bool if is_flag else \
               attr_dtype if attr_dtype is not None else \
               attr_value.dtype.str if hasattr(attr_value, 'dtype') else \
-              ('S%d' % max(map(len, attr_value))) if isinstance(attr_value[0], str) else \
+              ('U%d' % max(map(len, attr_value))) if isinstance(attr_value[0], str) else \
               type(attr_value[0])
         if adt in (bool, 'bool', '|b1'): adt = 'b'  # fix numpy dtype bug
 
@@ -534,7 +535,7 @@ class PeakList(object):
         rmid = np.where(self._flags)[0][peak_index] if flagged_only else peak_index
         self._dtable = np.delete(self._dtable, rmid)
         self._flags = np.delete(self._flags, rmid)
-        if self.size == 0: logging.warning('all peaks are removed for peaklist [%s]' % str(self.ID))
+        if self.size == 0: logging.warning('all peaks are removed for peaklist [%s]', str(self.ID))
         return self
 
     def cleanup_unflagged_peaks(self, flag_name: Union[str, None] = None):
@@ -566,7 +567,7 @@ class PeakList(object):
         rmids = np.where((self._flags if flag_name is None else self._dtable[flag_name]) == 0)
         self._dtable = np.delete(self._dtable, rmids)
         self._flags = np.delete(self._flags, rmids)
-        if self.size == 0: logging.warning('all peaks are removed for peaklist [%s]' % str(self.ID))
+        if self.size == 0: logging.warning('all peaks are removed for peaklist [%s]', str(self.ID))
         return self
 
     # exports

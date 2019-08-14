@@ -44,7 +44,6 @@ class HDF5PortalsTestCase(unittest.TestCase):
         for p in pkls: p.add_attribute('snr', np.random.uniform(300, 400, size = 100))
         for p in pkls: p.add_attribute('quad_flag', [0, 1, 1, 1] * 25, is_flag = True)
         for p in pkls: p.add_attribute('lab', [chr(i%26+97) for i in range(100)], flagged_only = False)
-        for p in pkls: p.add_attribute('lab_str', np.string_([chr(i%26+97) for i in range(100)]), flagged_only = False)
         return pkls
 
     def test_peaklist_portal(self):

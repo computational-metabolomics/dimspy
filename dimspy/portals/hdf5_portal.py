@@ -14,6 +14,7 @@ The PeakList and PeakMatrix HDF5 portals.
 import os, logging, zlib, h5py
 import pickle as cp
 import numpy as np
+import tables as ptb
 from typing import Sequence
 from ast import literal_eval
 from dimspy.models.peaklist_tags import Tag, PeakList_Tags
@@ -35,7 +36,7 @@ _convByteStr = lambda x: x if isinstance(x, str) else x.decode('utf-8')
 
 
 # peaklists portals
-def save_peaklists_as_hdf5(pkls: Sequence[PeakList], filename: str):
+def save_peaklists_as_hdf5(pkls: Sequence[PeakList], filename: str, compatibleMode: bool = False):
     """
     Saves multiple peaklists in a HDF5 file.
 
@@ -47,10 +48,12 @@ def save_peaklists_as_hdf5(pkls: Sequence[PeakList], filename: str):
 
     """
     if os.path.isfile(filename):
-        logging.warning('HDF5 database [%s] already exists and override' % filename)
-    f = h5py.File(filename, 'w')
+        logging.warning('HDF5 database [%s] already exists and override', filename)
 
-    def _savepkl(i, pkl):
+    if compatibleMode: logging.warning('DeprecationWarning: exporting HDF file in the old format')
+    f = h5py.File(filename, 'w') if compatibleMode else ptb.open_file(filename, mode = 'w')
+
+    def _old_savepkl(i, pkl):
         if pkl.ID in f.keys():
             raise IOError('peaklist [%s] already exists' % pkl.ID)
 
@@ -66,10 +69,28 @@ def save_peaklists_as_hdf5(pkls: Sequence[PeakList], filename: str):
         dset.attrs['tags'] = np.string_([(t or 'None', v) for v,t in pkl.tags.to_list()])
         for k, v in pkl.metadata.items(): dset.attrs['metadata_' + k] = _packMeta(v)
 
-    for pl in enumerate(pkls): _savepkl(*pl)
+    def _savepkl(i, pkl):
+        dns, dts = zip(*pkl.dtable.dtype.descr)
+        desc = type('_struct_array', (ptb.IsDescription,), {dn: ptb.Col.from_dtype(np.dtype(dt)) for dn,dt in zip(dns,dts)})
+        dset = ptb.Table(f.root, pkl.ID, desc)
+
+        dset.append([pkl.get_attribute(n, flagged_only = False) for n in dset.colnames])
+
+        dset.attrs.data_class = 'PeakList'
+        dset.attrs.order = i
+        dset.attrs.dtable_names = dns
+        dset.attrs.dtable_types = dts
+        dset.attrs.flag_attrs = np.array(pkl.flag_attributes)
+
+        dset.attrs.tags = np.array([(t or 'None', v) for v,t in pkl.tags.to_list()])
+        for k, v in pkl.metadata.items(): setattr(dset.attrs, 'metadata_' + k, _packMeta(v))
+ 
+    _save = _old_savepkl if compatibleMode else _savepkl
+    for pl in enumerate(pkls): _save(*pl)
+    f.close()
 
 
-def load_peaklists_from_hdf5(filename: str):
+def load_peaklists_from_hdf5(filename: str, compatibleMode: bool = False):
     """
     Loads a list of peaklist objects from a HDF5 file.
 
@@ -83,14 +104,15 @@ def load_peaklists_from_hdf5(filename: str):
         raise IOError('HDF5 database [%s] does not exist' % filename)
     if not h5py.is_hdf5(filename):
         raise IOError('input file [%s] is not a valid HDF5 database' % filename)
-    f = h5py.File(filename, 'r')
+    if compatibleMode: logging.warning('DeprecationWarning: loading HDF file in the old format')
+    f = h5py.File(filename, 'r') if compatibleMode else ptb.open_file(filename, mode = 'r')
 
-    def _loadpkl(ID):
+    def _old_loadpkl(ID):
         dset = f[ID]
         if _convByteStr(dset.attrs.get('class', '')) != 'PeakList':
             raise IOError('unknown object found in the database')
 
-        dm = dset.value
+        dm = dset[:]
         dn = dset.attrs['dtable_names'].astype(str)
         dt = dset.attrs['dtable_types'].astype(str)
 
@@ -105,11 +127,35 @@ def load_peaklists_from_hdf5(filename: str):
         for t,v in map(lambda x: x.astype(str), dset.attrs['tags']): pkl.tags.add_tag(_eval(v), None if t == 'None' else t)
         return dset.attrs['order'], pkl
 
-    return list(zip(*sorted(map(_loadpkl, f.keys()))))[1]
+    def _loadpkl(dset):
+        if dset.attrs.data_class != 'PeakList':
+            raise IOError('unknown object found in the database')
+
+        dn = dset.attrs.dtable_names
+        dt = dset.attrs.dtable_types
+        dm = [np.array(dset.colinstances[n]) for n in dn]
+
+        if dn[0] != 'mz' or dn[1] != 'intensity':
+            raise IOError('PANIC: HDF5 dataset matrix not in order')
+        pkl = PeakList(dset.name, dm[0], dm[1], 
+                       **{k[9:]: _unpackMeta(getattr(dset.attrs, k)) for k in dset.attrs._f_list('user') if k.startswith('metadata_')})
+
+        for n, v, t in zip(dn[2:], dm[2:], dt[2:]):
+            pkl.add_attribute(n, v, t, is_flag = (n in dset.attrs.flag_attrs), flagged_only = False)
+
+        for t, v in map(lambda x: x.astype(str), dset.attrs.tags): pkl.tags.add_tag(_eval(v), None if t == 'None' else t)
+        return dset.attrs.order, pkl
+
+    pkls = [_old_loadpkl(dname) for dname in f.keys()] if compatibleMode else \
+           [_loadpkl(dset) for dset in f.walk_nodes('/', 'Table')]
+    pkls = list(zip(*sorted(pkls, key = lambda x: x[0])))[1]
+
+    f.close()
+    return pkls
 
 
 # peak matrix portals
-def save_peak_matrix_as_hdf5(pm: PeakMatrix, filename: str):
+def save_peak_matrix_as_hdf5(pm: PeakMatrix, filename: str, compatibleMode: bool = False):
     """
     Saves a peak matrix object to a HDF5 file.
 
@@ -120,42 +166,67 @@ def save_peak_matrix_as_hdf5(pm: PeakMatrix, filename: str):
 
     """
     if os.path.isfile(filename):
-        logging.warning('HDF5 database [%s] already exists and override' % filename)
-    f = h5py.File(filename, 'w')
+        logging.warning('HDF5 database [%s] already exists and override', filename)
 
-    def _saveattr(attr):
-        if attr in f.keys():
-            raise IOError('attribute [%s] already exists' % attr)
+    if compatibleMode: logging.warning('DeprecationWarning: exporting HDF file in the old format')
+    f = h5py.File(filename, 'w') if compatibleMode else ptb.open_file(filename, mode = 'w')
 
-        with unmask_all_peakmatrix(pm) as m:
-            dm = m.attr_matrix(attr, flagged_only = False)
+    def _old_savepm():
+        def _saveattr(attr):
+            with unmask_all_peakmatrix(pm) as m:
+                dm = m.attr_matrix(attr, flagged_only = False)
 
-        dt = np.float64 if dm.dtype.kind == 'f' else \
-             np.int64 if dm.dtype.kind in ('i', 'u') else \
-             ('S%d' % np.max([list(map(len,l)) for l in dm]))
+            dt = np.float64 if dm.dtype.kind == 'f' else \
+                 np.int64 if dm.dtype.kind in ('i', 'u') else \
+                 ('S%d' % np.max([list(map(len,l)) for l in dm]))
 
-        ds = f.create_dataset(attr, dm.shape, dtype=dt)
-        ds[...] = dm.astype(dt)
-        ds.attrs['dtype'] = dm.dtype.str
+            ds = f.create_dataset(attr, dm.shape, dtype=dt)
+            ds[...] = dm.astype(dt)
+            ds.attrs['dtype'] = dm.dtype.str
 
-    for a in pm.attributes: _saveattr(a)
+        for a in pm.attributes: _saveattr(a)
 
-    dset = f['mz']  # must exists in pm
-    dset.attrs['class'] = 'PeakMatrix'
-    dset.attrs['attributes'] = np.string_(pm.attributes)
-    dset.attrs['mask'] = pm.mask
+        dset = f['mz']  # must exists in pm
+        dset.attrs['class'] = 'PeakMatrix'
+        dset.attrs['attributes'] = np.string_(pm.attributes)
+        dset.attrs['mask'] = pm.mask
 
-    with unmask_all_peakmatrix(pm):
-        dset.attrs['peaklist_ids'] = np.string_(pm.peaklist_ids)
-        for i, tags in enumerate(pm.peaklist_tags):
-            dset.attrs['peaklist_tags_%d' % i] = np.string_([(t or 'None', v) for v,t in tags.to_list()])
+        with unmask_all_peakmatrix(pm):
+            dset.attrs['peaklist_ids'] = np.string_(pm.peaklist_ids)
+            for i, tags in enumerate(pm.peaklist_tags):
+                dset.attrs['peaklist_tags_%d' % i] = np.string_([(t or 'None', v) for v,t in tags.to_list()])
 
-        dset.attrs['flag_names'] = np.string_(pm.flag_names)
-        for fn in pm.flag_names:
-            dset.attrs[fn] = pm.flag_values(fn)
+            dset.attrs['flag_names'] = np.string_(pm.flag_names)
+            for fn in pm.flag_names:
+                dset.attrs[fn] = pm.flag_values(fn)
+
+    def _savepm():
+        def _saveattr(attr):
+            with unmask_all_peakmatrix(pm) as m:
+                dm = m.attr_matrix(a, flagged_only = False)
+                ds = f.create_array(f.root, a, dm)
+                ds.attrs.dtype = dm.dtype.str
+        for a in pm.attributes: _saveattr(a)
+
+        dset = f.root.mz  # must exists in pm
+        dset.attrs.data_class = 'PeakMatrix'
+        dset.attrs.attributes = pm.attributes
+        dset.attrs.mask = pm.mask
+
+        with unmask_all_peakmatrix(pm):
+            dset.attrs.peaklist_ids = pm.peaklist_ids
+            for i, tags in enumerate(pm.peaklist_tags):
+                dset.attrs['peaklist_tags_%d' % i] = np.array([(t or 'None', v) for v,t in tags.to_list()])
+
+            dset.attrs.flag_names = pm.flag_names
+            for fn in pm.flag_names:
+                dset.attrs[fn] = pm.flag_values(fn)
+
+    (_old_savepm if compatibleMode else _savepm)()
+    f.close()
 
 
-def load_peak_matrix_from_hdf5(filename):
+def load_peak_matrix_from_hdf5(filename: str, compatibleMode: bool = False):
     """
     Loads a peak matrix from a HDF5 file.
 
@@ -167,26 +238,44 @@ def load_peak_matrix_from_hdf5(filename):
         raise IOError('HDF5 database [%s] does not exist' % filename)
     if not h5py.is_hdf5(filename):
         raise IOError('input file [%s] is not a valid HDF5 database' % filename)
-    f = h5py.File(filename, 'r')
+    if compatibleMode: logging.warning('DeprecationWarning: loading HDF file in the old format')
+    f = h5py.File(filename, 'r') if compatibleMode else ptb.open_file(filename, mode = 'r')
 
-    if 'mz' not in f:
-        raise IOError('input database missing crucial attribute [mz]')
+    def _old_loadpm():
+        dset = f['mz']
+        if _convByteStr(dset.attrs.get('class', '')) != 'PeakMatrix':
+            raise IOError('input database is not a valid PeakMatrix')
+        attl = dset.attrs['attributes'].astype(str)
+        pids = dset.attrs['peaklist_ids'].astype(str)
+        mask = dset.attrs['mask']
 
-    dset = f['mz']
-    if _convByteStr(dset.attrs.get('class', '')) != 'PeakMatrix':
-        raise IOError('input database is not a valid PeakMatrix')
-    attl = dset.attrs['attributes'].astype(str)
-    pids = dset.attrs['peaklist_ids'].astype(str)
-    mask = dset.attrs['mask']
+        tatt = sorted([x for x in dset.attrs.keys() if x.startswith('peaklist_tags_')], key=lambda x: int(x[14:]))
+        ptgs = [PeakList_Tags(*[Tag(_eval(v), None if t == 'None' else t) for t,v in map(lambda x: x.astype(str), tags)]) for tags in [dset.attrs[x] for x in tatt]]
 
-    tatt = sorted([x for x in dset.attrs.keys() if x.startswith('peaklist_tags_')], key=lambda x: int(x[14:]))
-    ptgs = [PeakList_Tags(*[Tag(_eval(v), None if t == 'None' else t) for t,v in map(lambda x: x.astype(str), tags)]) for tags in [dset.attrs[x] for x in tatt]]
+        flgs = [(fn, dset.attrs[fn]) for fn in dset.attrs['flag_names'].astype(str)]
+        alst = [(attr, np.array(f[attr]).astype(f[attr].attrs['dtype'])) for attr in attl]
+        return pids, ptgs, alst, mask, flgs
 
-    flgs = [(fn, dset.attrs[fn]) for fn in dset.attrs['flag_names'].astype(str)]
-    alst = [(attr, np.array(f[attr]).astype(f[attr].attrs['dtype'])) for attr in attl]
+    def _loadpm():
+        dset = f.root.mz
+        if dset.attrs.data_class != 'PeakMatrix':
+            raise IOError('input database is not a valid PeakMatrix')
+        attl = dset.attrs.attributes
+        pids = dset.attrs.peaklist_ids
+        mask = dset.attrs.mask
 
-    pm = PeakMatrix(pids, ptgs, alst)
-    pm.mask = mask
-    for fn, fv in flgs: pm.add_flag(fn, fv, flagged_only = False)
+        tatt = sorted([x for x in dset.attrs._f_list('user') if x.startswith('peaklist_tags_')], key = lambda x: int(x[14:]))
+        ptgs = [PeakList_Tags(*[Tag(_eval(v), None if t == 'None' else t) for t, v in map(lambda x: x.astype(str), tags)]) for tags in [dset.attrs[x] for x in tatt]]
+
+        flgs = [(flg, dset.attrs[flg]) for flg in dset.attrs.flag_names]
+        alst = [(attr, f.root[attr].read().astype(f.root[attr].attrs.dtype)) for attr in attl]
+        return pids, ptgs, alst, mask, flgs
+
+    res = (_old_loadpm if compatibleMode else _loadpm)()
+    f.close()
+
+    pm = PeakMatrix(*res[:3])
+    pm.mask = res[3]
+    for fn, fv in res[4]: pm.add_flag(fn, fv, flagged_only=False)
     return pm
 

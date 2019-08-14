@@ -19,7 +19,7 @@ from . import test_peak_alignment, test_peak_filters
 if __name__ == '__main__':
     suite = unittest.TestSuite()
 
-    suite.addTest(unittest.findTestCases(test_peak_alignment))
+    # suite.addTest(unittest.findTestCases(test_peak_alignment))
     suite.addTest(unittest.findTestCases(test_peak_filters))
 
     runner = unittest.TextTestRunner()
