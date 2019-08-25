@@ -9,7 +9,6 @@ origin: 05-14-2017
 
 """
 
-
 import unittest, os
 import numpy as np
 from dimspy.models.peaklist_tags import Tag

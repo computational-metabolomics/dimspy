@@ -68,5 +68,6 @@ class PathsPortalsTestCase(unittest.TestCase):
         with self.assertRaises(IOError):
             paths.check_paths(fn_filelist_mzml, source_mzml)
 
+
 if __name__ == '__main__':
     unittest.main()
