@@ -4,7 +4,7 @@ channels:
   - bioconda
 dependencies:
  - python=3.7
- - mono # https://www.mono-project.com/
+ - mono # [not win]
  - numpy=1.16.2
  - scipy=1.1.0
  - pymzml=2.2.3
