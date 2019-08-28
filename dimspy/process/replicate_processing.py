@@ -117,8 +117,7 @@ def read_scans(fn, source, function_noise, min_scans=1, filter_scan_events=None)
         else:
             logging.warning('Not enough scans for [{}] [{} < {}]. Scan event {} has been removed.'.format(h, len(scans), min_scans, h))
 
-    if fn.lower().endswith(".raw"):
-        run.close()
+    run.close()
 
     return scans
 
