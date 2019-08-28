@@ -28,8 +28,7 @@ class Mzml:
         if not self.filename.lower().endswith(".mzml") and not self.filename.lower().endswith(".mzml.gz"):
             raise IOError('Incorrect file format for mzML parser')
 
-        # run = pymzml.run.Reader(self.filename)
-        # run.info["file_object"].close()
+        self.run = pymzml.run.Reader(self.filename)
 
     def headers(self, n=None):
         h_sids = collections.OrderedDict()
@@ -135,3 +134,8 @@ class Mzml:
                         l.append([spectrum_ref, scan_id])
         run.info["file_object"].close()
         return l
+
+    def close(self):
+        self.run.info["file_object"].close()
+        
+    
