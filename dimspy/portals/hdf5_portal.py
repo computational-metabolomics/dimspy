@@ -36,7 +36,7 @@ _convByteStr = lambda x: x if isinstance(x, str) else x.decode('utf-8')
 
 
 # peaklists portals
-def save_peaklists_as_hdf5(pkls: Sequence[PeakList], filename: str, compatibleMode: bool = False):
+def save_peaklists_as_hdf5(pkls: Sequence[PeakList], filename: str, compatibility_mode: bool = False):
     """
     Saves multiple peaklists in a HDF5 file.
 
@@ -50,8 +50,8 @@ def save_peaklists_as_hdf5(pkls: Sequence[PeakList], filename: str, compatibleMo
     if os.path.isfile(filename):
         logging.warning('HDF5 database [%s] already exists and override', filename)
 
-    if compatibleMode: logging.warning('DeprecationWarning: exporting HDF file in the old format')
-    f = h5py.File(filename, 'w') if compatibleMode else ptb.open_file(filename, mode = 'w')
+    if compatibility_mode: logging.warning('DeprecationWarning: exporting HDF file in the old format')
+    f = h5py.File(filename, 'w') if compatibility_mode else ptb.open_file(filename, mode = 'w')
 
     def _old_savepkl(i, pkl):
         if pkl.ID in f.keys():
@@ -85,12 +85,12 @@ def save_peaklists_as_hdf5(pkls: Sequence[PeakList], filename: str, compatibleMo
         dset.attrs.tags = np.array([(t or 'None', v) for v,t in pkl.tags.to_list()])
         for k, v in pkl.metadata.items(): setattr(dset.attrs, 'metadata_' + k, _packMeta(v))
  
-    _save = _old_savepkl if compatibleMode else _savepkl
+    _save = _old_savepkl if compatibility_mode else _savepkl
     for pl in enumerate(pkls): _save(*pl)
     f.close()
 
 
-def load_peaklists_from_hdf5(filename: str, compatibleMode: bool = False):
+def load_peaklists_from_hdf5(filename: str, compatibility_mode: bool = False):
     """
     Loads a list of peaklist objects from a HDF5 file.
 
@@ -104,8 +104,8 @@ def load_peaklists_from_hdf5(filename: str, compatibleMode: bool = False):
         raise IOError('HDF5 database [%s] does not exist' % filename)
     if not h5py.is_hdf5(filename):
         raise IOError('input file [%s] is not a valid HDF5 database' % filename)
-    if compatibleMode: logging.warning('DeprecationWarning: loading HDF file in the old format')
-    f = h5py.File(filename, 'r') if compatibleMode else ptb.open_file(filename, mode = 'r')
+    if compatibility_mode: logging.warning('DeprecationWarning: loading HDF file in the old format')
+    f = h5py.File(filename, 'r') if compatibility_mode else ptb.open_file(filename, mode = 'r')
 
     def _old_loadpkl(ID):
         dset = f[ID]
@@ -146,7 +146,7 @@ def load_peaklists_from_hdf5(filename: str, compatibleMode: bool = False):
         for t, v in map(lambda x: x.astype(str), dset.attrs.tags): pkl.tags.add_tag(_eval(v), None if t == 'None' else t)
         return dset.attrs.order, pkl
 
-    pkls = [_old_loadpkl(dname) for dname in f.keys()] if compatibleMode else \
+    pkls = [_old_loadpkl(dname) for dname in f.keys()] if compatibility_mode else \
            [_loadpkl(dset) for dset in f.walk_nodes('/', 'Table')]
     pkls = list(zip(*sorted(pkls, key = lambda x: x[0])))[1]
 
@@ -155,7 +155,7 @@ def load_peaklists_from_hdf5(filename: str, compatibleMode: bool = False):
 
 
 # peak matrix portals
-def save_peak_matrix_as_hdf5(pm: PeakMatrix, filename: str, compatibleMode: bool = False):
+def save_peak_matrix_as_hdf5(pm: PeakMatrix, filename: str, compatibility_mode: bool = False):
     """
     Saves a peak matrix object to a HDF5 file.
 
@@ -168,8 +168,8 @@ def save_peak_matrix_as_hdf5(pm: PeakMatrix, filename: str, compatibleMode: bool
     if os.path.isfile(filename):
         logging.warning('HDF5 database [%s] already exists and override', filename)
 
-    if compatibleMode: logging.warning('DeprecationWarning: exporting HDF file in the old format')
-    f = h5py.File(filename, 'w') if compatibleMode else ptb.open_file(filename, mode = 'w')
+    if compatibility_mode: logging.warning('DeprecationWarning: exporting HDF file in the old format')
+    f = h5py.File(filename, 'w') if compatibility_mode else ptb.open_file(filename, mode = 'w')
 
     def _old_savepm():
         def _saveattr(attr):
@@ -222,11 +222,11 @@ def save_peak_matrix_as_hdf5(pm: PeakMatrix, filename: str, compatibleMode: bool
             for fn in pm.flag_names:
                 dset.attrs[fn] = pm.flag_values(fn)
 
-    (_old_savepm if compatibleMode else _savepm)()
+    (_old_savepm if compatibility_mode else _savepm)()
     f.close()
 
 
-def load_peak_matrix_from_hdf5(filename: str, compatibleMode: bool = False):
+def load_peak_matrix_from_hdf5(filename: str, compatibility_mode: bool = False):
     """
     Loads a peak matrix from a HDF5 file.
 
@@ -238,8 +238,8 @@ def load_peak_matrix_from_hdf5(filename: str, compatibleMode: bool = False):
         raise IOError('HDF5 database [%s] does not exist' % filename)
     if not h5py.is_hdf5(filename):
         raise IOError('input file [%s] is not a valid HDF5 database' % filename)
-    if compatibleMode: logging.warning('DeprecationWarning: loading HDF file in the old format')
-    f = h5py.File(filename, 'r') if compatibleMode else ptb.open_file(filename, mode = 'r')
+    if compatibility_mode: logging.warning('DeprecationWarning: loading HDF file in the old format')
+    f = h5py.File(filename, 'r') if compatibility_mode else ptb.open_file(filename, mode = 'r')
 
     def _old_loadpm():
         dset = f['mz']
@@ -271,7 +271,7 @@ def load_peak_matrix_from_hdf5(filename: str, compatibleMode: bool = False):
         alst = [(attr, f.root[attr].read().astype(f.root[attr].attrs.dtype)) for attr in attl]
         return pids, ptgs, alst, mask, flgs
 
-    res = (_old_loadpm if compatibleMode else _loadpm)()
+    res = (_old_loadpm if compatibility_mode else _loadpm)()
     f.close()
 
     pm = PeakMatrix(*res[:3])

@@ -343,20 +343,23 @@ def remove_samples(obj, sample_names):
         raise IOError("Incorrect format - PeakMatrix object or list of PeakList objects")
 
 
-def hdf5_peak_matrix_to_txt(filename, path_out, attr_name="intensity", rsd_tags=(), delimiter="\t", samples_in_rows=True, comprehensive=False):
+def hdf5_peak_matrix_to_txt(filename, path_out, attr_name="intensity", rsd_tags=(), delimiter="\t",
+                            samples_in_rows=True, comprehensive=False, compatibility_mode=False):
 
     if not os.path.isfile(filename):
         raise IOError('HDF5 database [%s] does not exist' % filename)
     if not h5py.is_hdf5(filename):
         raise IOError('input file [%s] is not a valid HDF5 database' % filename)
 
-    obj = hdf5_portal.load_peak_matrix_from_hdf5(filename)
+    obj = hdf5_portal.load_peak_matrix_from_hdf5(filename, compatibility_mode=compatibility_mode)
     with open(os.path.join(path_out), "w") as pk_out:
-        pk_out.write(obj.to_str(attr_name=attr_name, delimiter=delimiter, samples_in_rows=samples_in_rows, rsd_tags=rsd_tags, comprehensive=comprehensive))
+        pk_out.write(obj.to_str(attr_name=attr_name, delimiter=delimiter,
+                                samples_in_rows=samples_in_rows, rsd_tags=rsd_tags,
+                                comprehensive=comprehensive))
     return
 
 
-def hdf5_peaklists_to_txt(filename, path_out, delimiter="\t"):
+def hdf5_peaklists_to_txt(filename, path_out, delimiter="\t", compatibility_mode=False):
 
     if not os.path.isfile(filename):
         raise IOError('HDF5 database [%s] does not exist' % filename)
@@ -366,7 +369,7 @@ def hdf5_peaklists_to_txt(filename, path_out, delimiter="\t"):
     if not os.path.isdir(path_out):
         raise IOError("File or Directory does not exist:".format(path_out))
 
-    obj = hdf5_portal.load_peaklists_from_hdf5(filename)
+    obj = hdf5_portal.load_peaklists_from_hdf5(filename, compatibility_mode=compatibility_mode)
     if "#" in obj[0].ID:
         fns = set([pl.ID.split("#")[0] for pl in obj])
         sub_ids = [pl.ID.split("#")[1] for pl in obj]
