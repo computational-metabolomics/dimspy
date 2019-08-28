@@ -45,9 +45,6 @@ class WorkflowTestCase(unittest.TestCase):
 
         cls.pm_master = align_samples(cls.pls_master, ppm=2.0, filelist=None, block_size=5000, ncpus=None)
 
-        # save_peaklists_as_hdf5(cls.pls_master, to_test_data("MTBLS79_mzml_triplicates_v2.hdf5"))
-        # save_peak_matrix_as_hdf5(cls.pm_master, to_test_data("MTBLS79_mzml_peak_matrix_v2.hdf5"))
-
     def test_process_scans(self):
 
         pls = process_scans(to_test_result("zip_data"), function_noise="median",
@@ -181,7 +178,6 @@ class WorkflowTestCase(unittest.TestCase):
         pm_bf_sf = sample_filter(pm_bf, min_fraction=0.8, within=False, rsd=None, qc_label=None, labels=None)
         self.assertEqual(pm_bf_sf.shape, (6, 306))
 
-
     def test_remove_samples(self):
         self.assertEqual(self.pm_master.shape, (9, 1383))
         pm_rs = remove_samples(copy.deepcopy(self.pm_master), ["batch04_B02_rep01_301.mzML",
@@ -255,6 +251,22 @@ class WorkflowTestCase(unittest.TestCase):
             with open(to_test_result("pm_mzml_triplicates_{}.txt".format(version)), "r") as test_result:
                 with open(to_test_data("pm_mzml_triplicates_{}.txt".format(version)), "r") as comp:
                     self.assertEqual(test_result.read(), comp.read())
+
+    def test_hdf5_before_after(self):
+
+        save_peaklists_as_hdf5(self.pls_master, to_test_result("MTBLS79_mzml_triplicates.hdf5"))
+        pls = load_peaklists_from_hdf5(to_test_result("MTBLS79_mzml_triplicates.hdf5"))
+        self.assertEqual(len(pls), len(self.pls_master))
+        self.assertTrue(np.all(pls[0].mz == self.pls_master[0].mz))
+        self.assertTrue(np.all(pls[0].intensity == self.pls_master[0].intensity))
+        self.assertTrue(np.all(pls[0].snr == self.pls_master[0].snr))
+
+        save_peak_matrix_as_hdf5(self.pm_master, to_test_result("MTBLS79_mzml_peak_matrix.hdf5"))
+        pm = load_peak_matrix_from_hdf5(to_test_result("MTBLS79_mzml_peak_matrix.hdf5"))
+        self.assertEqual(pm.shape, self.pm_master.shape)
+        self.assertTrue(np.all(pm.attr_mean_vector('mz') == self.pm_master.attr_mean_vector('mz')))
+        self.assertTrue(np.all(pm.attr_mean_vector('intensity') == self.pm_master.attr_mean_vector('intensity')))
+        self.assertTrue(np.all(pm.attr_mean_vector('snr') == self.pm_master.attr_mean_vector('intensity')))
 
     def test_create_sample_list(self):
         create_sample_list(self.pls_master, to_test_result("filelist_csl_MTBLS79_mzml_triplicates.txt"))
