@@ -266,7 +266,7 @@ class WorkflowTestCase(unittest.TestCase):
         self.assertEqual(pm.shape, self.pm_master.shape)
         self.assertTrue(np.all(pm.attr_mean_vector('mz') == self.pm_master.attr_mean_vector('mz')))
         self.assertTrue(np.all(pm.attr_mean_vector('intensity') == self.pm_master.attr_mean_vector('intensity')))
-        self.assertTrue(np.all(pm.attr_mean_vector('snr') == self.pm_master.attr_mean_vector('intensity')))
+        self.assertTrue(np.all(pm.attr_mean_vector('snr') == self.pm_master.attr_mean_vector('snr')))
 
     def test_create_sample_list(self):
         create_sample_list(self.pls_master, to_test_result("filelist_csl_MTBLS79_mzml_triplicates.txt"))
