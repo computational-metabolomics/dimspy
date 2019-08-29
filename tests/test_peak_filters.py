@@ -12,8 +12,6 @@ origin: 05-14-2017
 
 import unittest
 from dimspy.models.peaklist_tags import PeakList_Tags
-from dimspy.models.peaklist import PeakList
-from dimspy.models.peak_matrix import PeakMatrix
 from dimspy.process.peak_filters import *
 
 
@@ -26,7 +24,7 @@ class PeakFiltersTestCase(unittest.TestCase):
 
     @staticmethod
     def _createPeakMatrix():
-        pids, tags = zip(*[
+        pids, tags = list(zip(*[
             ('sample_1_1', PeakList_Tags('sample', treatment = 'compound_1', time_point = '1hr', plate = 1, order = 1)),
             ('sample_1_2', PeakList_Tags('sample', treatment = 'compound_1', time_point = '6hr', plate = 1, order = 2)),
             ('QC_1',       PeakList_Tags('qc', plate = 1, order = 3)),
@@ -35,7 +33,7 @@ class PeakFiltersTestCase(unittest.TestCase):
             ('sample_2_2', PeakList_Tags('sample', treatment = 'compound_2', time_point = '6hr', plate = 2, order = 2)),
             ('QC_2',       PeakList_Tags('qc', plate = 2, order = 3)),
             ('Blank_2',    PeakList_Tags('blank', plate = 2, order = 4)),
-        ])
+        ]))
 
         mzs = np.tile(np.arange(0, 1000, step = 100, dtype = float), (8, 1))
         ints = np.arange(80, dtype = float).reshape((8, 10)) / 20.
@@ -49,7 +47,7 @@ class PeakFiltersTestCase(unittest.TestCase):
 
         try:
             filter_attr(pkl, 'snr', 0.5, flag_index = 2)
-        except Exception, e:
+        except Exception as e:
             self.fail('filter peaklist attribute failed: ' + str(e))
         self.assertListEqual(pkl.snr.tolist(), [0.1, 0.2, 0.3, 0.4, 0.5])
         self.assertTupleEqual(pkl.attributes, ('mz', 'intensity', 'snr_flag', 'snr'))
@@ -66,7 +64,7 @@ class PeakFiltersTestCase(unittest.TestCase):
 
         try:
             filter_ringing(pkl, threshold = 0.9, bin_size = 3.0)
-        except Exception, e:
+        except Exception as e:
             self.fail('filter peaklist ringing failed: ' + str(e))
         self.assertListEqual(pkl.mz.tolist(), [2., 5., 8., 9.])
 
@@ -75,7 +73,7 @@ class PeakFiltersTestCase(unittest.TestCase):
 
         try:
             filter_mz_ranges(pkl, [(1.,3.), (5.,8.)])
-        except Exception, e:
+        except Exception as e:
             self.fail('filter peaklist mz ranges failed: ' + str(e))
         self.assertListEqual(pkl.mz.tolist(), [0., 4., 9.])
 
@@ -85,15 +83,12 @@ class PeakFiltersTestCase(unittest.TestCase):
 
         try:
             pm = filter_rsd(pm, 62, 'qc')
-        except Exception, e:
+        except Exception as e:
             self.fail('filter peak_matrix rsd failed: ' + str(e))
         self.assertTrue(np.allclose(pm.rsd('qc'),
             [61.48754619, 60.17930052, 58.92556509, 57.72300254]))
 
         self.assertRaises(AttributeError, lambda: filter_rsd(pm, 45, 'not_QC'))
-        def _maskedcall():
-            with mask_peakmatrix('qc'): filter_rsd(pm, 45, 'qc')
-        self.assertRaises(AttributeError,  _maskedcall)
 
     def test_peak_matrix_fraction_filter(self):
         pm = self._createPeakMatrix()
@@ -101,7 +96,7 @@ class PeakFiltersTestCase(unittest.TestCase):
 
         try:
             pm = filter_fraction(pm, 1)
-        except Exception, e:
+        except Exception as e:
             self.fail('filter peak_matrix fraction failed: ' + str(e))
         self.assertEqual(pm.shape[1], 9)
 

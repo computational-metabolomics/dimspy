@@ -11,7 +11,7 @@ origin: 04-28-2017
 
 
 import unittest
-import cPickle as cp
+import pickle as cp
 from dimspy.models.peaklist_metadata import PeakList_Metadata
 
 
@@ -23,7 +23,7 @@ class PeakListMetadataTestCase(unittest.TestCase):
     def test_pl_meta_creation(self):
         try:
             self._createMetadata()
-        except Exception, e:
+        except Exception as e:
             self.fail('create metadata object failed: ' + str(e))
 
     def test_pl_meta_operations(self):
@@ -33,7 +33,7 @@ class PeakListMetadataTestCase(unittest.TestCase):
         self.assertListEqual(sorted(meta.values()), [1, 2, 3])
         self.assertListEqual(sorted(meta.items()), [('a', 1), ('b', 2), ('c', 3)])
         self.assertTrue(meta['a'] == 1 and meta['b'] == 2 and meta['c'] == 3)
-        self.assertTrue(meta.has_key('a') == True and meta.has_key('d') == False)
+        self.assertTrue(('a' in meta) == True and ('d' in meta) == False)
         self.assertTrue(meta.get('a', 4) == 1 and meta.get('d', 4) == 4)
 
         meta['a'] = 4
@@ -41,14 +41,14 @@ class PeakListMetadataTestCase(unittest.TestCase):
         meta['d'] = 5
         self.assertEqual(meta['d'], 5)
         del meta['b']
-        self.assertFalse(meta.has_key('b'))
+        self.assertFalse('b' in meta)
 
     def test_pl_meta_pickle(self):
         meta = self._createMetadata()
         try:
             mstr = cp.dumps(meta)
             meta = cp.loads(mstr)
-        except Exception, e:
+        except Exception as e:
             self.fail('metadata pickle failed: ' + str(e))
         self.assertTrue(meta['a'] == 1 and meta['b'] == 2 and meta['c'] == 3)
 

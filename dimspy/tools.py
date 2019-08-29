@@ -2,6 +2,9 @@
 # -*- coding: utf-8 -*-
 
 
+import warnings
+warnings.filterwarnings("ignore", category=ResourceWarning)
+
 import os
 import logging
 import operator
@@ -10,30 +13,30 @@ import h5py
 import numpy as np
 from itertools import combinations
 import zipfile
-from models.peaklist import PeakList
-from models.peak_matrix import PeakMatrix
-from models.peaklist_tags import Tag
-from portals import hdf5_portal
-from portals import txt_portal
-from portals.paths import check_paths
-from experiment import check_metadata
-from experiment import update_labels
-from experiment import update_metadata_and_labels
-from experiment import idxs_reps_from_filelist
-from experiment import mz_range_from_header
-from experiment import interpret_experiment
-from process.peak_alignment import align_peaks
-from process.peak_filters import filter_fraction
-from process.peak_filters import filter_blank_peaks
-from process.peak_filters import filter_rsd
-from process.peak_filters import filter_mz_ranges
-from process.peak_filters import filter_attr
-from process.peak_filters import filter_ringing
-from process.replicate_processing import average_replicate_scans
-from process.replicate_processing import average_replicate_peaklists
-from process.replicate_processing import join_peaklists
-from process.replicate_processing import read_scans
-from process.replicate_processing import remove_edges
+from .models.peaklist import PeakList
+from .models.peak_matrix import PeakMatrix
+from .models.peaklist_tags import Tag
+from .portals import hdf5_portal
+from .portals import txt_portal
+from .portals.paths import check_paths
+from .experiment import check_metadata
+from .experiment import update_labels
+from .experiment import update_metadata_and_labels
+from .experiment import idxs_reps_from_filelist
+from .experiment import mz_range_from_header
+from .experiment import interpret_experiment
+from .process.peak_alignment import align_peaks
+from .process.peak_filters import filter_fraction
+from .process.peak_filters import filter_blank_peaks
+from .process.peak_filters import filter_rsd
+from .process.peak_filters import filter_mz_ranges
+from .process.peak_filters import filter_attr
+from .process.peak_filters import filter_ringing
+from .process.replicate_processing import average_replicate_scans
+from .process.replicate_processing import average_replicate_peaklists
+from .process.replicate_processing import join_peaklists
+from .process.replicate_processing import read_scans
+from .process.replicate_processing import remove_edges
 
 
 def process_scans(source, function_noise, snr_thres, ppm, min_fraction=None, rsd_thres=None, min_scans=1, filelist=None,
@@ -61,17 +64,17 @@ def process_scans(source, function_noise, snr_thres, ppm, min_fraction=None, rsd
     pls = []
     for i in range(len(filenames)):
 
-        print
-        print os.path.basename(filenames[i])
+        print()
+        print((os.path.basename(filenames[i])))
 
         if type(source) is not str:
             source = ""
 
-        print "Reading scans...."
+        print("Reading scans....")
         pls_scans = read_scans(filenames[i], source, function_noise, min_scans, filter_scan_events)
 
         if type(remove_mz_range) == list and len(remove_mz_range) > 0:
-            print "Removing m/z ranges....."
+            print("Removing m/z ranges.....")
             for h in pls_scans:
                 pls_scans[h] = [filter_mz_ranges(pl, remove_mz_range) if len(pl.mz) > 0 else pl
                                 for pl in pls_scans[h]]
@@ -80,21 +83,21 @@ def process_scans(source, function_noise, snr_thres, ppm, min_fraction=None, rsd
             mz_ranges = [mz_range_from_header(h) for h in pls_scans]
             exp = interpret_experiment(mz_ranges)
             if exp == "overlapping":
-                print "Removing 'edges' from SIM windows....."
+                print("Removing 'edges' from SIM windows.....")
                 pls_scans = remove_edges(pls_scans)
 
         if ringing_thres is not None and float(ringing_thres) > 0.0:
-            print "Removing ringing artifacts....."
+            print("Removing ringing artifacts.....")
             for h in pls_scans:
                 pls_scans[h] = [filter_ringing(pl, threshold=ringing_thres, bin_size=1.0) if len(pl.mz) > 0 else pl
                                 for pl in pls_scans[h]]
 
-        print "Removing noise....."
+        print("Removing noise.....")
         for h in pls_scans:
             pls_scans[h] = [filter_attr(pl, "snr", min_threshold=snr_thres) if len(pl.mz) > 0 else pl
                             for pl in pls_scans[h]]
 
-        print "Aligning, averaging and filtering peaks....."
+        print("Aligning, averaging and filtering peaks.....")
         pls_avg = []
 
         for h in pls_scans:
@@ -105,9 +108,6 @@ def process_scans(source, function_noise, snr_thres, ppm, min_fraction=None, rsd
             if len(pls_scans[h]) >= 1:
                 if sum(pl.shape[0] for pl in pls_scans[h]) == 0:
                     logging.warning("No scan data available for {}".format(h))
-                    d = dict((k, [pls_scans[h][0].metadata[k]]) for k in pls_scans[h][0].metadata)
-                    pls_avg.append(PeakList(ID=h, mz=[], intensity=[], **d))
-                    n_peaks, median_rsd = 0, "NA"
                 else:
                     pl_avg = average_replicate_scans(h, pls_scans[h], ppm, min_fraction, rsd_thres, "intensity", block_size, ncpus)
                     pls_avg.append(pl_avg)
@@ -118,26 +118,24 @@ def process_scans(source, function_noise, snr_thres, ppm, min_fraction=None, rsd
             if report is not None:
                 out.write("{}\t{}\t{}\t{}\t{}\n".format(os.path.basename(filenames[i]), h, nscans, n_peaks, median_rsd))
 
-        if sum(pl.shape[0] for pl in pls_avg) == 0:
-            logging.warning("No peaks remaining after filtering. Remove file from Study (filelist).")
+        if len(pls_avg) == 0:
+            raise IOError("No peaks remaining after filtering. Remove file from Study (filelist).")
 
-        if not skip_stitching or len(pls_scans.keys()) == 1:
+        if not skip_stitching or len(list(pls_scans.keys())) == 1:
             pl = join_peaklists(os.path.basename(filenames[i]), pls_avg)
             pl = update_metadata_and_labels([pl], fl)
             pls.extend(pl)
-
-            if hasattr(pl[0], 'rsd'):
-                median_rsd = np.nanmedian(pl[0].rsd)
-            else:
-                median_rsd = "NA"
-
-            if len(pls_scans.keys()) > 1 and report is not None:
-                out.write("{}\t{}\t{}\t{}\t{}\n".format(os.path.basename(filenames[i]), "SIM-Stitch", "NA", pl[0].shape[0], median_rsd))
+            if len(list(pls_scans.keys())) > 1 and report is not None:
+                out.write("{}\t{}\t{}\t{}\t{}\n".format(os.path.basename(filenames[i]), "SIM-Stitch", "NA", pl[0].shape[0], np.nanmedian(pl[0].rsd)))
         else:
             for pl in pls_avg:
-                pl = join_peaklists("{}#{}".format(os.path.basename(filenames[i]), pl.metadata["header"][0]), [pl])
-                pl = update_metadata_and_labels([pl], fl, os.path.basename(filenames[i]))
-                pls.extend(pl)
+                pl = update_metadata_and_labels([pl], fl)
+                pl = join_peaklists("{}#{}".format(os.path.basename(filenames[i]), pl[0].metadata["header"][0]), pl)
+                pls.append(pl)
+
+    if report is not None:
+        out.close()
+
     return pls
 
 
@@ -176,7 +174,7 @@ def replicate_filter(source, ppm, replicates, min_peaks, rsd_thres=None, filelis
         out = open(report, "w")
 
     idxs_peaklists = idxs_reps_from_filelist([pl.metadata.replicate for pl in peaklists])
-    unique, counts = np.unique([pl.metadata.replicate for pl in peaklists], return_counts=True)
+    unique, counts = np.unique([int(pl.metadata.replicate) for pl in peaklists], return_counts=True)
 
     if len(counts) <= 1:
         raise ValueError("No technical replicates available (single) - Skip 'replicate filter'")
@@ -190,8 +188,8 @@ def replicate_filter(source, ppm, replicates, min_peaks, rsd_thres=None, filelis
         raise ValueError("Not enough (technical) replicates available for each sample.")
 
     if max(reps_each_sample) > replicates:
-        print "NOTE: All combinations (n={}) for each each set of replicates are " \
-              "processed to calculate the most reproducible set.".format(replicates)
+        print(("NOTE: All combinations (n={}) for each each set of replicates are " \
+              "processed to calculate the most reproducible set.".format(replicates)))
         if report is not None:
             out.write("set\trank\tname\tpeaks\tpeaks_{}oo{}\tmedian_rsd_{}oo{}\tscore\n".format(replicates, replicates, replicates, replicates))
     else:
@@ -214,7 +212,7 @@ def replicate_filter(source, ppm, replicates, min_peaks, rsd_thres=None, filelis
 
             reps = [_pl.metadata["replicate"] for _pl in pls_comb]
             pl.metadata["replicates"] = reps
-            pl.tags.add_tag("_".join(map(str, reps)), "replicates")
+            pl.tags.add_tag("-".join(map(str, reps)), "replicates")
 
             for t in pls_comb[0].tags.tags:
                 if t.ttype != "replicate":
@@ -230,8 +228,8 @@ def replicate_filter(source, ppm, replicates, min_peaks, rsd_thres=None, filelis
                 max_peak_count_present = pl_filt.shape[0]
 
         # find the RSD category for the median RDS
-        bins = np.array(range(0, 55, 5))
-        rsd_scores = [0.1 * b for b in reversed(range(len(bins)))]
+        bins = np.array(list(range(0, 55, 5)))
+        rsd_scores = [0.1 * b for b in reversed(list(range(len(bins))))]
         for i, comb in enumerate(temp):
 
             if np.isnan(comb[3]):
@@ -252,10 +250,9 @@ def replicate_filter(source, ppm, replicates, min_peaks, rsd_thres=None, filelis
 
         if sum([comb[-1] for comb in temp]) == 0.0:
             logging.warning("insufficient data available to calculate scores for {}".format(str([comb[0].ID for comb in temp])))
-            temp.sort(key=operator.itemgetter(1), reverse=True)
-        else:
-            # sort the scores from high to low
-            temp.sort(key=operator.itemgetter(-1), reverse=True)
+
+        # sort the scores from high to low
+        temp.sort(key=operator.itemgetter(-1), reverse=True)
         # select the replicate filtered peaklist that is ranked first
         pls_rep_filt.append(temp[0][0])
 
@@ -265,7 +262,10 @@ def replicate_filter(source, ppm, replicates, min_peaks, rsd_thres=None, filelis
                     out.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(idxs_pls+1, p+1, temp[p][0].ID, temp[p][1], temp[p][2], temp[p][3], temp[p][-1]))
                 else:
                     out.write("{}\t{}\t{}\t{}\n".format(temp[p][0].ID, temp[p][1], temp[p][2], temp[p][3]))
-
+    
+    if report is not None:
+        out.close()
+    
     return pls_rep_filt
 
 
@@ -300,7 +300,7 @@ def blank_filter(peak_matrix, blank_label, min_fraction=1.0, min_fold_change=1.0
     if labels is not None:
         peak_matrix = update_labels(peak_matrix, labels)
 
-    if not any(map(lambda x: Tag(blank_label, 'classLabel') in x, peak_matrix.peaklist_tags)):
+    if not any([Tag(blank_label, 'classLabel') in x for x in peak_matrix.peaklist_tags]):
         raise IOError("Blank label ({}) does not exist".format(blank_label))
 
     return filter_blank_peaks(peak_matrix, Tag(blank_label, 'classLabel'), min_fraction, min_fold_change, function, rm_samples)
@@ -331,32 +331,35 @@ def sample_filter(peak_matrix, min_fraction, within=False, rsd=None, qc_label=No
 
 
 def missing_values_sample_filter(peak_matrix, max_fraction):
-    return peak_matrix.remove_samples(np.where(map(lambda x: (x / float(peak_matrix.shape[1]) >= max_fraction), peak_matrix.missing_values)))
+    return peak_matrix.remove_samples(np.where([(x / float(peak_matrix.shape[1]) >= max_fraction) for x in peak_matrix.missing_values]))
 
 
 def remove_samples(obj, sample_names):
     if isinstance(obj, PeakMatrix):
-        return obj.remove_samples(np.where(map(lambda x: (x in sample_names), obj.peaklist_ids)))
+        return obj.remove_samples(np.where([(x in sample_names) for x in obj.peaklist_ids]))
     elif isinstance(obj[0], PeakList):
         return [pl for pl in obj if pl.ID not in sample_names]
     else:
         raise IOError("Incorrect format - PeakMatrix object or list of PeakList objects")
 
 
-def hdf5_peak_matrix_to_txt(filename, path_out, attr_name="intensity", rsd_tags=(), delimiter="\t", samples_in_rows=True, comprehensive=False):
+def hdf5_peak_matrix_to_txt(filename, path_out, attr_name="intensity", rsd_tags=(), delimiter="\t",
+                            samples_in_rows=True, comprehensive=False, compatibility_mode=False):
 
     if not os.path.isfile(filename):
         raise IOError('HDF5 database [%s] does not exist' % filename)
     if not h5py.is_hdf5(filename):
         raise IOError('input file [%s] is not a valid HDF5 database' % filename)
 
-    obj = hdf5_portal.load_peak_matrix_from_hdf5(filename)
+    obj = hdf5_portal.load_peak_matrix_from_hdf5(filename, compatibility_mode=compatibility_mode)
     with open(os.path.join(path_out), "w") as pk_out:
-        pk_out.write(obj.to_str(attr_name=attr_name, delimiter=delimiter, samples_in_rows=samples_in_rows, rsd_tags=rsd_tags, comprehensive=comprehensive))
+        pk_out.write(obj.to_str(attr_name=attr_name, delimiter=delimiter,
+                                samples_in_rows=samples_in_rows, rsd_tags=rsd_tags,
+                                comprehensive=comprehensive))
     return
 
 
-def hdf5_peaklists_to_txt(filename, path_out, delimiter="\t"):
+def hdf5_peaklists_to_txt(filename, path_out, delimiter="\t", compatibility_mode=False):
 
     if not os.path.isfile(filename):
         raise IOError('HDF5 database [%s] does not exist' % filename)
@@ -366,7 +369,7 @@ def hdf5_peaklists_to_txt(filename, path_out, delimiter="\t"):
     if not os.path.isdir(path_out):
         raise IOError("File or Directory does not exist:".format(path_out))
 
-    obj = hdf5_portal.load_peaklists_from_hdf5(filename)
+    obj = hdf5_portal.load_peaklists_from_hdf5(filename, compatibility_mode=compatibility_mode)
     if "#" in obj[0].ID:
         fns = set([pl.ID.split("#")[0] for pl in obj])
         sub_ids = [pl.ID.split("#")[1] for pl in obj]
@@ -415,7 +418,7 @@ def merge_peaklists(source, filelist=None):
         fl = check_metadata(filelist)
         pls_merged = update_metadata_and_labels(pls_merged, fl)
 
-        if 'multilist' in fl.keys():
+        if 'multilist' in list(fl.keys()):
             # make sure the peaklists are in the correct order (need to be sorted ascending)
             order_indx = np.argsort([i.metadata['multilist'] for i in pls_merged])
             nlists = [fl['multilist'][i] for i in order_indx]

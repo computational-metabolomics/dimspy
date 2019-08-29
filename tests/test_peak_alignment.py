@@ -14,6 +14,7 @@ import unittest
 import numpy as np
 from dimspy.models.peaklist import PeakList
 from dimspy.process.peak_alignment import align_peaks
+from functools import reduce
 
 
 class PeakAlignmentTestCase(unittest.TestCase):
@@ -64,7 +65,7 @@ class PeakAlignmentTestCase(unittest.TestCase):
             pm = align_peaks(pkls, ppm = 2.0, block_size = 5, fixed_block = True, edge_extend = 10, ncpus = 2)
             # print pm.attr_matrix('str_attr')
             # print pm.attr_mean_vector('str_attr')
-        except Exception, e:
+        except Exception as e:
             self.fail('alignment failed: ' + str(e))
 
         self._checkAlignmentResults(pm)
@@ -73,14 +74,14 @@ class PeakAlignmentTestCase(unittest.TestCase):
         pkls = self._createPeakLists()
         try:
             pm = align_peaks(pkls, ppm = 2.0, block_size = 1, fixed_block = True, edge_extend = 10, ncpus = 2)
-        except Exception, e:
+        except Exception as e:
             self.fail('alignment failed: ' + str(e))
         self._checkAlignmentResults(pm)
 
         pkls = self._createPeakLists()
         try:
             pm = align_peaks(pkls, ppm = 2.0, block_size = 20, fixed_block = True, edge_extend = 10, ncpus = 2)
-        except Exception, e:
+        except Exception as e:
             self.fail('alignment failed: ' + str(e))
         self._checkAlignmentResults(pm)
 
@@ -89,19 +90,19 @@ class PeakAlignmentTestCase(unittest.TestCase):
 
         try:
             pm = align_peaks(pkls, ppm = 1e+10, block_size = 5, fixed_block = True, edge_extend = 10, ncpus = 2)
-        except Exception, e:
+        except Exception as e:
             self.fail('alignment failed: ' + str(e))
 
-        self.assertTrue(np.allclose(pm.to_peaklist('merged').mz, [np.mean(map(np.mean, self.mz))]))
-        self.assertTrue(np.allclose(pm.intensity_matrix.flatten(), map(np.mean, self.ints)))
-        self.assertTrue(np.allclose(pm.attr_matrix('intra_count').flatten(), map(len, self.mz)))
+        self.assertTrue(np.allclose(pm.to_peaklist('merged').mz, [np.mean(list(map(np.mean, self.mz)))]))
+        self.assertTrue(np.allclose(pm.intensity_matrix.flatten(), list(map(np.mean, self.ints))))
+        self.assertTrue(np.allclose(pm.attr_matrix('intra_count').flatten(), list(map(len, self.mz))))
 
         try:
             pm = align_peaks(pkls, ppm = 1e-10, block_size = 5, fixed_block = True, edge_extend = 10, ncpus = 2)
-        except Exception, e:
+        except Exception as e:
             self.fail('alignment failed: ' + str(e))
 
-        self.assertTrue(np.allclose(pm.to_peaklist('merged').mz, np.sort(reduce(lambda x,y: x+y, map(list, self.mz)))))
+        self.assertTrue(np.allclose(pm.to_peaklist('merged').mz, np.sort(reduce(lambda x,y: x+y, list(map(list, self.mz))))))
         self.assertTrue(np.allclose(np.sort(np.sum(pm.intensity_matrix, axis = 0)), np.sort(reduce(lambda x,y: x+y, self.ints))))
         self.assertTrue(np.allclose(np.sum(pm.attr_matrix('intra_count'), axis = 0), np.ones(pm.shape[1])))
 
@@ -110,7 +111,7 @@ class PeakAlignmentTestCase(unittest.TestCase):
 
         try:
             pm = align_peaks(pkls, ppm = 2.0, block_size = 5, fixed_block = True, edge_extend = 10, ncpus = 2)
-        except Exception, e:
+        except Exception as e:
             self.fail('alignment failed: ' + str(e))
 
         self.assertTrue(np.allclose(pm.to_peaklist('merged').mz, np.arange(10, 110, step = 10)))
@@ -121,7 +122,7 @@ class PeakAlignmentTestCase(unittest.TestCase):
 
         try:
             pm = align_peaks(pkls, ppm = 2.0, block_size = 5, fixed_block = False, edge_extend = 10, ncpus = 2)
-        except Exception, e:
+        except Exception as e:
             self.fail('alignment failed: ' + str(e))
 
         self.assertTrue(np.allclose(pm.to_peaklist('merged').mz, [10.]))
@@ -130,7 +131,7 @@ class PeakAlignmentTestCase(unittest.TestCase):
 
         try:
             pm = align_peaks(pkls, ppm = 1e-10, block_size = 1, fixed_block = True, edge_extend = 1, ncpus = 2)
-        except Exception, e:
+        except Exception as e:
             self.fail('alignment failed: ' + str(e))
 
         self.assertTrue(np.allclose(pm.to_peaklist('merged').mz, [10.]))

@@ -2,9 +2,10 @@
 #  -*- coding: utf-8 -*-
 
 
-import unittest, os
-import test_tools
-from test_suite_runner import runTestSuite
+import unittest, sys
+from . import test_tools
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent.resolve()))
 
 
 if __name__ == '__main__':

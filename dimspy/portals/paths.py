@@ -55,7 +55,7 @@ def check_paths(tsv, source):
             raise IOError("[Errno 2] No such file or directory: {}".format(source))
 
     elif os.path.isfile(tsv):
-        fm = np.genfromtxt(tsv, dtype=None, delimiter="\t", names=True)
+        fm = np.genfromtxt(tsv, dtype=None, delimiter="\t", names=True, encoding=None)
         if len(fm.shape) == 0:
             fm = np.array([fm])
         if fm.dtype.names[0] != "filename" and fm.dtype.names[0] != "sample_id":

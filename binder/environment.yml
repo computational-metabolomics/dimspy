@@ -1,0 +1,9 @@
+name: dimspy
+channels:
+  - conda-forge
+  - bioconda
+  - computational-metabolomics
+dependencies:
+ - python=3.7
+ - dimspy
+ 

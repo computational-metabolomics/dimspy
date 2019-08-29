@@ -4,8 +4,8 @@
 import os
 import argparse
 import h5py
-import tools
-from portals import hdf5_portal
+from . import tools
+from .portals import hdf5_portal
 from dimspy import __version__
 
 
@@ -19,7 +19,7 @@ def map_delimiter(delimiter):
 
 def main():
 
-    print("Executing dimspy version %s." % __version__)
+    print(("Executing dimspy version %s." % __version__))
 
     parser = argparse.ArgumentParser(description='Python package to process DIMS data', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
@@ -403,7 +403,7 @@ def main():
 
     args = parser.parse_args()
     
-    print args
+    print(args)
 
     if args.step == "process-scans":
 
@@ -505,7 +505,7 @@ def main():
         # if a list of lists, save each as separate list of peaklists
         if any(isinstance(l, list) for l in pls_merged):
             for i in range(len(pls_merged)):
-                if 'multilistLabel' in pls_merged[i][0].metadata.keys():
+                if 'multilistLabel' in list(pls_merged[i][0].metadata.keys()):
                     m_label = pls_merged[i][0].metadata['multilistLabel']
                     hdf5_portal.save_peaklists_as_hdf5(pls_merged[i],
                                                        os.path.join(args.output, '{}.hdf5'.format(m_label)))

@@ -1,6 +1,6 @@
 DIMSpy
 ======
-|Version| |Py versions| |Git| |Bioconda| |Build Status (Travis)| |Build Status (AppVeyor)| |License| |RTD doc| |codecov|
+|Version| |Py versions| |Git| |Bioconda| |Build Status (Travis)| |Build Status (AppVeyor)| |License| |RTD doc| |codecov| |binder|
 
 Python package to process direct-infusion mass spectrometry-based metabolomics and lipidomics data
 
@@ -67,3 +67,7 @@ Released under the GNU General Public License v3.0 (see `LICENSE file <https://g
    
 .. |codecov| image:: https://codecov.io/gh/computational-metabolomics/dimspy/branch/master/graph/badge.svg
    :target: https://codecov.io/gh/computational-metabolomics/dimspy
+
+.. |binder| image:: https://mybinder.org/badge_logo.svg
+   :target: https://mybinder.org/v2/gh/computational-metabolomics/dimspy/master?filepath=notebooks%2Fworkflow.ipynb
+

@@ -11,15 +11,18 @@ PeakList and PeakMatrix filters.
 """
 
 
-from __future__ import division
+
 
 import logging
 import numpy as np
-from dimspy.models.peak_matrix import mask_peakmatrix, unmask_peakmatrix
+from functools import reduce
+from typing import Union, Sequence, Tuple, Any
+from dimspy.models.peaklist import PeakList
+from dimspy.models.peak_matrix import PeakMatrix, mask_peakmatrix, unmask_peakmatrix
 
 
 # peaklist filters
-def filter_attr(pl, attr_name, max_threshold=None, min_threshold=None, flag_name=None, flag_index=None):
+def filter_attr(pl: PeakList, attr_name: str, max_threshold: Union[int,float,None] = None, min_threshold: [int,float,None] = None, flag_name: Union[str,None] = None, flag_index: Union[int,None] = None):
     """
     Peaklist attribute values filter.
 
@@ -44,7 +47,7 @@ def filter_attr(pl, attr_name, max_threshold=None, min_threshold=None, flag_name
     return pl.add_attribute(flag_name, flt(pl[attr_name]), is_flag=True, on_index=flag_index)
 
 
-def filter_ringing(pl, threshold, bin_size=1.0, flag_name='ringing_flag', flag_index=None):
+def filter_ringing(pl: PeakList, threshold: float, bin_size: Union[int,float] = 1.0, flag_name: str = 'ringing_flag', flag_index: Union[int,None] = None):
     """
     Peaklist ringing filter.
 
@@ -67,7 +70,7 @@ def filter_ringing(pl, threshold, bin_size=1.0, flag_name='ringing_flag', flag_i
     return pl.add_attribute(flag_name, pl.intensity > (mask * threshold), is_flag=True, on_index=flag_index)
 
 
-def filter_mz_ranges(pl, mz_ranges, flag_name='mz_ranges_flag', flagged_only=False, flag_index=None):
+def filter_mz_ranges(pl: PeakList, mz_ranges: Sequence[Tuple[float,float]], flag_name: str = 'mz_ranges_flag', flagged_only: bool = False, flag_index: Union[int,None] = None):
     """
     Peaklist mz range filter.
     :param pl: the target peaklist
@@ -93,7 +96,7 @@ def filter_mz_ranges(pl, mz_ranges, flag_name='mz_ranges_flag', flagged_only=Fal
 
 
 # PeakMatrix filters
-def filter_rsd(pm, rsd_threshold, qc_tag, on_attr = 'intensity', flag_name='rsd_flag'):
+def filter_rsd(pm: PeakMatrix, rsd_threshold: Union[int,float], qc_tag: Any, on_attr: str = 'intensity', flag_name: str = 'rsd_flag'):
     """
     PeakMatrix RSD filter.
 
@@ -116,7 +119,7 @@ def filter_rsd(pm, rsd_threshold, qc_tag, on_attr = 'intensity', flag_name='rsd_
     return pm
 
 
-def filter_fraction(pm, fraction_threshold, within_classes=False, class_tag_type=None, flag_name='fraction_flag'):
+def filter_fraction(pm: PeakMatrix, fraction_threshold: float, within_classes: bool = False, class_tag_type: Any = None, flag_name: str = 'fraction_flag'):
     """
     PeakMatrix fraction filter.
 
@@ -136,7 +139,7 @@ def filter_fraction(pm, fraction_threshold, within_classes=False, class_tag_type
     else:
         if class_tag_type is None:
             raise KeyError('must provide class tag type for within classes filtering')
-        if not all(map(lambda t: t.has_tag_type(class_tag_type), pm.peaklist_tags)):
+        if not all([t.has_tag_type(class_tag_type) for t in pm.peaklist_tags]):
             raise AttributeError('not all tags have tag type [%s]' % class_tag_type)
         flg = np.zeros(pm.shape[1])
         for tag in pm.tags_of(class_tag_type):
@@ -146,7 +149,8 @@ def filter_fraction(pm, fraction_threshold, within_classes=False, class_tag_type
     return pm
 
 
-def filter_blank_peaks(pm, blank_tag, fraction_threshold=1, fold_threshold=1, method='mean', rm_blanks=True, flag_name='blank_flag'):
+def filter_blank_peaks(pm: PeakMatrix, blank_tag: Any, fraction_threshold: Union[int,float] = 1, fold_threshold: Union[int,float] = 1,
+                       method: str = 'mean', rm_blanks: bool = True, flag_name: str = 'blank_flag'):
     """
     PeakMatrix blank filter.
 
@@ -165,7 +169,7 @@ def filter_blank_peaks(pm, blank_tag, fraction_threshold=1, fold_threshold=1, me
     blank intensities x fold_threshold, this peak will be unflagged.
 
     """
-    if not any(map(lambda x: blank_tag in x, pm.peaklist_tags)):
+    if not any([blank_tag in x for x in pm.peaklist_tags]):
         raise ValueError('blank tag [%s] does not exist' % blank_tag)
     if method not in ('mean', 'median', 'max'):
         raise ValueError('filter method must be mean, median or max')
@@ -173,7 +177,7 @@ def filter_blank_peaks(pm, blank_tag, fraction_threshold=1, fold_threshold=1, me
     with unmask_peakmatrix(pm, blank_tag) as m:
         ints = m.intensity_matrix[0] if m.shape[0] == 1 else \
                np.max(m.intensity_matrix, axis=0) if method == 'max' else \
-               np.array(map(lambda x: getattr(np, method)(x), m.intensity_matrix.T))
+               np.array([getattr(np, method)(x) for x in m.intensity_matrix.T])
         ints *= fold_threshold
 
     with mask_peakmatrix(pm, blank_tag) as m:
@@ -181,5 +185,5 @@ def filter_blank_peaks(pm, blank_tag, fraction_threshold=1, fold_threshold=1, me
         m.add_flag(flag_name, ~((ints > 0) & faild_int))
 
     if rm_blanks:
-        pm = pm.remove_samples(np.where(map(lambda x: x.has_tag(blank_tag), pm.peaklist_tags)))
+        pm = pm.remove_samples(np.where([x.has_tag(blank_tag) for x in pm.peaklist_tags])[0])
     return pm

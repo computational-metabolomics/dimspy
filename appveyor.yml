@@ -2,7 +2,7 @@ build: false
 
 environment:
   matrix:
-    - PYTHON_VERSION: 2.7
+    - PYTHON_VERSION: 3.7
       MINICONDA: C:\Miniconda-x64
 
 init:
@@ -13,7 +13,7 @@ install:
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
   - conda info -a
-  - "conda create -q -n test-environment python=%PYTHON_VERSION% --file conda-requirements.txt -c conda-forge -c bioconda -c pythonnet"
+  - conda env create -n test-environment -f environment_win.yml
   - activate test-environment
   - python setup.py install
 

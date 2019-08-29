@@ -45,6 +45,7 @@ nosetests.xml
 coverage.xml
 *,cover
 .hypothesis/
+debug.py
 
 # Translations
 *.mo
@@ -63,6 +64,7 @@ instance/
 
 # Sphinx documentation
 docs/_build/
+docs/source/images/alignment.graffle
 
 # PyBuilder
 target/
@@ -82,11 +84,15 @@ celerybeat-schedule
 # virtualenv
 .venv
 venv/
+venv-py3/
 ENV/
 
 # PyCharm
 # User-specific stuff:
 .idea/
+
+# vscode
+.vscode
 
 # R-lanaguage
 # History files

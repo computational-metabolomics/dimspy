@@ -9,10 +9,10 @@ origin: 04-29-2017
 
 """
 
-
-import unittest, os
-import test_peaklist_metadata, test_peaklist_tags, test_peaklist, test_peak_matrix
-from test_suite_runner import runTestSuite
+import unittest, sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent.resolve()))
+from . import test_peaklist_metadata, test_peaklist_tags, test_peaklist, test_peak_matrix
 
 
 if __name__ == '__main__':
@@ -23,5 +23,5 @@ if __name__ == '__main__':
     suite.addTest(unittest.findTestCases(test_peaklist))
     suite.addTest(unittest.findTestCases(test_peak_matrix))
 
-    report = os.path.join(os.path.abspath(os.path.join(__file__, os.pardir)), 'test_results', 'results_test_suite_models')
-    runTestSuite(suite, report, title = 'Models Test Suite Report', verbosity = 2)
+    runner = unittest.TextTestRunner()
+    runner.run(suite)

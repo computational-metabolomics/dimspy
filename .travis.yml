@@ -1,23 +1,20 @@
+dist: xenial
 language: python
 python:
-  - "2.7"
+  - "3.7"
 
 install:
   - sudo apt-get update
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
-      wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh;
-    else
-      wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
-    fi
+  - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
   - bash miniconda.sh -b -p $HOME/miniconda
   - export PATH="$HOME/miniconda/bin:$PATH"
   - hash -r
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
   - conda info -a
-
-  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION coverage green codecov --file conda-requirements.txt -c conda-forge -c bioconda
+  - conda env create -n test-environment -f environment.yml
   - source activate test-environment
+  - conda install coverage green codecov -c conda-forge
   - python setup.py install
 
 script:
