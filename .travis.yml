@@ -19,7 +19,7 @@ install:
 
 script:
   - dimspy --help
-  - coverage run --source dimspy setup.py test
+  - coverage run --source dimspy --omit dimspy/__main__.py setup.py test
 
 after_script:
   - python -m codecov
