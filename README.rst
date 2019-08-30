@@ -2,15 +2,15 @@ DIMSpy
 ======
 |Version| |Py versions| |Git| |Bioconda| |Build Status (Travis)| |Build Status (AppVeyor)| |License| |RTD doc| |codecov| |binder|
 
-Python package to process direct-infusion mass spectrometry-based metabolomics and lipidomics data
+Python package for processing direct-infusion mass spectrometry-based metabolomics and lipidomics data
 
-- **Documentation:** https://computational-metabolomics.github.io/dimspy
+- **Documentation:** https://dimspy.readthedocs.io/en/latest
 - **Source:** https://github.com/computational-metabolomics/dimspy
 - **Bug reports:** https://github.com/computational-metabolomics/dimspy/issues
 
 Installation
 ------------
-See the `Installation page <https://computational-metabolomics.github.io/dimspy/introduction.html#installation>`__ of
+See the `Installation page <https://dimspy.readthedocs.io/en/latest/introduction.html#installation>`__ of
 the `online documentation <https://computational-metabolomics.github.io/dimspy/>`__.
 
 
@@ -31,9 +31,10 @@ will help you to make the PR if you are new to `git`.
 
 Developers & Contributors
 -------------------------
- - Ralf J. M. Weber (r.j.weber@bham.ac.uk) - `University of Birmingham (UK) <http://www.birmingham.ac.uk/index.aspx>`_
+ - Ralf J. M. Weber (r.j.weber@bham.ac.uk) - `University of Birmingham (UK) <https://www.birmingham.ac.uk/staff/profiles/biosciences/weber-ralf.aspx>`_
  - Jiarui (Albert) Zhou (j.zhou.3@bham.ac.uk) - `University of Birmingham (UK) <http://www.birmingham.ac.uk/index.aspx>`_, `HIT Shenzhen (China) <http://www.hitsz.edu.cn>`_
  - Thomas N. Lawson (tnl495@bham.ac.uk) - `University of Birmingham (UK) <http://www.birmingham.ac.uk/index.aspx>`_
+ - Martin R. Jones (martin.jones@eawag.ch) - `Eawag  (Switzerland) <https://www.eawag.ch/en/aboutus/portrait/organisation/staff/profile/martin-jones/show/>`_
 
 
 License
@@ -63,7 +64,7 @@ Released under the GNU General Public License v3.0 (see `LICENSE file <https://g
    :target: https://www.gnu.org/licenses/gpl-3.0.html
 
 .. |RTD doc| image:: https://img.shields.io/badge/documentation-RTD-71B360.svg?style=flat&maxAge=3600
-   :target: https://computational-metabolomics.github.io/dimspy/
+   :target: https://dimspy.readthedocs.io/en/latest/
    
 .. |codecov| image:: https://codecov.io/gh/computational-metabolomics/dimspy/branch/master/graph/badge.svg
    :target: https://codecov.io/gh/computational-metabolomics/dimspy
