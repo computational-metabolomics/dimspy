@@ -1,15 +1,17 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import os
 import argparse
+import os
+
 import h5py
+
+from dimspy import __version__
 from . import tools
 from .portals import hdf5_portal
-from dimspy import __version__
 
 
-def map_delimiter(delimiter):  # pragma: no cover
+def map_delimiter(delimiter: str):  # pragma: no cover
     seps = {"comma": ",", "tab": "\t"}
     if delimiter in seps:
         return seps[delimiter]

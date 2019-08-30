@@ -1,21 +1,14 @@
 #!/usr/bin/python 
 # -*- coding: utf-8 -*-
 
-"""
-
-.. moduleauthor:: Albert Zhou, Ralf Weber
-
-.. versionadded:: 1.0.0
-
-"""
-
-
-import os
 import collections
+import os
+
 import numpy as np
 import pymzml
-from dimspy.models.peaklist import PeakList
+
 from dimspy.experiment import mz_range_from_header
+from dimspy.models.peaklist import PeakList
 
 
 class Mzml:
@@ -31,6 +24,11 @@ class Mzml:
         self.run = pymzml.run.Reader(self.filename)
 
     def headers(self, n=None):
+        """
+
+        :param n:
+        :return:
+        """
         h_sids = collections.OrderedDict()
         run = pymzml.run.Reader(self.filename)
         for scan in run:
@@ -40,6 +38,10 @@ class Mzml:
         return h_sids
 
     def scan_ids(self):
+        """
+
+        :return:
+        """
         h_sids = collections.OrderedDict()
         run = pymzml.run.Reader(self.filename)
         for scan in run:
@@ -49,7 +51,12 @@ class Mzml:
         return h_sids
 
     def peaklist(self, scan_id, function_noise="median"):
+        """
 
+        :param scan_id:
+        :param function_noise:
+        :return:
+        """
         if function_noise not in ["mean", "median", "mad"]:
             raise ValueError("select a function that is available [mean, median, mad]")
 
@@ -86,6 +93,12 @@ class Mzml:
         return None
 
     def peaklists(self, scan_ids, function_noise="median"):
+        """
+
+        :param scan_ids:
+        :param function_noise:
+        :return:
+        """
         if function_noise not in ["mean", "median", "mad"]:
             raise ValueError("select a function that is available [mean, median, mad]")
         run = pymzml.run.Reader(self.filename)
@@ -94,6 +107,10 @@ class Mzml:
         return pls
 
     def tics(self):
+        """
+
+        :return:
+        """
         tic_values = collections.OrderedDict()
         run = pymzml.run.Reader(self.filename)
         for scan in run:
@@ -102,6 +119,10 @@ class Mzml:
         return tic_values
 
     def ion_injection_times(self):
+        """
+
+        :return:
+        """
         iits = collections.OrderedDict()
         run = pymzml.run.Reader(self.filename)
         for scan in run:
@@ -113,6 +134,10 @@ class Mzml:
         return iits
 
     def scan_dependents(self):
+        """
+
+        :return:
+        """
         l = []
         run = pymzml.run.Reader(self.filename)
         for scan in run:
@@ -130,6 +155,8 @@ class Mzml:
         return l
 
     def close(self):
+        """
+
+        :return:
+        """
         self.run.info["file_object"].close()
-        
-    

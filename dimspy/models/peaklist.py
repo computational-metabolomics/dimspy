@@ -1,22 +1,16 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-"""
-The PeakList data object class.
-
-.. moduleauthor:: Albert Zhou, Ralf Weber
-
-.. versionadded:: 1.0.0
-
-"""
-
-import logging, warnings
-import numpy as np
-import numpy.lib.recfunctions as rfn
-from typing import Callable, Sequence, Mapping, Union, Type
+import logging
+import warnings
 from collections import OrderedDict
 from collections.abc import Iterable
 from copy import deepcopy
+from typing import Callable, Sequence, Mapping, Union, Type
+
+import numpy as np
+import numpy.lib.recfunctions as rfn
+
 from .peaklist_metadata import PeakList_Metadata
 from .peaklist_tags import PeakList_Tags
 

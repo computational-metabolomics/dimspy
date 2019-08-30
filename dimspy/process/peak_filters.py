@@ -1,24 +1,14 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-"""
-PeakList and PeakMatrix filters.
-
-.. moduleauthor:: Albert Zhou, Ralf Weber
-
-.. versionadded:: 1.0.0
-
-"""
-
-
-
-
 import logging
-import numpy as np
 from functools import reduce
 from typing import Union, Sequence, Tuple, Any
-from dimspy.models.peaklist import PeakList
+
+import numpy as np
+
 from dimspy.models.peak_matrix import PeakMatrix, mask_peakmatrix, unmask_peakmatrix
+from dimspy.models.peaklist import PeakList
 
 
 # peaklist filters

@@ -1,19 +1,6 @@
 #!/usr/bin/env python
 #  -*- coding: utf-8 -*-
 
-"""
-The PeakList metadata class.
-
-.. moduleauthor:: Albert Zhou, Ralf Weber
-
-.. versionadded:: 1.0.0
-
-.. warning::
-    This class is designed for PeakList internal use only.
-
-"""
-
-
 # DO NOT try metadata.metadata.attr.
 # All attribute methods overrided
 class PeakList_Metadata(dict):

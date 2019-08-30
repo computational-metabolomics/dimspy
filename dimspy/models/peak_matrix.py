@@ -1,25 +1,16 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-"""
-The PeakMatrix data object class.
-
-.. moduleauthor:: Albert Zhou, Ralf Weber
-
-.. versionadded:: 1.0.0
-
-"""
-
-
-
 import logging
-import numpy as np
-from typing import  Sequence, Tuple, Any, Union
-from functools import reduce
 from collections import OrderedDict
 from collections.abc import Iterable
-from .peaklist_tags import Tag, PeakList_Tags
+from functools import reduce
+from typing import Sequence, Tuple, Any, Union
+
+import numpy as np
+
 from .peaklist import PeakList
+from .peaklist_tags import Tag, PeakList_Tags
 
 
 class PeakMatrix(object):

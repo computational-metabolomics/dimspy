@@ -1,22 +1,15 @@
 #!/usr/bin/env python
 #  -*- coding: utf-8 -*-
 
-"""
-The PeakList and PeakMatrix plain text portals.
-
-.. moduleauthor:: Albert Zhou, Ralf Weber
-
-.. versionadded:: 1.0.0
-
-"""
-
-import os
 import logging
-import numpy as np
+import os
 from ast import literal_eval
-from dimspy.models.peaklist_tags import PeakList_Tags
-from dimspy.models.peaklist import PeakList
+
+import numpy as np
+
 from dimspy.models.peak_matrix import PeakMatrix, unmask_all_peakmatrix
+from dimspy.models.peaklist import PeakList
+from dimspy.models.peaklist_tags import PeakList_Tags
 
 
 def _evalv(vect):

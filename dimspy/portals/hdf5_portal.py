@@ -1,25 +1,20 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-"""
-The PeakList and PeakMatrix HDF5 portals.
-
-.. moduleauthor:: Albert Zhou, Ralf Weber
-
-.. versionadded:: 1.0.0
-
-"""
-
-
-import os, logging, zlib, h5py
+import h5py
+import logging
+import os
 import pickle as cp
+import zlib
+from ast import literal_eval
+from typing import Sequence
+
 import numpy as np
 import tables as ptb
-from typing import Sequence
-from ast import literal_eval
-from dimspy.models.peaklist_tags import Tag, PeakList_Tags
-from dimspy.models.peaklist import PeakList
+
 from dimspy.models.peak_matrix import PeakMatrix, unmask_all_peakmatrix
+from dimspy.models.peaklist import PeakList
+from dimspy.models.peaklist_tags import Tag, PeakList_Tags
 
 
 def _eval(v):
@@ -42,6 +37,7 @@ def save_peaklists_as_hdf5(pkls: Sequence[PeakList], filename: str, compatibilit
 
     :param pkls: the target list of peaklist objects
     :param filename: path to a new HDF5 file
+    :param compatibility_mode: change mode to read previous DIMSpy v1.* based HDF5 file
 
     To incorporate with different dtypes in the attribute matrix, this portal converts all the arribute values
     into fix-length strings for HDF5 data tables storage. The order of the peaklists will be retained.
@@ -95,7 +91,8 @@ def load_peaklists_from_hdf5(filename: str, compatibility_mode: bool = False):
     Loads a list of peaklist objects from a HDF5 file.
 
     :param filename: path to a HDF5 file
-    :rtype: list
+    :param compatibility_mode: change mode to read previous DIMSpy v1.* based HDF5 file
+    :rtype: Sequence[PeakList]
 
     The values in HDF5 data tables are automatically converted to their original dtypes before loading in the peaklist.
 

@@ -1,46 +1,67 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-
-import warnings
-warnings.filterwarnings("ignore", category=ResourceWarning)
-
-import os
+import collections
 import logging
 import operator
-import collections
+import os
+import zipfile
+from itertools import combinations
+from typing import Sequence, Dict
+
 import h5py
 import numpy as np
-from itertools import combinations
-import zipfile
-from .models.peaklist import PeakList
+
+from .experiment import check_metadata
+from .experiment import idxs_reps_from_filelist
+from .experiment import interpret_experiment
+from .experiment import mz_range_from_header
+from .experiment import update_labels
+from .experiment import update_metadata_and_labels
 from .models.peak_matrix import PeakMatrix
+from .models.peaklist import PeakList
 from .models.peaklist_tags import Tag
 from .portals import hdf5_portal
 from .portals import txt_portal
 from .portals.paths import check_paths
-from .experiment import check_metadata
-from .experiment import update_labels
-from .experiment import update_metadata_and_labels
-from .experiment import idxs_reps_from_filelist
-from .experiment import mz_range_from_header
-from .experiment import interpret_experiment
 from .process.peak_alignment import align_peaks
-from .process.peak_filters import filter_fraction
-from .process.peak_filters import filter_blank_peaks
-from .process.peak_filters import filter_rsd
-from .process.peak_filters import filter_mz_ranges
 from .process.peak_filters import filter_attr
+from .process.peak_filters import filter_blank_peaks
+from .process.peak_filters import filter_fraction
+from .process.peak_filters import filter_mz_ranges
 from .process.peak_filters import filter_ringing
-from .process.replicate_processing import average_replicate_scans
+from .process.peak_filters import filter_rsd
 from .process.replicate_processing import average_replicate_peaklists
+from .process.replicate_processing import average_replicate_scans
 from .process.replicate_processing import join_peaklists
 from .process.replicate_processing import read_scans
 from .process.replicate_processing import remove_edges
 
 
-def process_scans(source, function_noise, snr_thres, ppm, min_fraction=None, rsd_thres=None, min_scans=1, filelist=None,
-                  skip_stitching=False, remove_mz_range=None, ringing_thres=None, filter_scan_events=None, report=None, block_size=5000, ncpus=None):
+def process_scans(source: str, function_noise: str, snr_thres: float, ppm: float, min_fraction: float or None = None,
+                  rsd_thres: float or None = None, min_scans: int = 1, filelist: str or None = None,
+                  skip_stitching: bool = False, remove_mz_range: list or None = None,
+                  ringing_thres: float or None = None, filter_scan_events: Dict or None  = None,
+                  report: str or None = None, block_size: int = 5000, ncpus: int or None  = None):
+    """
+
+    :param source:
+    :param function_noise:
+    :param snr_thres:
+    :param ppm:
+    :param min_fraction:
+    :param rsd_thres:
+    :param min_scans:
+    :param filelist:
+    :param skip_stitching:
+    :param remove_mz_range:
+    :param ringing_thres:
+    :param filter_scan_events:
+    :param report:
+    :param block_size:
+    :param ncpus:
+    :return:
+    """
 
     if filter_scan_events is None:
         filter_scan_events = {}
@@ -140,19 +161,55 @@ def process_scans(source, function_noise, snr_thres, ppm, min_fraction=None, rsd
 
 
 # placeholder (synonym)
-def sim_stitch(source, function_noise, snr_thres, ppm, min_fraction=None, rsd_thres=None, min_scans=1, filelist=None,
-                  skip_stitching=False, remove_mz_range=None, ringing_thres=None, filter_scan_events=None, report=None, block_size=5000, ncpus=None):
+def sim_stitch(source: str, function_noise: str, snr_thres: float, ppm: float, min_fraction: float or None = None,
+               rsd_thres: float or None = None, min_scans: int = 1, filelist: str or None = None,
+               skip_stitching: bool = False, remove_mz_range: list or None = None, ringing_thres: float or None = None,
+               filter_scan_events: Dict or None = None, report: str or None = None, block_size: int = 5000,
+               ncpus: int or None = None):
+    """
 
+    :param source:
+    :param function_noise:
+    :param snr_thres:
+    :param ppm:
+    :param min_fraction:
+    :param rsd_thres:
+    :param min_scans:
+    :param filelist:
+    :param skip_stitching:
+    :param remove_mz_range:
+    :param ringing_thres:
+    :param filter_scan_events:
+    :param report:
+    :param block_size:
+    :param ncpus:
+    :return:
+    """
     if filter_scan_events is None:
         filter_scan_events = {}
     if remove_mz_range is None:
         remove_mz_range = []
 
     return process_scans(source, function_noise, snr_thres, ppm, min_fraction, rsd_thres, min_scans, filelist,
-                  skip_stitching, remove_mz_range, ringing_thres, filter_scan_events, block_size, ncpus)
+                         skip_stitching, remove_mz_range, ringing_thres, filter_scan_events, report, block_size, ncpus)
 
 
-def replicate_filter(source, ppm, replicates, min_peaks, rsd_thres=None, filelist=None, report=None, block_size=5000, ncpus=None):
+def replicate_filter(source: str or Sequence[PeakList], ppm: float, replicates: int, min_peaks: int,
+                     rsd_thres: float or None = None, filelist: str or None = None, report: str or None = None,
+                     block_size: int = 5000, ncpus: int or None = None):
+    """
+
+    :param source:
+    :param ppm:
+    :param replicates:
+    :param min_peaks:
+    :param rsd_thres:
+    :param filelist:
+    :param report:
+    :param block_size:
+    :param ncpus:
+    :return:
+    """
 
     if replicates < min_peaks:
         raise IOError("Provide realistic values for the number of replicates and minimum number of peaks present (min_peaks)")
@@ -204,7 +261,7 @@ def replicate_filter(source, ppm, replicates, min_peaks, rsd_thres=None, filelis
 
         for pls_comb in combinations(peaklists[idxs_peaklists[idxs_pls][0]:idxs_peaklists[idxs_pls][-1] + 1], replicates):
 
-            pl = average_replicate_peaklists(pls_comb, ppm, min_peaks, rsd_thres, block_size=block_size, ncpus=None)
+            pl = average_replicate_peaklists(pls_comb, ppm, min_peaks, rsd_thres, block_size=block_size, ncpus=ncpus)
 
             if hasattr(pls_comb[0].metadata, "injectionOrder"):
                 pl.metadata["injectionOrder"] = int(pls_comb[0].metadata["injectionOrder"])
@@ -269,7 +326,17 @@ def replicate_filter(source, ppm, replicates, min_peaks, rsd_thres=None, filelis
     return pls_rep_filt
 
 
-def align_samples(source, ppm, filelist=None, block_size=5000, ncpus=None):
+def align_samples(source: str or Sequence[PeakList], ppm: float, filelist: str or None = None, block_size: int = 5000,
+                  ncpus: int or None = None):
+    """
+
+    :param source:
+    :param ppm:
+    :param filelist:
+    :param block_size:
+    :param ncpus:
+    :return:
+    """
 
     filenames = check_paths(filelist, source)
     peaklists = load_peaklists(source)
@@ -282,7 +349,20 @@ def align_samples(source, ppm, filelist=None, block_size=5000, ncpus=None):
     return align_peaks(peaklists, ppm=ppm, block_size=block_size, ncpus=ncpus)
 
 
-def blank_filter(peak_matrix, blank_label, min_fraction=1.0, min_fold_change=1.0, function="mean", rm_samples=True, labels=None):
+def blank_filter(peak_matrix: str or PeakMatrix, blank_label: str, min_fraction: float = 1.0,
+                 min_fold_change: float = 1.0, function: str = "mean", rm_samples: bool = True,
+                 labels: str or None = None):
+    """
+
+    :param peak_matrix:
+    :param blank_label:
+    :param min_fraction:
+    :param min_fold_change:
+    :param function:
+    :param rm_samples:
+    :param labels:
+    :return:
+    """
 
     if min_fraction < 0.0 or min_fraction > 1.0:
         raise ValueError("Provide a value between 0. and 1.")
@@ -306,7 +386,18 @@ def blank_filter(peak_matrix, blank_label, min_fraction=1.0, min_fold_change=1.0
     return filter_blank_peaks(peak_matrix, Tag(blank_label, 'classLabel'), min_fraction, min_fold_change, function, rm_samples)
 
 
-def sample_filter(peak_matrix, min_fraction, within=False, rsd=None, qc_label=None, labels=None):
+def sample_filter(peak_matrix: str or PeakMatrix, min_fraction: float, within: bool = False, rsd: float or None = None,
+                  qc_label: str or None = None, labels: str or None = None):
+    """
+
+    :param peak_matrix:
+    :param min_fraction:
+    :param within:
+    :param rsd:
+    :param qc_label:
+    :param labels:
+    :return:
+    """
 
     if not isinstance(peak_matrix, PeakMatrix):
         if h5py.is_hdf5(peak_matrix):
@@ -330,11 +421,25 @@ def sample_filter(peak_matrix, min_fraction, within=False, rsd=None, qc_label=No
     return peak_matrix
 
 
-def missing_values_sample_filter(peak_matrix, max_fraction):
+def missing_values_sample_filter(peak_matrix: PeakMatrix, max_fraction: float):
+    """
+
+    :param peak_matrix:
+    :param max_fraction:
+    :return:
+    """
+
     return peak_matrix.remove_samples(np.where([(x / float(peak_matrix.shape[1]) >= max_fraction) for x in peak_matrix.missing_values]))
 
 
-def remove_samples(obj, sample_names):
+def remove_samples(obj: PeakList or PeakMatrix, sample_names: list):
+    """
+
+    :param obj:
+    :param sample_names:
+    :return:
+    """
+
     if isinstance(obj, PeakMatrix):
         return obj.remove_samples(np.where([(x in sample_names) for x in obj.peaklist_ids]))
     elif isinstance(obj[0], PeakList):
@@ -343,8 +448,21 @@ def remove_samples(obj, sample_names):
         raise IOError("Incorrect format - PeakMatrix object or list of PeakList objects")
 
 
-def hdf5_peak_matrix_to_txt(filename, path_out, attr_name="intensity", rsd_tags=(), delimiter="\t",
-                            samples_in_rows=True, comprehensive=False, compatibility_mode=False):
+def hdf5_peak_matrix_to_txt(filename: str, path_out: str, attr_name: str = "intensity", rsd_tags: tuple = (),
+                            delimiter: str = "\t", samples_in_rows: bool = True, comprehensive: bool = False,
+                            compatibility_mode: bool = False):
+    """
+
+    :param filename:
+    :param path_out:
+    :param attr_name:
+    :param rsd_tags:
+    :param delimiter:
+    :param samples_in_rows:
+    :param comprehensive:
+    :param compatibility_mode:
+    :return:
+    """
 
     if not os.path.isfile(filename):
         raise IOError('HDF5 database [%s] does not exist' % filename)
@@ -359,7 +477,15 @@ def hdf5_peak_matrix_to_txt(filename, path_out, attr_name="intensity", rsd_tags=
     return
 
 
-def hdf5_peaklists_to_txt(filename, path_out, delimiter="\t", compatibility_mode=False):
+def hdf5_peaklists_to_txt(filename: str, path_out: str, delimiter: str = "\t", compatibility_mode: bool = False):
+    """
+
+    :param filename:
+    :param path_out:
+    :param delimiter:
+    :param compatibility_mode:
+    :return:
+    """
 
     if not os.path.isfile(filename):
         raise IOError('HDF5 database [%s] does not exist' % filename)
@@ -387,7 +513,13 @@ def hdf5_peaklists_to_txt(filename, path_out, delimiter="\t", compatibility_mode
     return
 
 
-def merge_peaklists(source, filelist=None):
+def merge_peaklists(source: Sequence[PeakList], filelist: str or None = None):
+    """
+
+    :param source:
+    :param filelist:
+    :return:
+    """
 
     if not isinstance(source, list):
         raise IOError("Incorrect input: list of lists of peaklists, list of peak matrix objects or list of HDF5 files expected.")
@@ -434,12 +566,23 @@ def merge_peaklists(source, filelist=None):
     return pls_merged
 
 
-def partition(alist, indices):
-    # return alist
+def partition(alist: list, indices: list):
+    """
+
+    :param alist:
+    :param indices:
+    :return:
+    """
+
     return [alist[i:j] for i, j in zip([0] + indices, indices + [None])]
 
 
-def load_peaklists(source):
+def load_peaklists(source: str or Sequence[PeakList]):
+    """
+
+    :param source:
+    :return:
+    """
 
     if type(source) == str:
         source = source.encode('string-escape')
@@ -470,6 +613,14 @@ def load_peaklists(source):
 
 
 def create_sample_list(source, path_out, delimiter="\t", qc_label="QC"):
+    """
+
+    :param source:
+    :param path_out:
+    :param delimiter:
+    :param qc_label:
+    :return:
+    """
 
     if isinstance(source, list) or isinstance(source, tuple):
 

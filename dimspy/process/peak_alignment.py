@@ -1,29 +1,20 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-"""
-Cluster and align peaklists into peak matrix.
-
-.. moduleauthor:: Albert Zhou, Ralf Weber
-
-.. versionadded:: 1.0.0
-
-"""
-
-
-
 import logging
-import numpy as np
-import fastcluster as fc
-from functools import reduce
-from operator import itemgetter
-from multiprocessing import Pool, cpu_count
 from collections import Counter
+from functools import reduce
+from multiprocessing import Pool, cpu_count
+from operator import itemgetter
 from typing import Sequence, List, Union
+
+import fastcluster as fc
+import numpy as np
 from scipy import cluster
 from scipy.spatial.distance import squareform
-from dimspy.models.peaklist import PeakList
+
 from dimspy.models.peak_matrix import PeakMatrix
+from dimspy.models.peaklist import PeakList
 
 
 # single cluster

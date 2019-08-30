@@ -1,18 +1,21 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import logging
 import collections
+import logging
 import os
 import zipfile
+from functools import reduce
+from typing import Sequence, Dict
+
 import numpy as np
+
+from dimspy.experiment import mz_range_from_header
+from dimspy.experiment import scan_type_from_header
 from dimspy.models.peaklist import PeakList
 from dimspy.portals import mzml_portal
 from dimspy.portals import thermo_raw_portal
 from dimspy.process.peak_alignment import align_peaks
-from dimspy.experiment import scan_type_from_header
-from dimspy.experiment import mz_range_from_header
-from functools import reduce
 
 
 def _calculate_edges(mz_ranges):
@@ -32,8 +35,12 @@ def _calculate_edges(mz_ranges):
     return list(zip(merged[::2], merged[1::2]))
 
 
-def remove_edges(pls_sd):
+def remove_edges(pls_sd: Dict):
+    """
 
+    :param pls_sd:
+    :return:
+    """
     if type(pls_sd) is not dict and type(pls_sd) is not collections.OrderedDict:
         raise TypeError("Incorrect format - dict or collections.OrderedDict required")
 
@@ -50,7 +57,16 @@ def remove_edges(pls_sd):
     return pls_sd
 
 
-def read_scans(fn, source, function_noise, min_scans=1, filter_scan_events=None):
+def read_scans(fn: str, source: str, function_noise: str, min_scans: int = 1, filter_scan_events: Dict = None):
+    """
+
+    :param fn:
+    :param source:
+    :param function_noise:
+    :param min_scans:
+    :param filter_scan_events:
+    :return:
+    """
 
     if filter_scan_events is None:
         filter_scan_events = {}
@@ -122,7 +138,20 @@ def read_scans(fn, source, function_noise, min_scans=1, filter_scan_events=None)
     return scans
 
 
-def average_replicate_scans(name, pls, ppm=2.0, min_fraction=0.8, rsd_thres=30.0, rsd_on="intensity", block_size=5000, ncpus=None):
+def average_replicate_scans(name: str, pls: Sequence[PeakList], ppm: float = 2.0, min_fraction: float = 0.8,
+                            rsd_thres: float = 30.0, rsd_on: str = "intensity", block_size: int = 5000, ncpus: int = None):
+    """
+
+    :param name:
+    :param pls:
+    :param ppm:
+    :param min_fraction:
+    :param rsd_thres:
+    :param rsd_on:
+    :param block_size:
+    :param ncpus:
+    :return:
+    """
 
     emlst = np.array([x.size == 0 for x in pls])
     if np.sum(emlst) > 0:
@@ -163,7 +192,18 @@ def average_replicate_scans(name, pls, ppm=2.0, min_fraction=0.8, rsd_thres=30.0
     return pl_avg
 
 
-def average_replicate_peaklists(pls, ppm, min_peaks, rsd_thres=None, block_size=5000, ncpus=None):
+def average_replicate_peaklists(pls: Sequence[PeakList], ppm: float, min_peaks: int, rsd_thres: float = None,
+                                block_size: int = 5000, ncpus: int = None):
+    """
+
+    :param pls:
+    :param ppm:
+    :param min_peaks:
+    :param rsd_thres:
+    :param block_size:
+    :param ncpus:
+    :return:
+    """
 
     pm = align_peaks(pls, ppm, block_size, ncpus)
 
@@ -184,7 +224,13 @@ def average_replicate_peaklists(pls, ppm, min_peaks, rsd_thres=None, block_size=
     return pl
 
 
-def join_peaklists(name, pls):
+def join_peaklists(name: str, pls: Sequence[PeakList]):
+    """
+
+    :param name:
+    :param pls:
+    :return:
+    """
 
     def _join_atrtributes(pls):
         attrs_out = collections.OrderedDict()

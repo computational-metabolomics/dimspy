@@ -1,20 +1,8 @@
 #!/usr/bin/env python
 #  -*- coding: utf-8 -*-
 
-"""
-The PeakList tags class.
-
-.. moduleauthor:: Albert Zhou, Ralf Weber
-
-.. versionadded:: 1.0.0
-
-.. warning::
-    This class is designed for PeakList and PeakMatrix internal use only.
-   
-"""
-
-
 from __future__ import annotations
+
 from typing import Union
 
 

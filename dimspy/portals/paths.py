@@ -1,23 +1,23 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-"""
-
-.. moduleauthor:: Albert Zhou, Ralf Weber
-
-.. versionadded:: 1.0.0
-
-"""
-
 import os
-import numpy as np
 import zipfile
+
 import h5py
-from dimspy.portals import hdf5_portal
+import numpy as np
+
 from dimspy.models.peaklist import PeakList
+from dimspy.portals import hdf5_portal
 
 
 def check_paths(tsv, source):
+    """
+
+    :param tsv:
+    :param source:
+    :return:
+    """
     if tsv is None:
         if type(source) == str:
             if os.path.isdir(source):
