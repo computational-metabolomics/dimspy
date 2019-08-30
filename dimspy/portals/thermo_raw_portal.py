@@ -123,20 +123,20 @@ class ThermoRaw:
         tics = collections.OrderedDict()
         for scan_id in range(self.run.RunHeaderEx.FirstSpectrum, self.run.RunHeaderEx.LastSpectrum + 1):
             scan_stats = self.run.GetScanStatsForScanNumber(scan_id)
-            tics[scan_id].append(scan_stats.TIC)
+            tics[scan_id] = scan_stats.TIC
         return tics
 
-    def injection_times(self):
-        injection_times = collections.OrderedDict()
+    def ion_injection_times(self):
+        iits = collections.OrderedDict()
         for scan_id in range(self.run.RunHeaderEx.FirstSpectrum, self.run.RunHeaderEx.LastSpectrum + 1):
             extra_values = list(self.run.GetTrailerExtraInformation(scan_id).Values)
             extra_labels = list(self.run.GetTrailerExtraInformation(scan_id).Labels)
             for i, label in enumerate(extra_labels):
                 if "Ion Injection Time (ms):" == label:
-                    injection_times[scan_id] = float(extra_values[i])
-            if scan_id not in injection_times:
-                injection_times[scan_id] = None
-        return injection_times
+                    iits[scan_id] = float(extra_values[i])
+            if scan_id not in iits:
+                iits[scan_id] = None
+        return iits
 
     def scan_dependents(self):
         l = []

@@ -85,8 +85,7 @@ class Mzml:
                 return pl
         return None
 
-    def peaklists(self, scan_ids, function_noise="median"):  # generator
-
+    def peaklists(self, scan_ids, function_noise="median"):
         if function_noise not in ["mean", "median", "mad"]:
             raise ValueError("select a function that is available [mean, median, mad]")
         run = pymzml.run.Reader(self.filename)
@@ -95,28 +94,23 @@ class Mzml:
         return pls
 
     def tics(self):
+        tic_values = collections.OrderedDict()
         run = pymzml.run.Reader(self.filename)
         for scan in run:
-            if scan["id"] == "TIC":
-                hit =  zip(*scan.peaks("raw"))[1]
-                run.info["file_object"].close()
-                return hit
+            tic_values[scan["id"]] = scan.TIC
         run.info["file_object"].close()
-        return
+        return tic_values
 
-    def injection_times(self):
-        injection_times = {}
+    def ion_injection_times(self):
+        iits = collections.OrderedDict()
         run = pymzml.run.Reader(self.filename)
         for scan in run:
-            injection_times[scan['id']] = None
-            for element in scan.xmlTree:
-                if "MS:1000927" == element.get('accession'):
-                    injection_times[scan['id']] = float(element.get("value"))
-                    break
-            if scan['id'] not in injection_times:
-                injection_times[scan['id']] = None
+            if "MS:1000927" in scan:
+                iits[scan['id']] = scan["MS:1000927"]
+            else:
+                iits[scan['id']] = None
         run.info["file_object"].close()
-        return injection_times
+        return iits
 
     def scan_dependents(self):
         l = []
@@ -124,9 +118,9 @@ class Mzml:
         for scan in run:
             if type(scan["id"]) == int:
                 scan_id = scan["id"]
-                if "precursors" in list(scan.keys()):
+                if hasattr(scan, "precursors"):
                     spectrum_ref = None
-                    for element in scan.xmlTree:
+                    for element in scan.element:
                         for e in list(element.items()):
                             if e[0] == 'spectrumRef':
                                 spectrum_ref = int(e[1].split("scan=")[1])

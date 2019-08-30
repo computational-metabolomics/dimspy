@@ -11,6 +11,7 @@ origin: 05-23-2017
 
 
 import unittest
+import os
 import copy
 import numpy as np
 from dimspy.tools import *
