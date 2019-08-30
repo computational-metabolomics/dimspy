@@ -100,7 +100,7 @@ def _partially_overlapping_windows(mzrs: list):
             if mzrs[i] not in temp:
                 temp.append(mzrs[i])
             if mzrs[i + 1] not in temp:
-                temp.append(mzrs[i+1])
+                temp.append(mzrs[i + 1])
     return temp
 
 
@@ -117,7 +117,7 @@ def _first_fully_overlapping_windows(mzrs: list):
 
     for i in range(0, len(mzrs) - 1):
         if mzrs[i][0] <= mzrs[i + 1][0] and mzrs[i][1] >= mzrs[i + 1][1]:
-            return mzrs[i], mzrs[i + 1] # Temporary print
+            return mzrs[i], mzrs[i + 1]  # Temporary print
     return []
 
 
@@ -140,7 +140,7 @@ def _non_overlapping_windows(mzrs: list):
                 c += 1
             elif mzrs[i][0] >= mzrs[j][1] and mzrs[i][1] >= mzrs[j][1]:
                 c += 1
-        if c == len(mzrs)-1:
+        if c == len(mzrs) - 1:
             temp.append(mzrs[i])
     return temp
 
@@ -218,14 +218,16 @@ def check_metadata(fn_tsv: str):
         print("Column for batch number missing. Not required.")
 
     if "injectionOrder" in fm_dict:
-        assert np.array_equal(fm_dict["injectionOrder"], sorted(fm_dict["injectionOrder"])), "Check the injectionOrder column - samples not in order"
+        assert np.array_equal(fm_dict["injectionOrder"], sorted(
+            fm_dict["injectionOrder"])), "Check the injectionOrder column - samples not in order"
     else:
         print("Column for sample injection order missing. Not required.")
 
     if "classLabel" in fm_dict:
         if "replicate" in fm_dict:
             for i in range(len(idxs_replicates)):
-                assert len(np.unique(fm_dict["classLabel"][min(idxs_replicates[i]):max(idxs_replicates[i])+1])) == 1, "class names do not match with number of replicates"
+                assert len(np.unique(fm_dict["classLabel"][min(idxs_replicates[i]):max(
+                    idxs_replicates[i]) + 1])) == 1, "class names do not match with number of replicates"
         unique, counts = np.unique(fm_dict["classLabel"], return_counts=True)
         cls = dict(list(zip(unique, counts)))
         print("Classes:", cls)
@@ -253,7 +255,7 @@ def update_metadata_and_labels(peaklists: Sequence[PeakList], fl: str):
 
             index = fl[list(fl.keys())[0]].index(pl.ID)
             pl.metadata[k] = fl[k][index]
-            #pl.metadata["filelist"] = {k:fl[k][index] for k in fl.keys()}
+            # pl.metadata["filelist"] = {k:fl[k][index] for k in fl.keys()}
 
             for tag_name in ["replicate", "replicates", "batch", "injectionOrder", "classLabel"]:
                 if tag_name in list(fl.keys()):
@@ -280,9 +282,11 @@ def update_labels(pm: PeakMatrix, fn_tsv: str):
             for k, v in row.items():
                 fm_dict.setdefault(k, []).append(v)
 
-    assert "sample_id" == list(fm_dict.keys())[0] or "filename" == list(fm_dict.keys())[0], "Column for class labels not available"
+    assert "sample_id" == list(fm_dict.keys())[0] or "filename" == list(fm_dict.keys())[
+        0], "Column for class labels not available"
     assert "classLabel" in fm_dict.keys(), "Column for class label (classLabel) not available"
-    assert (fm_dict[list(fm_dict.keys())[0]] == pm.peaklist_ids).all(), "Sample ids do not match {}".format(np.setdiff1d(fm_dict[list(fm_dict.keys())[0]], pm.peaklist_ids))
+    assert (fm_dict[list(fm_dict.keys())[0]] == pm.peaklist_ids).all(), "Sample ids do not match {}".format(
+        np.setdiff1d(fm_dict[list(fm_dict.keys())[0]], pm.peaklist_ids))
 
     for tag_name in ["replicate", "replicates", "batch", "injectionOrder", "classLabel"]:
         if tag_name in fm_dict:
@@ -303,15 +307,12 @@ def idxs_reps_from_filelist(replicates: list):
     idxs, temp = [], [0]
     replicates = [int(r) for r in replicates]
     for i in range(1, len(replicates)):
-        if (replicates[i-1] == replicates[i] or replicates[i-1] > replicates[i]) and replicates[i] == 1:
+        if (replicates[i - 1] == replicates[i] or replicates[i - 1] > replicates[i]) and replicates[i] == 1:
             idxs.append(temp)
             temp = [i]
-        elif replicates[i-1] < replicates[i] and replicates[i-1] - replicates[i] == -1:
+        elif replicates[i - 1] < replicates[i] and replicates[i - 1] - replicates[i] == -1:
             temp.append(i)
         else:
             raise ValueError("Incorrect numbering for replicates. Row {}".format(i))
     idxs.append(temp)
     return idxs
-
-
-

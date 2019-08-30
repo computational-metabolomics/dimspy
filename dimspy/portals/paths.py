@@ -21,7 +21,8 @@ def check_paths(tsv, source):
     if tsv is None:
         if type(source) == str:
             if os.path.isdir(source):
-                filenames = [os.path.join(source, fn) for fn in os.listdir(source) if fn.lower().endswith(".mzml") or fn.lower().endswith(".raw")]
+                filenames = [os.path.join(source, fn) for fn in os.listdir(source) if
+                             fn.lower().endswith(".mzml") or fn.lower().endswith(".raw")]
             elif zipfile.is_zipfile(source):
                 with zipfile.ZipFile(source) as zf:
                     if len([fn for fn in zf.namelist() if fn.lower().endswith(".raw")]) > 0:
@@ -72,13 +73,14 @@ def check_paths(tsv, source):
             else:
                 for filename in fm[fm.dtype.names[0]]:
                     if filename not in [os.path.basename(fn) for fn in source]:
-                        raise IOError("{} (row {}) does not exist in source provided".format(filename, list(fm[fm.dtype.names[0]]).index(filename)+1))
+                        raise IOError("{} (row {}) does not exist in source provided".format(filename, list(
+                            fm[fm.dtype.names[0]]).index(filename) + 1))
                 for fn in source:
                     if os.path.isfile(fn):
                         filenames.append(fn)
                     else:
                         raise IOError("[Errno 2] No such file or directory: {}".format(fn))
-  
+
         elif type(source) == str:
             if os.path.isdir(source):
                 l = os.listdir(source)

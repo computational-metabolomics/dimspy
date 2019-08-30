@@ -66,7 +66,8 @@ class ThermoRaw:
 
         scan = self.run.GetCentroidStream(scan_id, False)
         if scan.Masses is not None:
-            mz_ibn = list(zip(scan.Masses, scan.Intensities, scan.Baselines, scan.Noises))  # SignalToNoise not available
+            mz_ibn = list(
+                zip(scan.Masses, scan.Intensities, scan.Baselines, scan.Noises))  # SignalToNoise not available
             mz_ibn.sort()
             mzs, ints, baseline, noise = list(zip(*mz_ibn))
         else:

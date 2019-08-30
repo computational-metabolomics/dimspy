@@ -51,4 +51,3 @@ class PeakList_Metadata(dict):
             del self[item]
         else:
             super().__delattr__(item)
-

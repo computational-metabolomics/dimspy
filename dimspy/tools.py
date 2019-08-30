@@ -41,8 +41,8 @@ from .process.replicate_processing import remove_edges
 def process_scans(source: str, function_noise: str, snr_thres: float, ppm: float, min_fraction: float or None = None,
                   rsd_thres: float or None = None, min_scans: int = 1, filelist: str or None = None,
                   skip_stitching: bool = False, remove_mz_range: list or None = None,
-                  ringing_thres: float or None = None, filter_scan_events: Dict or None  = None,
-                  report: str or None = None, block_size: int = 5000, ncpus: int or None  = None):
+                  ringing_thres: float or None = None, filter_scan_events: Dict or None = None,
+                  report: str or None = None, block_size: int = 5000, ncpus: int or None = None):
     """
 
     :param source:
@@ -124,13 +124,14 @@ def process_scans(source: str, function_noise: str, snr_thres: float, ppm: float
         for h in pls_scans:
 
             nscans, n_peaks, median_rsd = len(pls_scans[h]), 0, "NA"
-            #pls_scans[h] = [pl for pl in pls_scans[h] if len(pl.mz) > 0]
+            # pls_scans[h] = [pl for pl in pls_scans[h] if len(pl.mz) > 0]
 
             if len(pls_scans[h]) >= 1:
                 if sum(pl.shape[0] for pl in pls_scans[h]) == 0:
                     logging.warning("No scan data available for {}".format(h))
                 else:
-                    pl_avg = average_replicate_scans(h, pls_scans[h], ppm, min_fraction, rsd_thres, "intensity", block_size, ncpus)
+                    pl_avg = average_replicate_scans(h, pls_scans[h], ppm, min_fraction, rsd_thres, "intensity",
+                                                     block_size, ncpus)
                     pls_avg.append(pl_avg)
                     n_peaks, median_rsd = pl_avg.shape[0], np.nanmedian(pl_avg.rsd)
             else:
@@ -147,7 +148,9 @@ def process_scans(source: str, function_noise: str, snr_thres: float, ppm: float
             pl = update_metadata_and_labels([pl], fl)
             pls.extend(pl)
             if len(list(pls_scans.keys())) > 1 and report is not None:
-                out.write("{}\t{}\t{}\t{}\t{}\n".format(os.path.basename(filenames[i]), "SIM-Stitch", "NA", pl[0].shape[0], np.nanmedian(pl[0].rsd)))
+                out.write(
+                    "{}\t{}\t{}\t{}\t{}\n".format(os.path.basename(filenames[i]), "SIM-Stitch", "NA", pl[0].shape[0],
+                                                  np.nanmedian(pl[0].rsd)))
         else:
             for pl in pls_avg:
                 pl = update_metadata_and_labels([pl], fl)
@@ -212,11 +215,14 @@ def replicate_filter(source: str or Sequence[PeakList], ppm: float, replicates: 
     """
 
     if replicates < min_peaks:
-        raise IOError("Provide realistic values for the number of replicates and minimum number of peaks present (min_peaks)")
+        raise IOError(
+            "Provide realistic values for the number of replicates and minimum number of peaks present (min_peaks)")
 
     filenames = check_paths(filelist, source)
     if len(filenames) == 0:
-        raise IOError("Provide a filelist that list all the text files (columnname:filename) and assign replicate numbers to each filename/sample (columnname:replicate)")
+        raise IOError(
+            "Provide a filelist that list all the text files (columnname:filename) and assign replicate numbers to "
+            "each filename/sample (columnname:replicate)")
     peaklists = load_peaklists(source)
 
     if filelist is not None:
@@ -245,13 +251,15 @@ def replicate_filter(source: str or Sequence[PeakList], ppm: float, replicates: 
         raise ValueError("Not enough (technical) replicates available for each sample.")
 
     if max(reps_each_sample) > replicates:
-        print(("NOTE: All combinations (n={}) for each each set of replicates are " \
-              "processed to calculate the most reproducible set.".format(replicates)))
+        print(("NOTE: All combinations (n={}) for each each set of replicates are "
+               "processed to calculate the most reproducible set.".format(replicates)))
         if report is not None:
-            out.write("set\trank\tname\tpeaks\tpeaks_{}oo{}\tmedian_rsd_{}oo{}\tscore\n".format(replicates, replicates, replicates, replicates))
+            out.write("set\trank\tname\tpeaks\tpeaks_{}oo{}\tmedian_rsd_{}oo{}\tscore\n".format(replicates, replicates,
+                                                                                                replicates, replicates))
     else:
         if report is not None:
-            out.write("name\tpeaks\tpeaks_{}oo{}\tmedian_rsd_{}oo{}\n".format(replicates, replicates, replicates, replicates))
+            out.write(
+                "name\tpeaks\tpeaks_{}oo{}\tmedian_rsd_{}oo{}\n".format(replicates, replicates, replicates, replicates))
 
     pls_rep_filt = []
     for idxs_pls in range(len(idxs_peaklists)):
@@ -259,7 +267,8 @@ def replicate_filter(source: str or Sequence[PeakList], ppm: float, replicates: 
         temp = []
         max_peak_count, max_peak_count_present = 0, 0
 
-        for pls_comb in combinations(peaklists[idxs_peaklists[idxs_pls][0]:idxs_peaklists[idxs_pls][-1] + 1], replicates):
+        for pls_comb in combinations(peaklists[idxs_peaklists[idxs_pls][0]:idxs_peaklists[idxs_pls][-1] + 1],
+                                     replicates):
 
             pl = average_replicate_peaklists(pls_comb, ppm, min_peaks, rsd_thres, block_size=block_size, ncpus=ncpus)
 
@@ -293,12 +302,12 @@ def replicate_filter(source: str or Sequence[PeakList], ppm: float, replicates: 
                 rsd_score = 0.0
             else:
                 inds = np.digitize([comb[3]], bins)
-                rsd_score = rsd_scores[inds[0]-1]
+                rsd_score = rsd_scores[inds[0] - 1]
 
             # score 1: peak count / peak count present in n-out-n (e.g. 3-out-of-3)
             # score 2: peak count present in n-out-n (e.g. 3-out-of-3) / MAX peak count present in n-out-n across replicates
             # score 3: RSD categories (0-5 (score=1.0), 5-10 (score=0.9), 10-15 (score=0.8), etc)
-            scores = [comb[2]/float(comb[1]), comb[2]/float(max_peak_count_present), rsd_score]
+            scores = [comb[2] / float(comb[1]), comb[2] / float(max_peak_count_present), rsd_score]
             if np.isnan(sum(scores)):
                 scores.append(0)
             else:
@@ -306,7 +315,8 @@ def replicate_filter(source: str or Sequence[PeakList], ppm: float, replicates: 
             temp[i].extend(scores)
 
         if sum([comb[-1] for comb in temp]) == 0.0:
-            logging.warning("insufficient data available to calculate scores for {}".format(str([comb[0].ID for comb in temp])))
+            logging.warning(
+                "insufficient data available to calculate scores for {}".format(str([comb[0].ID for comb in temp])))
 
         # sort the scores from high to low
         temp.sort(key=operator.itemgetter(-1), reverse=True)
@@ -316,13 +326,14 @@ def replicate_filter(source: str or Sequence[PeakList], ppm: float, replicates: 
         if report is not None:
             for p in range(0, len(temp)):
                 if max(reps_each_sample) > replicates:
-                    out.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(idxs_pls+1, p+1, temp[p][0].ID, temp[p][1], temp[p][2], temp[p][3], temp[p][-1]))
+                    out.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(idxs_pls + 1, p + 1, temp[p][0].ID, temp[p][1],
+                                                                    temp[p][2], temp[p][3], temp[p][-1]))
                 else:
                     out.write("{}\t{}\t{}\t{}\n".format(temp[p][0].ID, temp[p][1], temp[p][2], temp[p][3]))
-    
+
     if report is not None:
         out.close()
-    
+
     return pls_rep_filt
 
 
@@ -383,7 +394,8 @@ def blank_filter(peak_matrix: str or PeakMatrix, blank_label: str, min_fraction:
     if not any([Tag(blank_label, 'classLabel') in x for x in peak_matrix.peaklist_tags]):
         raise IOError("Blank label ({}) does not exist".format(blank_label))
 
-    return filter_blank_peaks(peak_matrix, Tag(blank_label, 'classLabel'), min_fraction, min_fold_change, function, rm_samples)
+    return filter_blank_peaks(peak_matrix, Tag(blank_label, 'classLabel'), min_fraction, min_fold_change, function,
+                              rm_samples)
 
 
 def sample_filter(peak_matrix: str or PeakMatrix, min_fraction: float, within: bool = False, rsd: float or None = None,
@@ -429,7 +441,8 @@ def missing_values_sample_filter(peak_matrix: PeakMatrix, max_fraction: float):
     :return:
     """
 
-    return peak_matrix.remove_samples(np.where([(x / float(peak_matrix.shape[1]) >= max_fraction) for x in peak_matrix.missing_values]))
+    return peak_matrix.remove_samples(
+        np.where([(x / float(peak_matrix.shape[1]) >= max_fraction) for x in peak_matrix.missing_values]))
 
 
 def remove_samples(obj: PeakList or PeakMatrix, sample_names: list):
@@ -522,7 +535,8 @@ def merge_peaklists(source: Sequence[PeakList], filelist: str or None = None):
     """
 
     if not isinstance(source, list):
-        raise IOError("Incorrect input: list of lists of peaklists, list of peak matrix objects or list of HDF5 files expected.")
+        raise IOError(
+            "Incorrect input: list of lists of peaklists, list of peak matrix objects or list of HDF5 files expected.")
 
     pls_merged = []
     for s in source:
@@ -544,7 +558,8 @@ def merge_peaklists(source: Sequence[PeakList], filelist: str or None = None):
             f.close()
             pls_merged.extend(pls)
         else:
-            raise IOError("Incorrect input: list of lists of peaklists, list of peak matrix objects or list of HDF5 files expected.")
+            raise IOError(
+                "Incorrect input: list of lists of peaklists, list of peak matrix objects or list of HDF5 files expected.")
 
     if filelist is not None:
         fl = check_metadata(filelist)
@@ -591,14 +606,17 @@ def load_peaklists(source: str or Sequence[PeakList]):
         elif zipfile.is_zipfile(source):
             zf = zipfile.ZipFile(source)
             filenames = zf.namelist()
-            assert len([fn for fn in filenames if fn.lower().endswith(".mzml") or fn.lower().endswith(".raw")]) == 0,\
+            assert len([fn for fn in filenames if fn.lower().endswith(".mzml") or fn.lower().endswith(".raw")]) == 0, \
                 "Incorrect format. Process .mzML and .raw files first using the \'process scans\' function"
-            peaklists = [txt_portal.load_peaklist_from_txt(zf.open(fn), ID=os.path.basename(fn), has_flag_col=True) for fn in filenames]
+            peaklists = [txt_portal.load_peaklist_from_txt(zf.open(fn), ID=os.path.basename(fn), has_flag_col=True) for
+                         fn in filenames]
         elif os.path.isdir(source):
             filenames = os.listdir(source)
-            assert len([fn for fn in filenames if fn.lower().endswith(".mzml") or fn.lower().endswith(".raw")]) == 0,\
+            assert len([fn for fn in filenames if fn.lower().endswith(".mzml") or fn.lower().endswith(".raw")]) == 0, \
                 "Incorrect format. Process .mzML and .raw files first using the \'process scans\' function"
-            peaklists = [txt_portal.load_peaklist_from_txt(os.path.join(source, fn), ID=os.path.basename(fn), delimiter="\t", has_flag_col=False) for fn in filenames]
+            peaklists = [
+                txt_portal.load_peaklist_from_txt(os.path.join(source, fn), ID=os.path.basename(fn), delimiter="\t",
+                                                  has_flag_col=False) for fn in filenames]
         else:
             raise IOError("Incorrect format. Process .mzML and .raw files first using the 'process scans' function")
     elif type(source) == list or type(source) == tuple:
