@@ -10,9 +10,11 @@ from typing import Callable, Sequence, Mapping, Union, Type
 
 import numpy as np
 import numpy.lib.recfunctions as rfn
+import pandas as pd
 
 from .peaklist_metadata import PeakList_Metadata
 from .peaklist_tags import PeakList_Tags
+
 
 
 class PeakList(object):
@@ -596,6 +598,16 @@ class PeakList(object):
         """
         title, data = zip(*self.to_dict().items())
         return str.join('\n', [str.join(delimiter, map(str, x)) for x in [title] + list(zip(*data))])
+
+    def to_df(self):
+        """
+        Exports peaklist attribute table to Pandas DataFrame, including the flags.
+
+        :rtype: pd.DataFrame
+
+        """
+        title, data = zip(*self.to_dict().items())
+        return pd.DataFrame(list(zip(*data)), columns=title)
 
     # utils
     def copy(self):

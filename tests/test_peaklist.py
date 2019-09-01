@@ -12,6 +12,7 @@ origin: 04-28-2017
 
 import unittest
 import numpy as np
+import pandas as pd
 import pickle as cp
 from dimspy.models.peaklist import PeakList
 
@@ -170,6 +171,14 @@ class PeakListTestCase(unittest.TestCase):
             self.fail('to_str function failed: ' + str(e))
         self.assertListEqual(np.arange(0, 1000, step = 100).tolist(),
                              list(map(float, list(zip(*[x.split(',') for x in psr.split('\n')[1:]]))[0])))
+
+        try:
+            pl_df = pl.to_df()
+        except Exception as e:
+            self.fail('to_df function failed: ' + str(e))
+
+        title, data = zip(*pl.to_dict().items())
+        self.assertTrue(pl_df.equals(pd.DataFrame(list(zip(*data)), columns=title)))
 
     def test_pl_pickle(self):
         pl = self._createPeakList()
