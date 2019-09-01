@@ -5,3 +5,4 @@ pymzml==2.4.2
 h5py==2.8.0
 pythonnet==2.4.0
 tables==3.5.2
+pandas==0.25.0

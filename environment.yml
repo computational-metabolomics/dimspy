@@ -11,4 +11,4 @@ dependencies:
  - pythonnet=2.4.0
  - fastcluster=1.1.25
  - pytables=3.5.2
-
+ - pandas==0.25.0
