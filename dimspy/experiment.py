@@ -5,7 +5,7 @@ import csv
 import os
 import re
 import warnings
-from typing import Sequence
+from typing import Sequence, Dict
 
 import numpy as np
 
@@ -237,7 +237,7 @@ def check_metadata(fn_tsv: str):
     return fm_dict
 
 
-def update_metadata_and_labels(peaklists: Sequence[PeakList], fl: str):
+def update_metadata_and_labels(peaklists: Sequence[PeakList], fl: Dict):
     """
 
     :param peaklists:

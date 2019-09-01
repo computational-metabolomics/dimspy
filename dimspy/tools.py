@@ -592,11 +592,12 @@ def partition(alist: list, indices: list):
     return [alist[i:j] for i, j in zip([0] + indices, indices + [None])]
 
 
-def load_peaklists(source: str or Sequence[PeakList]):
+def load_peaklists(source: Sequence[PeakList] or str):
     """
 
     :param source:
     :return:
+    :rtype: Sequence[PeakList]
     """
 
     if type(source) == str:
@@ -630,7 +631,7 @@ def load_peaklists(source: str or Sequence[PeakList]):
     return peaklists
 
 
-def create_sample_list(source, path_out, delimiter="\t", qc_label="QC"):
+def create_sample_list(source: Sequence[PeakList] or PeakMatrix, path_out: str, delimiter: str = "\t"):
     """
 
     :param source:
@@ -638,6 +639,7 @@ def create_sample_list(source, path_out, delimiter="\t", qc_label="QC"):
     :param delimiter:
     :param qc_label:
     :return:
+    :rtype: None
     """
 
     if isinstance(source, list) or isinstance(source, tuple):

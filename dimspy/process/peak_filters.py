@@ -67,13 +67,17 @@ def filter_mz_ranges(pl: PeakList, mz_ranges: Sequence[Tuple[float, float]], fla
                      flagged_only: bool = False, flag_index: Union[int, None] = None):
     """
     Peaklist mz range filter.
+
     :param pl: the target peaklist
     :param mz_ranges: the mz ranges to remove. Must be in the format of [(mz_min1, mz_max2), (mz_min2, mz_max2), ...]
     :param flag_name: name of the new flag attribute. Default = 'mz_range_remove_flag'
     :param flag_index: index of the new flag to be inserted into the peaklist. Default = None
-    :rtype: PeakList object
+    :rtype: PeakList
+
     This filter will remove all the peaks whose mz values are within any of the ranges in the mz_remove_rngs.
+
     """
+
     if flagged_only:
         flags = np.ones(pl.shape[0], dtype=bool)
     else:
@@ -102,7 +106,7 @@ def filter_rsd(pm: PeakMatrix, rsd_threshold: Union[int, float], qc_tag: Any, on
     :param qc_tag: tag (label) to unmask qc samples
     :param on_attr: calculate RSD on given attribute. Default = "intensity"
     :param flag_name: name of the new flag. Default = 'rsd_flag'
-    :rtype: PeakMatrix object
+    :rtype: PeakMatrix
 
     This filter will calculate the RSD values of the QC samples. A peak with a QC RSD value larger than the
     threshold will be unflagged.
