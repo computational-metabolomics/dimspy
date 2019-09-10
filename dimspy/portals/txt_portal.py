@@ -1,22 +1,15 @@
 #!/usr/bin/env python
 #  -*- coding: utf-8 -*-
 
-"""
-The PeakList and PeakMatrix plain text portals.
-
-.. moduleauthor:: Albert Zhou, Ralf Weber
-
-.. versionadded:: 1.0.0
-
-"""
-
-import os
 import logging
-import numpy as np
+import os
 from ast import literal_eval
-from dimspy.models.peaklist_tags import PeakList_Tags
-from dimspy.models.peaklist import PeakList
+
+import numpy as np
+
 from dimspy.models.peak_matrix import PeakMatrix, unmask_all_peakmatrix
+from dimspy.models.peaklist import PeakList
+from dimspy.models.peaklist_tags import PeakList_Tags
 
 
 def _evalv(vect):
@@ -43,7 +36,8 @@ def save_peaklist_as_txt(pkl: PeakList, filename: str, *args, **kwargs):
     with open(filename, 'w') as f: f.write(pkl.to_str(*args, **kwargs))
 
 
-def load_peaklist_from_txt(filename: str, ID: any, delimiter: str = ',', flag_names: str = 'auto', has_flag_col: bool = True):
+def load_peaklist_from_txt(filename: str, ID: any, delimiter: str = ',', flag_names: str = 'auto',
+                           has_flag_col: bool = True):
     """
     Loads a peaklist from plain text file.
 
@@ -76,7 +70,7 @@ def load_peaklist_from_txt(filename: str, ID: any, delimiter: str = ',', flag_na
     pkl = PeakList(ID, mzs, ints)
 
     flag_names = [x for x in hd if x.endswith('_flag')] if flag_names == 'auto' else \
-                 [] if flag_names is None else set(flag_names)
+        [] if flag_names is None else set(flag_names)
     for n, v in zip(hd[2:], dm[2:]): pkl.add_attribute(n, _evalv(v), is_flag=n in flag_names, flagged_only=False)
 
     return pkl
@@ -99,7 +93,8 @@ def save_peak_matrix_as_txt(pm: PeakMatrix, filename: str, *args, **kwargs):
         with unmask_all_peakmatrix(pm) as m: f.write(m.to_str(*args, **kwargs))
 
 
-def load_peak_matrix_from_txt(filename: str, delimiter: str = '\t', samples_in_rows: bool = True, comprehensive: str = 'auto'):
+def load_peak_matrix_from_txt(filename: str, delimiter: str = '\t', samples_in_rows: bool = True,
+                              comprehensive: str = 'auto'):
     """
     Loads a peak matrix from plain text file.
 
@@ -126,10 +121,11 @@ def load_peak_matrix_from_txt(filename: str, delimiter: str = '\t', samples_in_r
 
     def _parseflags():
         fgs = []
-        for l, ln in enumerate(rdlns[rsdrow+1:]):
+        for l, ln in enumerate(rdlns[rsdrow + 1:]):
             if ln[0] == 'flags': break
             fgs += [(ln[0], list(map(eval, [x for x in ln[1:] if x != ''])))]
         return fgs
+
     flgs = _parseflags() if comprehensive else []
 
     # must refactor if PeakMatrix.to_str changed
@@ -144,6 +140,7 @@ def load_peak_matrix_from_txt(filename: str, delimiter: str = '\t', samples_in_r
             tl = [x for x in enumerate(_evalv(tv)) if x[1] != '']
             for i, v in tl: tgs[i].add_tag(v) if tn == 'untyped' else tgs[i].add_tag(v, tn)
         return l, tgs
+
     tnum, tags = 0, [PeakList_Tags() for _ in pids]
     if comprehensive: tnum, tags = _parsetags(tags)
 
@@ -152,6 +149,5 @@ def load_peak_matrix_from_txt(filename: str, delimiter: str = '\t', samples_in_r
     ints = np.array(rlns[pcol:], dtype=float)
 
     pm = PeakMatrix(pids, tags, [('mz', mz), ('intensity', ints)])
-    for fn, fv in flgs: pm.add_flag(fn, fv, flagged_only = False)
+    for fn, fv in flgs: pm.add_flag(fn, fv, flagged_only=False)
     return pm
-

@@ -1,29 +1,20 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-"""
-Cluster and align peaklists into peak matrix.
-
-.. moduleauthor:: Albert Zhou, Ralf Weber
-
-.. versionadded:: 1.0.0
-
-"""
-
-
-
 import logging
-import numpy as np
-import fastcluster as fc
-from functools import reduce
-from operator import itemgetter
-from multiprocessing import Pool, cpu_count
 from collections import Counter
+from functools import reduce
+from multiprocessing import Pool, cpu_count
+from operator import itemgetter
 from typing import Sequence, List, Union
+
+import fastcluster as fc
+import numpy as np
 from scipy import cluster
 from scipy.spatial.distance import squareform
-from dimspy.models.peaklist import PeakList
+
 from dimspy.models.peak_matrix import PeakMatrix
+from dimspy.models.peaklist import PeakList
 
 
 # single cluster
@@ -69,7 +60,8 @@ def _cluster_peaks_mp(params):
     return _cluster_peaks(*params)
 
 
-def _cluster_peaks_map(mzs: Sequence[float], ppm: float, block_size: int, fixed_block: bool, edge_extend: Union[int, float], ncpus: Union[int, None]) -> List[List[int]]:
+def _cluster_peaks_map(mzs: Sequence[float], ppm: float, block_size: int, fixed_block: bool,
+                       edge_extend: Union[int, float], ncpus: Union[int, None]) -> List[List[int]]:
     if not np.all(mzs[1:] >= mzs[:-1]):
         raise ValueError('mz values not in ascending order')
     if not 1 <= block_size <= len(mzs):
@@ -99,7 +91,9 @@ def _cluster_peaks_map(mzs: Sequence[float], ppm: float, block_size: int, fixed_
         largechk = [x for x in p if len(x[0]) > 1E+5]
         if len(largechk) > 0:
             raise RuntimeError('Some of the clustering chunks contain too many peaks: \n%s' %
-                str.join('\n', ['mz range [%.5f - %.5f] ... [%d] peaks' % (min(x[0]),max(x[0]),len(x[0])) for x in largechk]))
+                               str.join('\n',
+                                        ['mz range [%.5f - %.5f] ... [%d] peaks' % (min(x[0]), max(x[0]), len(x[0])) for
+                                         x in largechk]))
         return (_smap if ncpus == 1 or cpu_count() <= 2 else _mmap)(f, p)
 
     # align edges
@@ -183,8 +177,8 @@ def _align_peaks(cids: np.ndarray, pids: np.ndarray, *attrs):
 
     def _fillam(a):
         alg = _avg_am if a.dtype.kind in ('i', 'u', 'f') else \
-              _cat_am if a.dtype.kind in ('?', 'b', 'a', 'S', 'U') else \
-              lambda x: logging.warning('undefined alignment behaviour for [%s] dtype data') # returns None
+            _cat_am if a.dtype.kind in ('?', 'b', 'a', 'S', 'U') else \
+                lambda x: logging.warning('undefined alignment behaviour for [%s] dtype data')  # returns None
         return alg(a)
 
     attrMs = list(map(_fillam, attrs))
@@ -195,7 +189,8 @@ def _align_peaks(cids: np.ndarray, pids: np.ndarray, *attrs):
 
 
 # interface
-def align_peaks(peaks: Sequence[PeakList], ppm: float = 2.0, block_size: int = 5000, fixed_block: bool = True, edge_extend: Union[int, float] = 10, ncpus: Union[int, None]  = None):
+def align_peaks(peaks: Sequence[PeakList], ppm: float = 2.0, block_size: int = 5000, fixed_block: bool = True,
+                edge_extend: Union[int, float] = 10, ncpus: Union[int, None] = None):
     """
     Cluster and align peaklists into a peak matrix.
 
@@ -239,7 +234,7 @@ def align_peaks(peaks: Sequence[PeakList], ppm: float = 2.0, block_size: int = 5
         raise ValueError('peak attributes not the same')
     if 'intra_count' in attrs:
         raise AttributeError('preserved attribute name [intra_count] already exists')
-    attrs = [x for x in attrs if x not in peaks[0].flag_attributes] # flags should be excluded
+    attrs = [x for x in attrs if x not in peaks[0].flag_attributes]  # flags should be excluded
 
     # single peaklist
     if len(peaks) == 1:

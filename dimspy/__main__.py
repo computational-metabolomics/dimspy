@@ -1,15 +1,17 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import os
 import argparse
+import os
+
 import h5py
+
+from dimspy import __version__
 from . import tools
 from .portals import hdf5_portal
-from dimspy import __version__
 
 
-def map_delimiter(delimiter):
+def map_delimiter(delimiter: str):  # pragma: no cover
     seps = {"comma": ",", "tab": "\t"}
     if delimiter in seps:
         return seps[delimiter]
@@ -17,27 +19,36 @@ def map_delimiter(delimiter):
         return delimiter
 
 
-def main():
+def main():  # pragma: no cover
 
     print(("Executing dimspy version %s." % __version__))
 
-    parser = argparse.ArgumentParser(description='Python package to process DIMS data', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser = argparse.ArgumentParser(description='Python package to process DIMS data',
+                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     subparsers = parser.add_subparsers(dest='step')
 
     parser_ps = subparsers.add_parser('process-scans', help='Process scans and/or stitch SIM windows.')
-    parser_rf = subparsers.add_parser('replicate-filter', help='Filter irreproducible peaks from technical replicate peaklists.')
+    parser_rf = subparsers.add_parser('replicate-filter',
+                                      help='Filter irreproducible peaks from technical replicate peaklists.')
     parser_as = subparsers.add_parser('align-samples', help='Align peaklists across samples.')
-    parser_bf = subparsers.add_parser('blank-filter', help='Filter peaks across samples that are present in the blank samples.')
-    parser_sf = subparsers.add_parser('sample-filter', help='Filter peaks based on certain reproducibility and sample class criteria.')
-    parser_rs = subparsers.add_parser('remove-samples', help='Remove sample(s) from a peak matrix object or list of peaklist objects.')
-    parser_mvsf = subparsers.add_parser('mv-sample-filter', help='Filter samples based on the percentage of missing values.')
-    parser_mp = subparsers.add_parser('merge-peaklists', help='Merge peaklists from multiple lists of peaklist or peak matrix objects.')
+    parser_bf = subparsers.add_parser('blank-filter',
+                                      help='Filter peaks across samples that are present in the blank samples.')
+    parser_sf = subparsers.add_parser('sample-filter',
+                                      help='Filter peaks based on certain reproducibility and sample class criteria.')
+    parser_rs = subparsers.add_parser('remove-samples',
+                                      help='Remove sample(s) from a peak matrix object or list of peaklist objects.')
+    parser_mvsf = subparsers.add_parser('mv-sample-filter',
+                                        help='Filter samples based on the percentage of missing values.')
+    parser_mp = subparsers.add_parser('merge-peaklists',
+                                      help='Merge peaklists from multiple lists of peaklist or peak matrix objects.')
     parser_gp = subparsers.add_parser('get-peaklists', help='Get peaklists from a peak matrix object.')
-    parser_gap = subparsers.add_parser('get-average-peaklist', help='Get an average peaklist from a peak matrix object.')
+    parser_gap = subparsers.add_parser('get-average-peaklist',
+                                       help='Get an average peaklist from a peak matrix object.')
     parser_hpmt = subparsers.add_parser('hdf5-pm-to-txt', help='Write HDF5 output (peak matrix) to text format.')
     parser_hplt = subparsers.add_parser('hdf5-pls-to-txt', help='Write HDF5 output (peak lists) to text format.')
-    parser_csl = subparsers.add_parser('create-sample-list', help='Create a sample list from a peak matrix object or list of peaklist objects.')
+    parser_csl = subparsers.add_parser('create-sample-list',
+                                       help='Create a sample list from a peak matrix object or list of peaklist objects.')
 
     #################################
     # PROCESS SCANS
@@ -61,7 +72,7 @@ def main():
                            help="Select function to calculate noise.")
 
     parser_ps.add_argument('-s', '--snr-threshold',
-                           default=3.0,  type=float,  required=True,
+                           default=3.0, type=float, required=True,
                            help="Signal-to-noise threshold")
 
     parser_ps.add_argument('-p', '--ppm',
@@ -89,12 +100,12 @@ def main():
                            help="Ringing")
 
     parser_ps.add_argument('-e', '--include-scan-events',
-                           action='append', nargs=3, required=False, 
+                           action='append', nargs=3, required=False,
                            metavar=('start', 'end', 'scan_type'), default=[],
                            help="Scan events to select. E.g. 100.0 200.0 sim  or  50.0 1000.0 full")
 
     parser_ps.add_argument('-x', '--exclude-scan-events',
-                           action='append', nargs=3, required=False, 
+                           action='append', nargs=3, required=False,
                            metavar=('start', 'end', 'scan_type'), default=[],
                            help="Scan events to select. E.g. 100.0 200.0 sim  or  50.0 1000.0 full")
 
@@ -143,7 +154,7 @@ def main():
                            help="Minimum number of times a peak has to be present (number) across technical replicates.")
 
     parser_rf.add_argument('-d', '--rsd-threshold',
-                           default=None, type=float,  required=False,
+                           default=None, type=float, required=False,
                            help="Maximum threshold - Relative Standard Deviation.")
 
     parser_rf.add_argument('-l', '--filelist',
@@ -228,7 +239,6 @@ def main():
                            type=str, required=False,
                            help="Tab delimited file with at least two columns named 'filename' and 'classLabel'.")
 
-
     #################################
     # Sample filter
     #################################
@@ -266,12 +276,12 @@ def main():
     #################################
 
     parser_mvsf.add_argument('-i', '--input',
-                           type=str, required=True,
-                           help="HDF5 file file that contains a peak matrix object.")
+                             type=str, required=True,
+                             help="HDF5 file file that contains a peak matrix object.")
 
     parser_mvsf.add_argument('-o', '--output',
-                           type=str, required=True,
-                           help="HDF5 file to save the peak matrix object to.")
+                             type=str, required=True,
+                             help="HDF5 file to save the peak matrix object to.")
 
     parser_mvsf.add_argument('-m', '--max-fraction',
                              type=float, required=False,
@@ -402,21 +412,22 @@ def main():
                             help="Values on each line of the file are separated by this character.")
 
     args = parser.parse_args()
-    
+
     print(args)
 
     if args.step == "process-scans":
 
         filter_scan_events = {}
         if args.exclude_scan_events != [] and args.include_scan_events != []:
-            raise argparse.ArgumentTypeError("-u/--include-scan-events and -x/--exclude-scan-events can not be used together.")
+            raise argparse.ArgumentTypeError(
+                "-u/--include-scan-events and -x/--exclude-scan-events can not be used together.")
         elif args.exclude_scan_events != []:
-            for se in args.exclude_scan_events: 
+            for se in args.exclude_scan_events:
                 if "exclude" not in filter_scan_events:
                     filter_scan_events["exclude"] = []
                 filter_scan_events["exclude"].append([se[0], se[1], se[2]])
         elif args.include_scan_events != []:
-            for se in args.include_scan_events: 
+            for se in args.include_scan_events:
                 if "include" not in filter_scan_events:
                     filter_scan_events["include"] = []
                 filter_scan_events["include"].append([se[0], se[1], se[2]])
@@ -513,7 +524,7 @@ def main():
                     m_nm = pls_merged[i][0].metadata['multilist']
                     hdf5_portal.save_peaklists_as_hdf5(pls_merged[i],
                                                        os.path.join(args.output,
-                                                       'merged_peaklist_{:03}.hdf5'.format(m_nm)))
+                                                                    'merged_peaklist_{:03}.hdf5'.format(m_nm)))
         else:
             hdf5_portal.save_peaklists_as_hdf5(pls_merged, args.output)
 
@@ -551,6 +562,6 @@ def main():
             inp = hdf5_portal.load_peak_matrix_from_hdf5(args.input)
         tools.create_sample_list(inp, args.output, delimiter=map_delimiter(args.delimiter))
 
+
 if __name__ == "__main__":
     main()
-

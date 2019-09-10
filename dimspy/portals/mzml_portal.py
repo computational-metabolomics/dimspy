@@ -1,70 +1,67 @@
 #!/usr/bin/python 
 # -*- coding: utf-8 -*-
 
-"""
-
-.. moduleauthor:: Albert Zhou, Ralf Weber
-
-.. versionadded:: 1.0.0
-
-"""
-
-
-import os
 import collections
-import numpy as np
-import zipfile
-from copy import deepcopy
-from dimspy.models.peaklist import PeakList
-from dimspy.experiment import mz_range_from_header
+import os
 
-import warnings
-warnings.simplefilter("ignore", category=ResourceWarning)
-with warnings.catch_warnings():
-    warnings.simplefilter("ignore", category=DeprecationWarning)
-    import pymzml
+import numpy as np
+import pymzml
+
+from dimspy.experiment import mz_range_from_header
+from dimspy.models.peaklist import PeakList
+
 
 class Mzml:
     def __init__(self, filename="", preload=True):
         self.filename = filename
-        self._preload = preload
-        self._cache = None
 
-    def run(self):
-        # if self._cache is not None: return self._cache
+        if not os.path.isfile(self.filename):
+            raise IOError("{} does not exist".format(self.filename))
 
         if not self.filename.lower().endswith(".mzml") and not self.filename.lower().endswith(".mzml.gz"):
             raise IOError('Incorrect file format for mzML parser')
-        
-        if self.filename.lower().endswith(".mzml") or self.filename.lower().endswith(".mzml.gz"):
-            if not os.path.isfile(self.filename):
-                raise IOError("{} does not exist".format(self.filename))
-            dat = pymzml.run.Reader(self.filename)
-            # if self._preload: dat = self._cache = tuple(map(deepcopy, dat))
-            return dat
-        else:
-            return None
+
+        self.run = pymzml.run.Reader(self.filename)
 
     def headers(self, n=None):
+        """
+
+        :param n:
+        :return:
+        """
         h_sids = collections.OrderedDict()
-        for scan in self.run():
+        run = pymzml.run.Reader(self.filename)
+        for scan in run:
             if 'MS:1000512' in scan:
                 h_sids.setdefault(scan['MS:1000512'], []).append(scan['id'])
+        run.info["file_object"].close()
         return h_sids
 
     def scan_ids(self):
+        """
+
+        :return:
+        """
         h_sids = collections.OrderedDict()
-        for scan in self.run():
+        run = pymzml.run.Reader(self.filename)
+        for scan in run:
             if 'MS:1000512' in scan:
                 h_sids[scan['id']] = str(scan['MS:1000512'])
+        run.info["file_object"].close()
         return h_sids
 
     def peaklist(self, scan_id, function_noise="median"):
+        """
 
+        :param scan_id:
+        :param function_noise:
+        :return:
+        """
         if function_noise not in ["mean", "median", "mad"]:
             raise ValueError("select a function that is available [mean, median, mad]")
 
-        for scan in self.run():
+        run = pymzml.run.Reader(self.filename)
+        for scan in run:
             if scan["id"] == scan_id:
                 peaks = scan.peaks("raw")
                 if len(peaks) > 0:
@@ -81,7 +78,6 @@ class Mzml:
                 header = scan['MS:1000512']
                 mz_range = mz_range_from_header(header)
                 ms_level = scan['ms level']
-
                 pl = PeakList(ID=scan["id"], mz=mzs, intensity=ints,
                               mz_range=mz_range,
                               header=header,
@@ -92,49 +88,75 @@ class Mzml:
                               function_noise=function_noise)
                 snr = np.divide(ints, scan.estimated_noise_level(mode=function_noise))
                 pl.add_attribute('snr', snr)
+                run.info["file_object"].close()
                 return pl
         return None
 
-    def peaklists(self, scan_ids, function_noise="median"):  # generator
+    def peaklists(self, scan_ids, function_noise="median"):
+        """
 
+        :param scan_ids:
+        :param function_noise:
+        :return:
+        """
         if function_noise not in ["mean", "median", "mad"]:
             raise ValueError("select a function that is available [mean, median, mad]")
-
-        # somehow i can not access the scans directly when run() uses an open archive object
-        # print self.run()[2] fails ...
-        return [self.peaklist(scan["id"], function_noise) for scan in self.run() if scan["id"] in scan_ids]
+        run = pymzml.run.Reader(self.filename)
+        pls = [self.peaklist(scan["id"], function_noise) for scan in run if scan["id"] in scan_ids]
+        run.info["file_object"].close()
+        return pls
 
     def tics(self):
-        # somehow i can not access the scans directly when run() uses an open archive object
-        # print self.run()[2]
-        for scan in self.run():
-            if scan["id"] == "TIC":
-                return zip(*scan.peaks("raw"))[1]
-        return
+        """
 
-    def injection_times(self):
-        injection_times = {}
-        for scan in self.run():
-            injection_times[scan['id']] = None
-            for element in scan.xmlTree:
-                if "MS:1000927" == element.get('accession'):
-                    injection_times[scan['id']] = float(element.get("value"))
-                    break
-            if scan['id'] not in injection_times:
-                injection_times[scan['id']] = None
-        return injection_times
+        :return:
+        """
+        tic_values = collections.OrderedDict()
+        run = pymzml.run.Reader(self.filename)
+        for scan in run:
+            tic_values[scan["id"]] = scan.TIC
+        run.info["file_object"].close()
+        return tic_values
+
+    def ion_injection_times(self):
+        """
+
+        :return:
+        """
+        iits = collections.OrderedDict()
+        run = pymzml.run.Reader(self.filename)
+        for scan in run:
+            if "MS:1000927" in scan:
+                iits[scan['id']] = scan["MS:1000927"]
+            else:
+                iits[scan['id']] = None
+        run.info["file_object"].close()
+        return iits
 
     def scan_dependents(self):
+        """
+
+        :return:
+        """
         l = []
-        for scan in self.run():
+        run = pymzml.run.Reader(self.filename)
+        for scan in run:
             if type(scan["id"]) == int:
                 scan_id = scan["id"]
-                if "precursors" in list(scan.keys()):
+                if hasattr(scan, "precursors"):
                     spectrum_ref = None
-                    for element in scan.xmlTree:
+                    for element in scan.element:
                         for e in list(element.items()):
                             if e[0] == 'spectrumRef':
                                 spectrum_ref = int(e[1].split("scan=")[1])
                     if spectrum_ref is not None:
                         l.append([spectrum_ref, scan_id])
+        run.info["file_object"].close()
         return l
+
+    def close(self):
+        """
+
+        :return:
+        """
+        self.run.info["file_object"].close()

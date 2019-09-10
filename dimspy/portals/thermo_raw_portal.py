@@ -1,21 +1,16 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-"""
-
-.. moduleauthor:: Ralf Weber, Albert Zhou
-
-.. versionadded:: 1.0.0
-
-"""
-
-import sys
+import collections
 import os
 import re
-import collections
-import numpy as np
-from dimspy.models.peaklist import PeakList
+import sys
+
 import clr
+import numpy as np
+
+from dimspy.models.peaklist import PeakList
+
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), "ThermoRawFileReader_3_0_41/Libraries"))
 clr.AddReference('ThermoFisher.CommonCore.RawFileReader')
 clr.AddReference('ThermoFisher.CommonCore.Data')
@@ -23,7 +18,12 @@ import ThermoFisher.CommonCore.Data.Business as Business
 import ThermoFisher.CommonCore.RawFileReader as RawFileReader
 
 
-def mz_range_from_header(h):
+def mz_range_from_header(h: str):
+    """
+
+    :param h:
+    :return: Sequence[float, float]
+    """
     return [float(m) for m in re.findall(r'([\w\.-]+)-([\w\.-]+)', h)[0]]
 
 
@@ -35,27 +35,39 @@ class ThermoRaw:
         self.filename = filename
 
     def headers(self):
+        """
 
+        :return:
+        """
         sids = collections.OrderedDict()
         for scan_id in range(self.run.RunHeaderEx.FirstSpectrum, self.run.RunHeaderEx.LastSpectrum + 1):
             sids.setdefault(str(self.run.GetFilterForScanNumber(scan_id).Filter), []).append(scan_id)
         return sids
 
     def scan_ids(self):
+        """
 
+        :return:
+        """
         sids = collections.OrderedDict()
         for scan_id in range(self.run.RunHeaderEx.FirstSpectrum, self.run.RunHeaderEx.LastSpectrum + 1):
             sids[scan_id] = str(self.run.GetFilterForScanNumber(scan_id).Filter)
         return sids
 
     def peaklist(self, scan_id, function_noise="noise_packets"):
+        """
 
+        :param scan_id:
+        :param function_noise:
+        :return:
+        """
         if function_noise not in ["noise_packets", "mean", "median", "mad"]:
             raise ValueError("select a function that is available [noise_packets, mean, median, mad]")
 
         scan = self.run.GetCentroidStream(scan_id, False)
         if scan.Masses is not None:
-            mz_ibn = list(zip(scan.Masses, scan.Intensities, scan.Baselines, scan.Noises))  # SignalToNoise not available
+            mz_ibn = list(
+                zip(scan.Masses, scan.Intensities, scan.Baselines, scan.Noises))  # SignalToNoise not available
             mz_ibn.sort()
             mzs, ints, baseline, noise = list(zip(*mz_ibn))
         else:
@@ -114,6 +126,12 @@ class ThermoRaw:
         return pl
 
     def peaklists(self, scan_ids, function_noise="noise_packets"):
+        """
+
+        :param scan_ids:
+        :param function_noise:
+        :return:
+        """
         if function_noise not in ["noise_packets", "mean", "median", "mad"]:
             raise ValueError("select a function that is available [noise_packets, mean, median, mad]")
 
@@ -123,22 +141,30 @@ class ThermoRaw:
         tics = collections.OrderedDict()
         for scan_id in range(self.run.RunHeaderEx.FirstSpectrum, self.run.RunHeaderEx.LastSpectrum + 1):
             scan_stats = self.run.GetScanStatsForScanNumber(scan_id)
-            tics[scan_id].append(scan_stats.TIC)
+            tics[scan_id] = scan_stats.TIC
         return tics
 
-    def injection_times(self):
-        injection_times = collections.OrderedDict()
+    def ion_injection_times(self):
+        """
+
+        :return:
+        """
+        iits = collections.OrderedDict()
         for scan_id in range(self.run.RunHeaderEx.FirstSpectrum, self.run.RunHeaderEx.LastSpectrum + 1):
             extra_values = list(self.run.GetTrailerExtraInformation(scan_id).Values)
             extra_labels = list(self.run.GetTrailerExtraInformation(scan_id).Labels)
             for i, label in enumerate(extra_labels):
                 if "Ion Injection Time (ms):" == label:
-                    injection_times[scan_id] = float(extra_values[i])
-            if scan_id not in injection_times:
-                injection_times[scan_id] = None
-        return injection_times
+                    iits[scan_id] = float(extra_values[i])
+            if scan_id not in iits:
+                iits[scan_id] = None
+        return iits
 
     def scan_dependents(self):
+        """
+
+        :return:
+        """
         l = []
         for scan_id in range(self.run.RunHeaderEx.FirstSpectrum, self.run.RunHeaderEx.LastSpectrum + 1):
             gsd = self.run.GetScanDependents(scan_id, 5)
@@ -148,4 +174,8 @@ class ThermoRaw:
         return l
 
     def close(self):
+        """
+
+        :return:
+        """
         self.run.Close()

@@ -1,24 +1,20 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-"""
-The PeakList data object class.
-
-.. moduleauthor:: Albert Zhou, Ralf Weber
-
-.. versionadded:: 1.0.0
-
-"""
-
-import logging, warnings
-import numpy as np
-import numpy.lib.recfunctions as rfn
-from typing import Callable, Sequence, Mapping, Union, Type
+import logging
+import warnings
 from collections import OrderedDict
 from collections.abc import Iterable
 from copy import deepcopy
+from typing import Callable, Sequence, Mapping, Union, Type
+
+import numpy as np
+import numpy.lib.recfunctions as rfn
+import pandas as pd
+
 from .peaklist_metadata import PeakList_Metadata
 from .peaklist_tags import PeakList_Tags
+
 
 
 class PeakList(object):
@@ -320,8 +316,9 @@ class PeakList(object):
         """
         return attr_name in self.attributes
 
-    def add_attribute(self, attr_name: str, attr_value: Sequence, attr_dtype: Union[Type, str, None] = None, is_flag: bool = False,
-                      on_index: Union[int, None] = None, flagged_only: bool = True, invalid_value = np.nan):
+    def add_attribute(self, attr_name: str, attr_value: Sequence, attr_dtype: Union[Type, str, None] = None,
+                      is_flag: bool = False,
+                      on_index: Union[int, None] = None, flagged_only: bool = True, invalid_value=np.nan):
         """
         Adds an new attribute to the PeakList attribute table.
 
@@ -349,13 +346,13 @@ class PeakList(object):
         if on_index is not None and not (-self.shape[1] + 1 < on_index < 0 or 1 < on_index < self.shape[1]):
             raise IndexError('index [%d] out of (insertable) range' % on_index)
 
-        attr_name = str(attr_name) # rfn.append_fields doesn't recognise unicode
+        attr_name = str(attr_name)  # rfn.append_fields doesn't recognise unicode
 
         adt = bool if is_flag else \
-              attr_dtype if attr_dtype is not None else \
-              attr_value.dtype.str if hasattr(attr_value, 'dtype') else \
-              ('U%d' % max(map(len, attr_value))) if isinstance(attr_value[0], str) else \
-              type(attr_value[0])
+            attr_dtype if attr_dtype is not None else \
+                attr_value.dtype.str if hasattr(attr_value, 'dtype') else \
+                    ('U%d' % max(map(len, attr_value))) if isinstance(attr_value[0], str) else \
+                        type(attr_value[0])
         if adt in (bool, 'bool', '|b1'): adt = 'b'  # fix numpy dtype bug
 
         if flagged_only:
@@ -379,11 +376,12 @@ class PeakList(object):
         # "Numpy has detected that you (may be) writing to an array returned
         #  by numpy.diagonal or by selecting multiple fields in a structured
         #  array. This code will likely break in a future numpy release ..."
-        warnings.simplefilter(action = 'ignore', category = FutureWarning)
+        warnings.simplefilter(action='ignore', category=FutureWarning)
         prevtb = np.array(nattr, dtype=[(attr_name, adt)]) if len(prevnm) == 0 else \
             rfn.append_fields(self._fields_view(self._dtable, prevnm), attr_name, nattr, dtypes=adt, usemask=False)
         self._dtable = prevtb if len(restnm) == 0 else \
-            rfn.append_fields(prevtb, restnm, list(zip(*self._fields_view(self._dtable, restnm))), dtypes=resttp, usemask=False)
+            rfn.append_fields(prevtb, restnm, list(zip(*self._fields_view(self._dtable, restnm))), dtypes=resttp,
+                              usemask=False)
         warnings.resetwarnings()
 
         if is_flag:
@@ -438,7 +436,7 @@ class PeakList(object):
 
         # May raise FutureWarning, but that shold be a false alarm, because attr_name is a string rather than a list
         # we are not accessing multiple fields by their names here
-        warnings.simplefilter(action = 'ignore', category = FutureWarning)
+        warnings.simplefilter(action='ignore', category=FutureWarning)
         self._dtable[attr_name][self._flags if flagged_only else slice(None)] = attr_value
         warnings.resetwarnings()
 
@@ -600,6 +598,16 @@ class PeakList(object):
         """
         title, data = zip(*self.to_dict().items())
         return str.join('\n', [str.join(delimiter, map(str, x)) for x in [title] + list(zip(*data))])
+
+    def to_df(self):
+        """
+        Exports peaklist attribute table to Pandas DataFrame, including the flags.
+
+        :rtype: pd.DataFrame
+
+        """
+        title, data = zip(*self.to_dict().items())
+        return pd.DataFrame(list(zip(*data)), columns=title)
 
     # utils
     def copy(self):

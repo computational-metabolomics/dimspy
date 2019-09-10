@@ -1,39 +1,47 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import logging
 import collections
+import logging
 import os
 import zipfile
+from functools import reduce
+from typing import Sequence, Dict
+
 import numpy as np
+
+from dimspy.experiment import mz_range_from_header
+from dimspy.experiment import scan_type_from_header
 from dimspy.models.peaklist import PeakList
 from dimspy.portals import mzml_portal
 from dimspy.portals import thermo_raw_portal
 from dimspy.process.peak_alignment import align_peaks
-from dimspy.experiment import scan_type_from_header
-from dimspy.experiment import mz_range_from_header
-from functools import reduce
 
 
 def _calculate_edges(mz_ranges):
     s_mz_ranges = list(map(sorted, mz_ranges))
     if len(s_mz_ranges) == 1:
         return s_mz_ranges
-    
+
     s_min, s_max = list(zip(*s_mz_ranges))
     assert all([x[0] < x[1] for x in zip(s_min[:-1], s_min[1:])]), 'start values not in order'
     assert all([x[0] < x[1] for x in zip(s_max[:-1], s_max[1:])]), 'end values not in order'
-    
+
     s_zip = list(zip(s_min[1:], s_max[:-1]))
-    e_size = [(x[1]-x[0]) * 0.5 for x in s_zip]
+    e_size = [(x[1] - x[0]) * 0.5 for x in s_zip]
     assert all([x > 0 for x in e_size]), 'incorrect overlap'
-    
-    merged = (s_min[0],) + reduce(lambda x, y: x+y, [(z[0]+e, z[1]-e) for z, e in zip(s_zip, e_size)]) + (s_max[-1],)
+
+    merged = (s_min[0],) + reduce(lambda x, y: x + y, [(z[0] + e, z[1] - e) for z, e in zip(s_zip, e_size)]) + (
+    s_max[-1],)
     return list(zip(merged[::2], merged[1::2]))
 
 
-def remove_edges(pls_sd):
+def remove_edges(pls_sd: Dict):
+    """
 
+    :param pls_sd:
+    :return:
+    """
     if type(pls_sd) is not dict and type(pls_sd) is not collections.OrderedDict:
         raise TypeError("Incorrect format - dict or collections.OrderedDict required")
 
@@ -42,7 +50,8 @@ def remove_edges(pls_sd):
     for h in list(pls_sd.keys()):
         mz_ranges = len(pls_sd[h]) * [new_mzrs[list(pls_sd.keys()).index(h)]]
         for i in range(len(pls_sd[h])):
-            remove = [np.where(pls_sd[h][i].mz == mz)[0][0] for mz in pls_sd[h][i].mz if mz < mz_ranges[i][0] or mz >= mz_ranges[i][1]]
+            remove = [np.where(pls_sd[h][i].mz == mz)[0][0] for mz in pls_sd[h][i].mz if
+                      mz < mz_ranges[i][0] or mz >= mz_ranges[i][1]]
             for mz in pls_sd[h][i].mz:
                 if mz < mz_ranges[i][0] or mz >= mz_ranges[i][1]:
                     remove.extend(list(np.where(pls_sd[h][i].mz == mz)[0]))
@@ -50,7 +59,16 @@ def remove_edges(pls_sd):
     return pls_sd
 
 
-def read_scans(fn, source, function_noise, min_scans=1, filter_scan_events=None):
+def read_scans(fn: str, source: str, function_noise: str, min_scans: int = 1, filter_scan_events: Dict = None):
+    """
+
+    :param fn:
+    :param source:
+    :param function_noise:
+    :param min_scans:
+    :param filter_scan_events:
+    :return:
+    """
 
     if filter_scan_events is None:
         filter_scan_events = {}
@@ -81,13 +99,16 @@ def read_scans(fn, source, function_noise, min_scans=1, filter_scan_events=None)
 
         if ("include" in filter_scan_events and "exclude" in filter_scan_events) or \
                 ("include" not in filter_scan_events and "exclude" not in filter_scan_events):
-            raise ValueError("Use 'exclude' or 'include' for filter_scan_events not both. E.g {'include': [[70.0, 170.0, 'sim']]}")
+            raise ValueError(
+                "Use 'exclude' or 'include' for filter_scan_events not both. E.g {'include': [[70.0, 170.0, 'sim']]}")
 
-        if len([True for fse in list(filter_scan_events.values())[0] if len(fse) == 3]) != len(list(filter_scan_events.values())[0]):
+        if len([True for fse in list(filter_scan_events.values())[0] if len(fse) == 3]) != len(
+                list(filter_scan_events.values())[0]):
             raise ValueError("Provide a start, end and scan type (sim or full) for filter_scan_events.")
 
         filter_scan_events = {list(filter_scan_events.keys())[0]:
-                              [[float(fse[0]), float(fse[1]), str(fse[2])] for fse in list(filter_scan_events.values())[0]]}
+                                  [[float(fse[0]), float(fse[1]), str(fse[2])] for fse in
+                                   list(filter_scan_events.values())[0]]}
 
         h_descs = {}
         for h in h_sids.copy():
@@ -115,20 +136,35 @@ def read_scans(fn, source, function_noise, min_scans=1, filter_scan_events=None)
         if len(sids) >= min_scans:
             scans[h] = run.peaklists(sids, function_noise)
         else:
-            logging.warning('Not enough scans for [{}] [{} < {}]. Scan event {} has been removed.'.format(h, len(scans), min_scans, h))
+            logging.warning(
+                'Not enough scans for [{}] [{} < {}]. Scan event {} has been removed.'.format(h, len(scans), min_scans,
+                                                                                              h))
 
-    if fn.lower().endswith(".raw"):
-        run.close()
+    run.close()
 
     return scans
 
 
-def average_replicate_scans(name, pls, ppm=2.0, min_fraction=0.8, rsd_thres=30.0, rsd_on="intensity", block_size=5000, ncpus=None):
+def average_replicate_scans(name: str, pls: Sequence[PeakList], ppm: float = 2.0, min_fraction: float = 0.8,
+                            rsd_thres: float = 30.0, rsd_on: str = "intensity", block_size: int = 5000,
+                            ncpus: int = None):
+    """
+
+    :param name:
+    :param pls:
+    :param ppm:
+    :param min_fraction:
+    :param rsd_thres:
+    :param rsd_on:
+    :param block_size:
+    :param ncpus:
+    :return:
+    """
 
     emlst = np.array([x.size == 0 for x in pls])
     if np.sum(emlst) > 0:
-        logging.warning('No scan data available for {}'.format(str([p.ID for e, p in zip(emlst,  pls) if e])))
-        pls = [p for e, p in zip(emlst,  pls) if not e]
+        logging.warning('No scan data available for {}'.format(str([p.ID for e, p in zip(emlst, pls) if e])))
+        pls = [p for e, p in zip(emlst, pls) if not e]
 
     pm = align_peaks(pls, ppm=ppm, block_size=block_size, ncpus=ncpus)
 
@@ -149,13 +185,14 @@ def average_replicate_scans(name, pls, ppm=2.0, min_fraction=0.8, rsd_thres=30.0
         rsd_label = "rsd"
         shift = 0
 
-    pl_avg.add_attribute("snr", pm.attr_mean_vector('snr'), on_index=2+shift)
+    pl_avg.add_attribute("snr", pm.attr_mean_vector('snr'), on_index=2 + shift)
     pl_avg.add_attribute("snr_flag", np.ones(pl_avg.full_size), flagged_only=False, is_flag=True)
 
-    pl_avg.add_attribute(rsd_label, pm.rsd(on_attr=rsd_on, flagged_only=False), on_index=5+shift)
+    pl_avg.add_attribute(rsd_label, pm.rsd(on_attr=rsd_on, flagged_only=False), on_index=5 + shift)
 
     if min_fraction is not None:
-        pl_avg.add_attribute("fraction_flag", (pm.present / float(pm.shape[0])) >= min_fraction, flagged_only=False, is_flag=True)
+        pl_avg.add_attribute("fraction_flag", (pm.present / float(pm.shape[0])) >= min_fraction, flagged_only=False,
+                             is_flag=True)
     if rsd_thres is not None:
         if pm.shape[0] == 1:
             logging.warning('applying RSD filter on single scan, all peaks removed')
@@ -164,7 +201,18 @@ def average_replicate_scans(name, pls, ppm=2.0, min_fraction=0.8, rsd_thres=30.0
     return pl_avg
 
 
-def average_replicate_peaklists(pls, ppm, min_peaks, rsd_thres=None, block_size=5000, ncpus=None):
+def average_replicate_peaklists(pls: Sequence[PeakList], ppm: float, min_peaks: int, rsd_thres: float = None,
+                                block_size: int = 5000, ncpus: int = None):
+    """
+
+    :param pls:
+    :param ppm:
+    :param min_peaks:
+    :param rsd_thres:
+    :param block_size:
+    :param ncpus:
+    :return:
+    """
 
     pm = align_peaks(pls, ppm, block_size, ncpus)
 
@@ -185,7 +233,13 @@ def average_replicate_peaklists(pls, ppm, min_peaks, rsd_thres=None, block_size=
     return pl
 
 
-def join_peaklists(name, pls):
+def join_peaklists(name: str, pls: Sequence[PeakList]):
+    """
+
+    :param name:
+    :param pls:
+    :return:
+    """
 
     def _join_atrtributes(pls):
         attrs_out = collections.OrderedDict()

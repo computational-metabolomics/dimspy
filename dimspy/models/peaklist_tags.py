@@ -1,20 +1,8 @@
 #!/usr/bin/env python
 #  -*- coding: utf-8 -*-
 
-"""
-The PeakList tags class.
-
-.. moduleauthor:: Albert Zhou, Ralf Weber
-
-.. versionadded:: 1.0.0
-
-.. warning::
-    This class is designed for PeakList and PeakMatrix internal use only.
-   
-"""
-
-
 from __future__ import annotations
+
 from typing import Union
 
 
@@ -55,7 +43,7 @@ class Tag(object):
         return self._value
 
     @value.setter
-    def value(self, value: Union[int, float, str]): # numpy types should be manually converted
+    def value(self, value: Union[int, float, str]):  # numpy types should be manually converted
         self._value = value
 
     @property
@@ -72,7 +60,7 @@ class Tag(object):
 
     @ttype.setter
     def ttype(self, value: Union[str, None]):
-        if value in ('None', ''): # reserve for hdf5 protal
+        if value in ('None', ''):  # reserve for hdf5 protal
             raise KeyError('["%s"] is not an acceptable tag type' % value)
         self._type = None if value is None else value
 
@@ -118,7 +106,7 @@ class PeakList_Tags(object):
     def __init__(self, *args, **kwargs):
         self._tags = []
         for v in args: self.add_tag(v)
-        for k,v in list(kwargs.items()): self.add_tag(v,k)
+        for k, v in list(kwargs.items()): self.add_tag(v, k)
 
     # build-ins
     def __str__(self):
@@ -207,7 +195,7 @@ class PeakList_Tags(object):
 
         """
         return (tag in self._tags) if isinstance(tag, Tag) or tag_type is None else \
-               (Tag(tag, tag_type) in self._tags)
+            (Tag(tag, tag_type) in self._tags)
 
     def has_tag_type(self, tag_type: Union[str, None] = None):
         """
