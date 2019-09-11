@@ -19,21 +19,6 @@ class PathsPortalsTestCase(unittest.TestCase):
 
         path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "data", "MTBLS79_subset")
 
-        source = os.path.join(path, "MTBLS79_mzml_triplicates.zip")
-        fns = paths.check_paths(None, source)
-        fns_c = ['batch04_QC17_rep01_262.mzML', 'batch04_QC17_rep02_263.mzML', 'batch04_QC17_rep03_264.mzML',
-                 'batch04_B02_rep01_301.mzML', 'batch04_B02_rep02_302.mzML', 'batch04_B02_rep03_303.mzML',
-                 'batch04_S01_rep01_247.mzML', 'batch04_S01_rep02_248.mzML', 'batch04_S01_rep03_249.mzML']
-        self.assertListEqual(fns, fns_c)
-
-        fn_filelist = os.path.join(path, "filelist_mzml_triplicates.txt")
-        print(path)
-        fns = paths.check_paths(fn_filelist, source)
-        fns_c = ['batch04_B02_rep01_301.mzML', 'batch04_B02_rep02_302.mzML', 'batch04_B02_rep03_303.mzML',
-                 'batch04_QC17_rep01_262.mzML', 'batch04_QC17_rep02_263.mzML', 'batch04_QC17_rep03_264.mzML',
-                 'batch04_S01_rep01_247.mzML', 'batch04_S01_rep02_248.mzML', 'batch04_S01_rep03_249.mzML']
-        self.assertListEqual(fns, fns_c)
-
         source_raw = os.path.join(path, "raw")
         fn_filelist_raw = os.path.join(path, "filelist_raw_triplicates.txt")
         fns = paths.check_paths(fn_filelist_raw, source_raw)

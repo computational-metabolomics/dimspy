@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import os
-import zipfile
 
 import h5py
 import numpy as np
@@ -23,11 +22,6 @@ def check_paths(tsv, source):
             if os.path.isdir(source):
                 filenames = [os.path.join(source, fn) for fn in os.listdir(source) if
                              fn.lower().endswith(".mzml") or fn.lower().endswith(".raw")]
-            elif zipfile.is_zipfile(source):
-                with zipfile.ZipFile(source) as zf:
-                    if len([fn for fn in zf.namelist() if fn.lower().endswith(".raw")]) > 0:
-                        raise IOError("Archive with *.raw files not yet supported. Convert to mzML")
-                    filenames = [fn for fn in zf.namelist() if fn.lower().endswith(".mzml")]
             elif h5py.is_hdf5(source):
                 peaklists = hdf5_portal.load_peaklists_from_hdf5(source)
                 filenames = [os.path.join(os.path.abspath(os.path.dirname(source)), pl.ID) for pl in peaklists]
@@ -88,15 +82,6 @@ def check_paths(tsv, source):
                     if os.path.basename(fn) not in l:
                         raise IOError("{} does not exist in directory provided".format(os.path.basename(fn)))
                     filenames.append(os.path.join(source, fn))
-
-            elif zipfile.is_zipfile(source):
-                with zipfile.ZipFile(source) as zf:
-                    if len([fn for fn in zf.namelist() if fn.lower().endswith(".raw")]) > 0:
-                        raise IOError("Archive with *.raw files not yet supported. Convert to mzML")
-                    for fn in fm[fm.dtype.names[0]]:
-                        if fn not in zf.namelist():
-                            raise IOError("{} does not exist in .zip file".format(fn))
-                        filenames.append(fn)
 
             elif h5py.is_hdf5(source):
                 peaklists = hdf5_portal.load_peaklists_from_hdf5(source)
