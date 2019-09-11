@@ -86,22 +86,20 @@ class ThermoRaw:
 
         scan_stats = self.run.GetScanStatsForScanNumber(scan_id)
 
+        ion_injection_time = None
+        micro_scans = None
+
         extra_values = list(self.run.GetTrailerExtraInformation(scan_id).Values)
         extra_labels = list(self.run.GetTrailerExtraInformation(scan_id).Labels)
         for i, label in enumerate(extra_labels):
             if "Ion Injection Time (ms):" == label:
-                ion_injection_time = extra_values[i]
-            else:
-                ion_injection_time = None
-            if "Elapsed Scan Time (sec):" == label:
-                scan_time = extra_values[i]
-            else:
-                scan_time = None
-            if "Micro Scan Count:" == label:
-                micro_scans = extra_values[i]
-            else:
-                micro_scans = None
+                ion_injection_time = float(extra_values[i])
+            elif "Elapsed Scan Time (sec):" == label:
+                elapsed_scan_time = float(extra_values[i])
+            elif "Micro Scan Count:" == label:
+                micro_scans = float(extra_values[i])
 
+        scan_time = float(scan_stats.StartTime)
         tic = scan_stats.TIC
         segment = scan_stats.SegmentNumber
         header = str(self.run.GetScanEventStringForScanNumber(scan_id))
@@ -115,6 +113,7 @@ class ThermoRaw:
                       segment=segment,
                       ion_injection_time=ion_injection_time,
                       scan_time=scan_time,
+                      elapsed_scan_time=elapsed_scan_time,
                       tic=tic,
                       function_noise=function_noise)
 

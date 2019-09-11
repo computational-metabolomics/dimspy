@@ -4,6 +4,7 @@
 import h5py
 import logging
 import os
+import warnings
 import pickle as cp
 import zlib
 from ast import literal_eval
@@ -15,6 +16,8 @@ import tables as ptb
 from dimspy.models.peak_matrix import PeakMatrix, unmask_all_peakmatrix
 from dimspy.models.peaklist import PeakList
 from dimspy.models.peaklist_tags import Tag, PeakList_Tags
+
+warnings.filterwarnings('ignore', category=ptb.NaturalNameWarning)
 
 
 def _eval(v):
