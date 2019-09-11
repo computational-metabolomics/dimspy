@@ -15,7 +15,7 @@ from dimspy.experiment import scan_type_from_header
 from dimspy.models.peaklist import PeakList
 from dimspy.portals import mzml_portal
 from dimspy.portals import thermo_raw_portal
-from dimspy.process.peak_alignment import align_peaks
+from .peak_alignment import align_peaks
 
 
 def _calculate_edges(mz_ranges):

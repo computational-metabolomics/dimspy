@@ -601,7 +601,7 @@ def load_peaklists(source: Sequence[PeakList] or str):
     """
 
     if type(source) == str:
-        source = source.encode('string-escape')
+        source = source.encode('unicode_escape')
         if h5py.is_hdf5(source):
             peaklists = hdf5_portal.load_peaklists_from_hdf5(source)
         elif zipfile.is_zipfile(source):
