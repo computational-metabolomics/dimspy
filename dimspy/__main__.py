@@ -3,6 +3,7 @@
 
 import argparse
 import os
+import zipfile
 
 import h5py
 
@@ -49,6 +50,7 @@ def main():  # pragma: no cover
     parser_hplt = subparsers.add_parser('hdf5-pls-to-txt', help='Write HDF5 output (peak lists) to text format.')
     parser_csl = subparsers.add_parser('create-sample-list',
                                        help='Create a sample list from a peak matrix object or list of peaklist objects.')
+    parser_un = subparsers.add_parser('unzip', help='Extract files from zip file')
 
     #################################
     # PROCESS SCANS
@@ -411,6 +413,18 @@ def main():  # pragma: no cover
                             default="tab", choices=["tab", "comma"],
                             help="Values on each line of the file are separated by this character.")
 
+    #################################
+    # Unzip archive
+    #################################
+
+    parser_un.add_argument('-i', '--input',
+                            type=str, required=True,
+                            help="file[.zip]")
+
+    parser_un.add_argument('-o', '--output',
+                            type=str, required=True,
+                            help="Directory to write to.")
+
     args = parser.parse_args()
 
     print(args)
@@ -561,6 +575,10 @@ def main():  # pragma: no cover
         except:
             inp = hdf5_portal.load_peak_matrix_from_hdf5(args.input)
         tools.create_sample_list(inp, args.output, delimiter=map_delimiter(args.delimiter))
+
+    elif args.step == "unzip":
+        with zipfile.ZipFile(args.input, 'r') as zip_ref:
+            zip_ref.extractall(args.output)
 
 
 if __name__ == "__main__":
