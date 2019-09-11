@@ -4,14 +4,6 @@ dimspy\.process package
 Submodules
 ----------
 
-dimspy\.process\.mass\_calibration module
------------------------------------------
-
-.. automodule:: dimspy.process.mass_calibration
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 dimspy\.process\.peak\_alignment module
 ---------------------------------------
 
@@ -19,6 +11,7 @@ dimspy\.process\.peak\_alignment module
     :members:
     :undoc-members:
     :show-inheritance:
+    :member-order: bysource
 
 dimspy\.process\.peak\_filters module
 -------------------------------------
@@ -27,15 +20,16 @@ dimspy\.process\.peak\_filters module
     :members:
     :undoc-members:
     :show-inheritance:
+    :member-order: bysource
 
 dimspy\.process\.scan\_processing module
 ----------------------------------------
 
-.. automodule:: dimspy.process.scan_processing
+.. automodule:: dimspy.process.replicate_processing
     :members:
     :undoc-members:
     :show-inheritance:
-
+    :member-order: bysource
 
 Module contents
 ---------------
@@ -44,3 +38,4 @@ Module contents
     :members:
     :undoc-members:
     :show-inheritance:
+    :member-order: bysource

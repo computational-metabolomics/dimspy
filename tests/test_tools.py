@@ -13,6 +13,7 @@ origin: 05-23-2017
 import unittest
 import os
 import copy
+import zipfile
 import numpy as np
 from dimspy.tools import *
 from dimspy.portals.hdf5_portal import *

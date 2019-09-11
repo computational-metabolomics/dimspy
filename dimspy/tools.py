@@ -5,7 +5,6 @@ import collections
 import logging
 import operator
 import os
-import zipfile
 from itertools import combinations
 from typing import Sequence, Dict
 
@@ -44,23 +43,86 @@ def process_scans(source: str, function_noise: str, snr_thres: float, ppm: float
                   ringing_thres: float or None = None, filter_scan_events: Dict or None = None,
                   report: str or None = None, block_size: int = 5000, ncpus: int or None = None):
     """
+    Extract, filter and average spectral data from input .RAW or .mzML files and generate a single mass
+    spectral peaklist (object) for each of the data files defined in the ‘filelist’ (see below).
 
-    :param source:
-    :param function_noise:
-    :param snr_thres:
-    :param ppm:
-    :param min_fraction:
-    :param rsd_thres:
-    :param min_scans:
-    :param filelist:
-    :param skip_stitching:
-    :param remove_mz_range:
-    :param ringing_thres:
-    :param filter_scan_events:
-    :param report:
-    :param block_size:
-    :param ncpus:
-    :return:
+    NOTE: When using .mzML files generated using the Proteowizard tool, SIM-type scans will only be treated
+    as spectra if the ‘simAsSpectra’ filter was set to true during the conversion process:
+    *msconvert.exe example.raw* **--simAsSpectra** *--64 --zlib --filter "peakPicking true 1-”*
+
+    :param source: Path to the input .RAW or .mzML files
+    :param function_noise: Function to calculate the noise from each scan. The following options are available:
+
+        * **median** - the median of all peak intensities within a given scan is used as the noise value.
+
+        * **mean** - the unweighted mean average of all peak intensities within a given scan is used as the noise value.
+
+        * **mad (Mean Absolute Deviation)** - the noise value is set as the mean of the absolute differences between peak
+          intensities and the mean peak intensity (calculated across all peak intensities within a given scan).
+
+        * **noise_packets** - the noise value is calculated using the proprietary algorithms contained in Thermo Fisher
+          Scientific’s msFileReader library. This option should only be applied when you are processing .RAW files.
+
+    :param snr_thres: Peaks with a signal-to-noise ratio (SNR) less-than or equal-to this value will be removed
+        from the output peaklist.
+
+    :param ppm: A positive numerical value equal-to or greater-than zero. This option impacts the clustering of peaks
+        extracted from an input file. If the mass-to-charge ratios of two peaks, when divided by the average of
+        their mass-to-charge ratios and then multiplied by 1 × 10^6, is equal-to or less-than this user-defined value,
+        then these peaks are clustered together as a single peak. Clustering is applied across all replicates of a given
+        scan event type i.e. with a given input file, all peaks detected in the three replicates of a 50-400 *m/z* scan event
+        would undergo assessment for the need for clustering.
+
+    :param min_fraction: A numerical value from 0 to 1 that specifies the minimum proportion of scans a given mass
+        spectral peak must be detected in, in order for it to be kept in the output peaklist. Here, scans refers to
+        replicates of the same scan event type, i.e. if set to 0.33, then a peak would need to be detected in at least
+        1 of the 3 replicates of a given scan event type.
+
+    :param rsd_thres: Relative standard deviation threshold - A numerical value equal-to or greater-than 0.
+        If greater than 0, then peaks whose intensity values have a percent relative standard deviation (otherwise termed
+        the percent coefficient of variation) greater-than this value are excluded from the output peaklist.
+
+    :param min_scans: Minimum number of scans required for each *m/z* window or event within a raw/mzML data file.
+
+    :param filelist: A tab-delimited text file containing **filename** and **classLabel** information for each
+        experimental sample. These column headers MUST be included in the first row of the table. For a standard DIMS
+        experiment, users are advised to also include the following additional columns:
+
+        * **injectionOrder** - integer values ranging from 1 to i, where i is the total number of independent injections
+          performed as part of a DIMS experiment. e.g. if a study included 20 samples, each of which was injected as four
+          independent replicates, there would be at least 20 * 4 injections, so i = 80 and the range for injection
+          order would be from 1 to 80 in steps of 1.
+
+        * **replicate** - integer value from 1 to r, indicating the order in which technical replicates of each study
+          sample were injected in to the mass spectrometer, e.g. if study samples were analysed in quadruplicate,
+          r = 4 and integer values are accordingly 1, 2, 3, 4.
+
+        * **batch** - integer value from 1 to b, where b corresponds to the total number of batches analysed under
+          define analysis conditions, for any given experiment. e.g. : if 4 independent plates of polar extracts were
+          analysed in the positive ionisation mode, then valid values for batch are 1, 2, 3 and 4.
+
+        This filelist may include additional columns, e.g. additional metadata relating to study samples. Ensure that columns
+        names do not conflict with existing column names.
+
+    :param skip_stitching: Selected Ion Monitoring (SIM) scans with overlapping scan ranges can be "stitched" together
+        in to a pseudo-spectrum. This is achieved by setting this parameter to False (default).
+    :param remove_mz_range: this option allows for specific m/z regions of the output peaklist to be deleted, this
+        option may be useful for removing sections of a spectrum known to correspond to system noise peaks.
+
+    :param ringing_thres: Fourier transform-based mass spectra often contain peaks (ringing artefacts) around
+        spectral features that require removal. This threshold is a positive float indicating the required relative
+        intensity a peak must exceed (with reference to the largest peak in a cluster of peaks) in order to be retained.
+
+    :param filter_scan_events: Include or exclude specific scan events, by default all ALL scan events will be
+        included. To include or exclude specific scan events use the following format of a dictionary.
+
+        >>> {"include":[[100, 300, "sim"]]} or {"include":[[100, 1000, "full"]]}
+
+    :param report: A tab-delimited text file containing details for each scan event processed in each .RAW or .mzML files.
+    :param block_size: Number peaks in each centre clustering block.
+    :param ncpus: Number of CPUs for parallel clustering. Default = None, indicating using as many as possible
+
+    :return: List of peaklist objects
     """
 
     if filter_scan_events is None:
@@ -161,40 +223,6 @@ def process_scans(source: str, function_noise: str, snr_thres: float, ppm: float
         out.close()
 
     return pls
-
-
-# placeholder (synonym)
-def sim_stitch(source: str, function_noise: str, snr_thres: float, ppm: float, min_fraction: float or None = None,
-               rsd_thres: float or None = None, min_scans: int = 1, filelist: str or None = None,
-               skip_stitching: bool = False, remove_mz_range: list or None = None, ringing_thres: float or None = None,
-               filter_scan_events: Dict or None = None, report: str or None = None, block_size: int = 5000,
-               ncpus: int or None = None):
-    """
-
-    :param source:
-    :param function_noise:
-    :param snr_thres:
-    :param ppm:
-    :param min_fraction:
-    :param rsd_thres:
-    :param min_scans:
-    :param filelist:
-    :param skip_stitching:
-    :param remove_mz_range:
-    :param ringing_thres:
-    :param filter_scan_events:
-    :param report:
-    :param block_size:
-    :param ncpus:
-    :return:
-    """
-    if filter_scan_events is None:
-        filter_scan_events = {}
-    if remove_mz_range is None:
-        remove_mz_range = []
-
-    return process_scans(source, function_noise, snr_thres, ppm, min_fraction, rsd_thres, min_scans, filelist,
-                         skip_stitching, remove_mz_range, ringing_thres, filter_scan_events, report, block_size, ncpus)
 
 
 def replicate_filter(source: str or Sequence[PeakList], ppm: float, replicates: int, min_peaks: int,
@@ -365,14 +393,14 @@ def blank_filter(peak_matrix: str or PeakMatrix, blank_label: str, min_fraction:
                  labels: str or None = None):
     """
 
-    :param peak_matrix:
+    :param peak_matrix: PeakMatrix object
     :param blank_label:
     :param min_fraction:
     :param min_fold_change:
     :param function:
     :param rm_samples:
     :param labels:
-    :return:
+    :return: PeakMatrix object
     """
 
     if min_fraction < 0.0 or min_fraction > 1.0:
@@ -402,13 +430,13 @@ def sample_filter(peak_matrix: str or PeakMatrix, min_fraction: float, within: b
                   qc_label: str or None = None, labels: str or None = None):
     """
 
-    :param peak_matrix:
+    :param peak_matrix: PeakMatrix object
     :param min_fraction:
     :param within:
     :param rsd:
     :param qc_label:
     :param labels:
-    :return:
+    :return: PeakMatrix object
     """
 
     if not isinstance(peak_matrix, PeakMatrix):
@@ -436,9 +464,9 @@ def sample_filter(peak_matrix: str or PeakMatrix, min_fraction: float, within: b
 def missing_values_sample_filter(peak_matrix: PeakMatrix, max_fraction: float):
     """
 
-    :param peak_matrix:
+    :param peak_matrix: PeakMatrix object
     :param max_fraction:
-    :return:
+    :return: PeakMatrix object
     """
 
     return peak_matrix.remove_samples(
@@ -448,9 +476,9 @@ def missing_values_sample_filter(peak_matrix: PeakMatrix, max_fraction: float):
 def remove_samples(obj: PeakList or PeakMatrix, sample_names: list):
     """
 
-    :param obj:
-    :param sample_names:
-    :return:
+    :param obj: Peaklist Object
+    :param sample_names: List of sample names
+    :return: List of Peaklist Objects or PeakMatrix object
     """
 
     if isinstance(obj, PeakMatrix):
@@ -474,7 +502,6 @@ def hdf5_peak_matrix_to_txt(filename: str, path_out: str, attr_name: str = "inte
     :param samples_in_rows:
     :param comprehensive:
     :param compatibility_mode:
-    :return:
     """
 
     if not os.path.isfile(filename):
@@ -497,7 +524,6 @@ def hdf5_peaklists_to_txt(filename: str, path_out: str, delimiter: str = "\t", c
     :param path_out:
     :param delimiter:
     :param compatibility_mode:
-    :return:
     """
 
     if not os.path.isfile(filename):
@@ -529,9 +555,9 @@ def hdf5_peaklists_to_txt(filename: str, path_out: str, delimiter: str = "\t", c
 def merge_peaklists(source: Sequence[PeakList], filelist: str or None = None):
     """
 
-    :param source:
+    :param source: List or typle of Peaklist objects, or hdf5 file
     :param filelist:
-    :return:
+    :return: Nested lists of Peaklist objects (e.g. [[pl_01, pl_02], [pl_03, pl_04, pl05]]
     """
 
     if not isinstance(source, list):
@@ -551,7 +577,7 @@ def merge_peaklists(source: Sequence[PeakList], filelist: str or None = None):
         elif h5py.is_hdf5(s):
             f = h5py.File(s, 'r')
             if "mz" in f:
-                pm = txt_portal.load_peak_matrix_from_txt(s)
+                pm = hdf5_portal.load_peak_matrix_from_hdf5(s)
                 pls = pm.extract_peaklists()
             else:
                 pls = hdf5_portal.load_peaklists_from_hdf5(s)
@@ -584,9 +610,9 @@ def merge_peaklists(source: Sequence[PeakList], filelist: str or None = None):
 def partition(alist: list, indices: list):
     """
 
-    :param alist:
-    :param indices:
-    :return:
+    :param alist: list
+    :param indices: indices
+    :return: Nested list
     """
 
     return [alist[i:j] for i, j in zip([0] + indices, indices + [None])]
@@ -595,7 +621,7 @@ def partition(alist: list, indices: list):
 def load_peaklists(source: Sequence[PeakList] or str):
     """
 
-    :param source:
+    :param source: hdf5 file or list of Peaklist objects
     :return:
     :rtype: Sequence[PeakList]
     """
@@ -604,13 +630,6 @@ def load_peaklists(source: Sequence[PeakList] or str):
         source = source.encode('unicode_escape')
         if h5py.is_hdf5(source):
             peaklists = hdf5_portal.load_peaklists_from_hdf5(source)
-        elif zipfile.is_zipfile(source):
-            zf = zipfile.ZipFile(source)
-            filenames = zf.namelist()
-            assert len([fn for fn in filenames if fn.lower().endswith(".mzml") or fn.lower().endswith(".raw")]) == 0, \
-                "Incorrect format. Process .mzML and .raw files first using the \'process scans\' function"
-            peaklists = [txt_portal.load_peaklist_from_txt(zf.open(fn), ID=os.path.basename(fn), has_flag_col=True) for
-                         fn in filenames]
         elif os.path.isdir(source):
             filenames = os.listdir(source)
             assert len([fn for fn in filenames if fn.lower().endswith(".mzml") or fn.lower().endswith(".raw")]) == 0, \
