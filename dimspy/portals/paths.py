@@ -96,4 +96,4 @@ def check_paths(tsv, source):
     else:
         raise IOError("[Errno 2] No such file or directory: {} or {}".format(source, tsv))
 
-    return filenames
+    return sorted(filenames)
