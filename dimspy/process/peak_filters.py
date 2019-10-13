@@ -6,9 +6,8 @@ from functools import reduce
 from typing import Union, Sequence, Tuple, Any
 
 import numpy as np
-
-from dimspy.models.peak_matrix import PeakMatrix, mask_peakmatrix, unmask_peakmatrix
-from dimspy.models.peaklist import PeakList
+from ..models.peak_matrix import PeakMatrix, mask_peakmatrix, unmask_peakmatrix
+from ..models.peaklist import PeakList
 
 
 # peaklist filters

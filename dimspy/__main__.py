@@ -6,8 +6,8 @@ import os
 import zipfile
 
 import h5py
-
 from dimspy import __version__
+
 from . import tools
 from .portals import hdf5_portal
 
@@ -83,7 +83,7 @@ def main():  # pragma: no cover
 
     parser_ps.add_argument('-n', '--min_scans',
                            default=1, type=int, required=False,
-                           help="Minimum number of scans required for each m/z range or event (header).")
+                           help="Minimum number of scans required for each m/z range or event.")
 
     parser_ps.add_argument('-a', '--min-fraction',
                            default=0.5, type=float, required=False,
@@ -104,7 +104,7 @@ def main():  # pragma: no cover
     parser_ps.add_argument('-e', '--include-scan-events',
                            action='append', nargs=3, required=False,
                            metavar=('start', 'end', 'scan_type'), default=[],
-                           help="Scan events to select. E.g. 100.0 200.0 sim  or  50.0 1000.0 full")
+                           help="Scan events to select. E.g. 100.0 200.0 sim or 50.0 1000.0 full")
 
     parser_ps.add_argument('-x', '--exclude-scan-events',
                            action='append', nargs=3, required=False,
@@ -434,7 +434,7 @@ def main():  # pragma: no cover
         filter_scan_events = {}
         if args.exclude_scan_events != [] and args.include_scan_events != []:
             raise argparse.ArgumentTypeError(
-                "-u/--include-scan-events and -x/--exclude-scan-events can not be used together.")
+                "-e/--include-scan-events and -x/--exclude-scan-events can not be used together.")
         elif args.exclude_scan_events != []:
             for se in args.exclude_scan_events:
                 if "exclude" not in filter_scan_events:
@@ -502,7 +502,7 @@ def main():  # pragma: no cover
         pm_sf = tools.sample_filter(peak_matrix=args.input,
                                     min_fraction=args.min_fraction,
                                     within=args.within,
-                                    rsd=args.rsd_threshold,
+                                    rsd_thres=args.rsd_threshold,
                                     qc_label=args.qc_label,
                                     labels=args.labels)
         hdf5_portal.save_peak_matrix_as_hdf5(pm_sf, args.output)

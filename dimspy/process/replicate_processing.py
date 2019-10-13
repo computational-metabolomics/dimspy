@@ -8,12 +8,12 @@ from functools import reduce
 from typing import Sequence, Dict
 
 import numpy as np
+from ..metadata import mz_range_from_header
+from ..metadata import scan_type_from_header
+from ..models.peaklist import PeakList
+from ..portals import mzml_portal
+from ..portals import thermo_raw_portal
 
-from dimspy.experiment import mz_range_from_header
-from dimspy.experiment import scan_type_from_header
-from dimspy.models.peaklist import PeakList
-from dimspy.portals import mzml_portal
-from dimspy.portals import thermo_raw_portal
 from .peak_alignment import align_peaks
 
 

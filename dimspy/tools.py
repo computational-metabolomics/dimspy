@@ -6,23 +6,23 @@ import logging
 import operator
 import os
 from itertools import combinations
-from typing import Sequence, Dict
+from typing import Sequence, Dict, Union
 
 import h5py
 import numpy as np
 
-from .experiment import check_metadata
-from .experiment import idxs_reps_from_filelist
-from .experiment import interpret_experiment
-from .experiment import mz_range_from_header
-from .experiment import update_labels
-from .experiment import update_metadata_and_labels
+from .metadata import validate_metadata
+from .metadata import idxs_reps_from_filelist
+from .metadata import interpret_method
+from .metadata import mz_range_from_header
+from .metadata import update_labels
+from .metadata import update_metadata_and_labels
 from .models.peak_matrix import PeakMatrix
 from .models.peaklist import PeakList
 from .models.peaklist_tags import Tag
 from .portals import hdf5_portal
 from .portals import txt_portal
-from .portals.paths import check_paths
+from .portals.paths import validate_and_sort_paths
 from .process.peak_alignment import align_peaks
 from .process.peak_filters import filter_attr
 from .process.peak_filters import filter_blank_peaks
@@ -37,20 +37,21 @@ from .process.replicate_processing import read_scans
 from .process.replicate_processing import remove_edges
 
 
-def process_scans(source: str, function_noise: str, snr_thres: float, ppm: float, min_fraction: float or None = None,
-                  rsd_thres: float or None = None, min_scans: int = 1, filelist: str or None = None,
+def process_scans(source: str, function_noise: str, snr_thres: float, ppm: float, min_fraction: Union[float, None] = None,
+                  rsd_thres: Union[float, None] = None, min_scans: int = 1, filelist: Union[str, None] = None,
                   skip_stitching: bool = False, remove_mz_range: list or None = None,
-                  ringing_thres: float or None = None, filter_scan_events: Dict or None = None,
-                  report: str or None = None, block_size: int = 5000, ncpus: int or None = None):
+                  ringing_thres: Union[float, None] = None, filter_scan_events: Dict or None = None,
+                  report: Union[str, None] = None, block_size: int = 5000, ncpus: int or None = None):
     """
     Extract, filter and average spectral data from input .RAW or .mzML files and generate a single mass
     spectral peaklist (object) for each of the data files defined in the ‘filelist’ (see below).
 
-    NOTE: When using .mzML files generated using the Proteowizard tool, SIM-type scans will only be treated
-    as spectra if the ‘simAsSpectra’ filter was set to true during the conversion process:
-    *msconvert.exe example.raw* **--simAsSpectra** *--64 --zlib --filter "peakPicking true 1-”*
+    .. warning::
+        When using .mzML files generated using the Proteowizard tool, SIM-type scans will only be treated
+        as spectra if the ‘simAsSpectra’ filter was set to true during the conversion process:
+        *msconvert.exe example.raw* **--simAsSpectra** *--64 --zlib --filter "peakPicking true 1-”*
 
-    :param source: Path to the input .RAW or .mzML files
+    :param source: Path to a set of input .RAW or .mzML files
     :param function_noise: Function to calculate the noise from each scan. The following options are available:
 
         * **median** - the median of all peak intensities within a given scan is used as the noise value.
@@ -68,7 +69,7 @@ def process_scans(source: str, function_noise: str, snr_thres: float, ppm: float
 
     :param ppm: A positive numerical value equal-to or greater-than zero. This option impacts the clustering of peaks
         extracted from an input file. If the mass-to-charge ratios of two peaks, when divided by the average of
-        their mass-to-charge ratios and then multiplied by 1 × 10^6, is equal-to or less-than this user-defined value,
+        their mass-to-charge ratios and then multiplied by 1 × 10\ :sup:`6`, is equal-to or less-than this user-defined value,
         then these peaks are clustered together as a single peak. Clustering is applied across all replicates of a given
         scan event type i.e. with a given input file, all peaks detected in the three replicates of a 50-400 *m/z* scan event
         would undergo assessment for the need for clustering.
@@ -118,9 +119,9 @@ def process_scans(source: str, function_noise: str, snr_thres: float, ppm: float
 
         >>> {"include":[[100, 300, "sim"]]} or {"include":[[100, 1000, "full"]]}
 
-    :param report: A tab-delimited text file containing details for each scan event processed in each .RAW or .mzML files.
+    :param report: A tab-delimited text file to write measures of quality (e.g. RSD, number of peaks, etc) for each scan event processed in each .RAW or .mzML files.
     :param block_size: Number peaks in each centre clustering block.
-    :param ncpus: Number of CPUs for parallel clustering. Default = None, indicating using as many as possible
+    :param ncpus: Number of CPUs for parallel clustering. Default = None, indicating using all CPUs that are available
 
     :return: List of peaklist objects
     """
@@ -130,13 +131,13 @@ def process_scans(source: str, function_noise: str, snr_thres: float, ppm: float
     if remove_mz_range is None:
         remove_mz_range = []
 
-    filenames = check_paths(filelist, source)
+    filenames = validate_and_sort_paths(source, filelist)
 
     if len([fn for fn in filenames if not fn.lower().endswith(".mzml") or not fn.lower().endswith(".raw")]) == 0:
         raise IOError("Incorrect file format. Provide .mzML and .raw files")
 
     if filelist is not None:
-        fl = check_metadata(filelist)
+        fl = validate_metadata(filelist)
     else:
         fl = collections.OrderedDict()
 
@@ -164,7 +165,7 @@ def process_scans(source: str, function_noise: str, snr_thres: float, ppm: float
 
         if not skip_stitching:
             mz_ranges = [mz_range_from_header(h) for h in pls_scans]
-            exp = interpret_experiment(mz_ranges)
+            exp = interpret_method(mz_ranges)
             if exp == "overlapping":
                 print("Removing 'edges' from SIM windows.....")
                 pls_scans = remove_edges(pls_scans)
@@ -225,28 +226,69 @@ def process_scans(source: str, function_noise: str, snr_thres: float, ppm: float
     return pls
 
 
-def replicate_filter(source: str or Sequence[PeakList], ppm: float, replicates: int, min_peaks: int,
-                     rsd_thres: float or None = None, filelist: str or None = None, report: str or None = None,
+def replicate_filter(source: Union[Sequence[PeakList], str], ppm: float, replicates: int, min_peaks: int,
+                     rsd_thres: Union[float, None] = None, filelist: Union[str, None] = None, report: Union[str, None] = None,
                      block_size: int = 5000, ncpus: int or None = None):
     """
+    Peaks from each technical replicate (for a given study sample) are aligned using a one-dimensional hierarchical
+    clustering procedure (applied on the mass-to-charge level).
+    Peaks are aligned only if the difference in their mass-to-charge ratios, when divided by the average of their
+    mass-to-charge ratios and multiplied by 1 × 10\ :sup:`6` \ (i.e. when measured in units of parts-per-million, ppm),
+    is less-than or equal-to the user-defined ‘ppm error tolerance’. After alignment, a set of user-defined filters are
+    applied to retain only those peaks that:
 
-    :param source:
+        * occur in equal-to or more-than the user-defined 'Number of technical replicates a peak has to be present
+          in', i.e. if set to 2, then a peak must be detected in at least two of the replicate analyses, **and/or**
+
+        * have relative standard deviation (measured in %; may otherwise be referred to as the percent coefficient
+          of variation) of intensity values, across technical replicates, that is equal-to or less-than the user-defined
+          ‘relative standard deviation threshold’ (if defined, otherwise ignored).
+
+    .. warning::
+        When the parameter “number of technical replicates for each sample” is set to a value less-than the total
+        number of technical replicates actually acquired for each study sample, this tool will automatically determine
+        which combination of technical replicates to combine. See the parameter description (below) for further details.
+
+    :param source: A list of processed peaklist objects generated by 'process_scans' or path to hdf5 file
     :param ppm:
-    :param replicates:
-    :param min_peaks:
-    :param rsd_thres:
+    :param replicates: Number of technical replicates for each sample - the total number of technical replicates
+        acquired for each study sample. This value must be set to the lowest number of technical replicates acquired
+        for ANY of the study samples, or alternatively, may be set to the minimum number of replicates the user would
+        like to select from the total number of technical replicates for a biological sample.
+
+    :param min_peaks: Minimum number of technical replicates a peak has to be present in.
+        For a given biological sample, the number of replicates that will be used to generate the replicate-filtered
+        peaklist. If this parameter is set to a value less-than the total number of technical replicates acquired for
+        each biological sample, it will automatically determines which combination of technical replicates yields
+        the best overall rank. Otherwise, all technical replicates are used. Ranking of the combinations of
+        technical replicates is based on the average of the following three scores:
+
+        * score 1: peak count / peak count present in n-out-n (e.g. 3-out-of-3)
+
+        * score 2: peak count present in x-out-of-n (e.g. 3-out-of-3) / MAX peak count present in x-out-of-n across
+          sets of replicates
+
+        * score 3: RSD categories (0-5 (score=1.0), 5-10 (score=0.9), 10-15 (score=0.8), etc)
+
+    :param rsd_thres: Relative standard deviation threshold - a numerical value from 0 upwards that defines the
+        acceptable percentage relative standard deviation (otherwise termed the percent coefficient of variation)
+        of a peak’s intensity across technical replicates. Peaks are removed from the output ‘replicate-filtered’
+        peaklist if this condition is not met. Set to None to skipe this filter.
+
     :param filelist:
-    :param report:
-    :param block_size:
-    :param ncpus:
-    :return:
+    :param report: A tab-delimited text file to write measures of quality (e.g. RSD, number of peaks, etc) for each
+        processed 'replicate-filtered' peaklist.
+    :param block_size: Number peaks in each centre clustering block.
+    :param ncpus: Number of CPUs for parallel clustering. Default = None, indicating using all CPUs that are available
+
+    :return: List of peaklist objects
     """
 
     if replicates < min_peaks:
         raise IOError(
             "Provide realistic values for the number of replicates and minimum number of peaks present (min_peaks)")
 
-    filenames = check_paths(filelist, source)
+    filenames = validate_and_sort_paths(source, filelist)
     if len(filenames) == 0:
         raise IOError(
             "Provide a filelist that list all the text files (columnname:filename) and assign replicate numbers to "
@@ -254,7 +296,7 @@ def replicate_filter(source: str or Sequence[PeakList], ppm: float, replicates: 
     peaklists = load_peaklists(source)
 
     if filelist is not None:
-        fl = check_metadata(filelist)
+        fl = validate_metadata(filelist)
         peaklists = [pl for pl in peaklists if pl.ID in [os.path.basename(fn) for fn in filenames]]
         peaklists = update_metadata_and_labels(peaklists, fl)
 
@@ -365,41 +407,66 @@ def replicate_filter(source: str or Sequence[PeakList], ppm: float, replicates: 
     return pls_rep_filt
 
 
-def align_samples(source: str or Sequence[PeakList], ppm: float, filelist: str or None = None, block_size: int = 5000,
+def align_samples(source: Union[Sequence[PeakList], str], ppm: float, filelist: Union[str, None] = None, block_size: int = 5000,
                   ncpus: int or None = None):
     """
 
-    :param source:
+    :param source: A list of processed peaklist objects generated by 'process_scans' and/or 'replicate_filter', or path to hdf5 file.
     :param ppm:
     :param filelist:
-    :param block_size:
-    :param ncpus:
+    :param block_size: Number peaks in each centre clustering block.
+    :param ncpus: Number of CPUs for parallel clustering. Default = None, indicating using all CPUs that are available
+
     :return:
     """
 
-    filenames = check_paths(filelist, source)
+    filenames = validate_and_sort_paths(source, filelist)
     peaklists = load_peaklists(source)
 
     if filelist is not None:
-        fl = check_metadata(filelist)
+        fl = validate_metadata(filelist)
         peaklists = [pl for pl in peaklists if pl.ID in [os.path.basename(fn) for fn in filenames]]
         peaklists = update_metadata_and_labels(peaklists, fl)
 
     return align_peaks(peaklists, ppm=ppm, block_size=block_size, ncpus=ncpus)
 
 
-def blank_filter(peak_matrix: str or PeakMatrix, blank_label: str, min_fraction: float = 1.0,
+def blank_filter(peak_matrix: Union[PeakMatrix, str], blank_label: str, min_fraction: float = 1.0,
                  min_fold_change: float = 1.0, function: str = "mean", rm_samples: bool = True,
-                 labels: str or None = None):
+                 labels: Union[str, None] = None):
     """
 
     :param peak_matrix: PeakMatrix object
-    :param blank_label:
-    :param min_fraction:
-    :param min_fold_change:
-    :param function:
-    :param rm_samples:
-    :param labels:
+    :param blank_label: Label for the blank samples - a string indicating the name of the class to be used for
+        filtering (e.g. blank), i.e. the “reference” class. This string must have been included in the “classLabel”
+        column of the metadata file associated with the process_sans or replicate_filter function(s).
+    :param min_fraction: A numeric value ranging from 0 to 1. Setting this value to None or 0 will skip this
+        filtering step. A value greater than 0 requires that for each peak in the peak intensity matrix,
+        at least this proportion of non-reference samples have to have an intensity value that exceeds the product
+        of: (A) the average intensity of “reference” class intensities and (B) the user-defined “min_fold_change”.
+        If this condition is not met, the peak is removed from the peak intensity matrix.
+
+    :param min_fold_change: A numeric value from 0 upwards. When minimum fraction filtering is enabled, this value
+        defines the minimum required ratio between the intensity of a peak in a “non-reference” sample and the average
+        intensity of the “reference” sample(s). Peaks with ratios exceeding this threshold are considered to have been
+        reliably detected in a “non-reference” sample.
+
+    :param function: Function to calculate the 'reference' intensity
+
+        * **mean** - corresponds to using the non-weighted average of “reference” sample peak intensities
+          (NA values are ignored) in calculating the “reference” to “non-reference” peak intensity ratio.
+
+        * **median** - corresponds to using the median of “reference” sample peak intensities (NA values are ignored)
+          in calculating the “reference” to “non-reference” peak intensity ratio.
+
+        * **max** corresponds to the use of the maximum intensity among “reference” sample peak intensities
+          (NA values are ignored) in calculating the “reference” to “non-reference” peak intensity ratio.
+
+    :param rm_samples: 	Remove blank samples from the output peak matrix:
+        * **True** - samples belonging to the user-defined “reference” class are removed from the output peak matrix
+        * **False** - samples belonging to the user-defined “reference” class are retained in the output peak matrix.
+
+    :param labels: Path to the metadata file
     :return: PeakMatrix object
     """
 
@@ -426,16 +493,36 @@ def blank_filter(peak_matrix: str or PeakMatrix, blank_label: str, min_fraction:
                               rm_samples)
 
 
-def sample_filter(peak_matrix: str or PeakMatrix, min_fraction: float, within: bool = False, rsd: float or None = None,
-                  qc_label: str or None = None, labels: str or None = None):
+def sample_filter(peak_matrix: Union[PeakMatrix, str], min_fraction: float, within: bool = False,
+                  rsd_thres: Union[float, None] = None, qc_label: Union[str, None] = None, labels: Union[str, None] = None):
     """
 
-    :param peak_matrix: PeakMatrix object
-    :param min_fraction:
-    :param within:
-    :param rsd:
-    :param qc_label:
-    :param labels:
+    :param peak_matrix: PeakMatrix object or path to hdf5 file
+    :param min_fraction: Minimum fraction - a numeric value between 0 and 1 indicating the proportion of study
+        samples in which a peak must have a recorded intensity value in order for it to be retained in the output peak
+        intensity matrix; e.g. 0.5 means that at least 50% of samples (whether assessed across all classes, or within
+        each class individually) must have a recorded intensity value for a specific peak in order for it to be retained
+        in the output peak matrix.
+    :param within: Apply sample filter within each sample class
+
+        * **False** - check across ALL classes simultaneously whether greater-than the user-defined “Minimum fraction”
+          of samples contained an intensity value for a specific mass spectral peak.
+        * **True** - check within EACH class separately whether greater-than the user-defined “Minimum fraction” of
+          samples contained an intensity value for a specific mass spectral peak.
+
+        .. warning::
+            if in ANY class a peak is detected in greater-than the user-defined minimum fraction of samples, then
+            the peak is retained in the output peak matrix. For classes in which this condition is not met, the
+            peak intensity recorded for that peak (if any) will still be presented in the output peak matrix.
+            If no peak intensity was recorded in a sample, then a ‘0’ is inserted in to the peak matrix.
+
+    :param rsd_thres: Relative standard deviation threshold - A numerical value equal-to or greater-than 0.
+        If greater than 0, then peaks whose intensity values have a percent relative standard deviation (otherwise termed
+        the percent coefficient of variation) greater-than this value are excluded from the output PeakMatrix object.
+    :param qc_label: Label for the QC samples - a string indicating the name of the class to be used for
+        filtering, i.e. the “reference” class. This string must have been included in the “classLabel”
+        column of the metadata file associated with the process_sans or replicate_filter function(s).
+    :param labels: Path to a metadata file
     :return: PeakMatrix object
     """
 
@@ -456,8 +543,8 @@ def sample_filter(peak_matrix: str or PeakMatrix, min_fraction: float, within: b
 
     peak_matrix = filter_fraction(peak_matrix, min_fraction, within_classes=within, class_tag_type="classLabel")
 
-    if rsd is not None:
-        peak_matrix = filter_rsd(peak_matrix, rsd, Tag(qc_label, "classLabel"))
+    if rsd_thres is not None:
+        peak_matrix = filter_rsd(peak_matrix, rsd_thres, Tag(qc_label, "classLabel"))
     return peak_matrix
 
 
@@ -473,7 +560,7 @@ def missing_values_sample_filter(peak_matrix: PeakMatrix, max_fraction: float):
         np.where([(x / float(peak_matrix.shape[1]) >= max_fraction) for x in peak_matrix.missing_values]))
 
 
-def remove_samples(obj: PeakList or PeakMatrix, sample_names: list):
+def remove_samples(obj: Union[PeakMatrix, Sequence[PeakList]], sample_names: list):
     """
 
     :param obj: Peaklist Object
@@ -552,7 +639,7 @@ def hdf5_peaklists_to_txt(filename: str, path_out: str, delimiter: str = "\t", c
     return
 
 
-def merge_peaklists(source: Sequence[PeakList], filelist: str or None = None):
+def merge_peaklists(source: Sequence[PeakList], filelist: Union[str, None] = None):
     """
 
     :param source: List or typle of Peaklist objects, or hdf5 file
@@ -588,7 +675,7 @@ def merge_peaklists(source: Sequence[PeakList], filelist: str or None = None):
                 "Incorrect input: list of lists of peaklists, list of peak matrix objects or list of HDF5 files expected.")
 
     if filelist is not None:
-        fl = check_metadata(filelist)
+        fl = validate_metadata(filelist)
         pls_merged = update_metadata_and_labels(pls_merged, fl)
 
         if 'multilist' in list(fl.keys()):
@@ -618,7 +705,7 @@ def partition(alist: list, indices: list):
     return [alist[i:j] for i, j in zip([0] + indices, indices + [None])]
 
 
-def load_peaklists(source: Sequence[PeakList] or str):
+def load_peaklists(source: Union[Sequence[PeakList] or str]):
     """
 
     :param source: hdf5 file or list of Peaklist objects
@@ -650,11 +737,11 @@ def load_peaklists(source: Sequence[PeakList] or str):
     return peaklists
 
 
-def create_sample_list(source: Sequence[PeakList] or PeakMatrix, path_out: str, delimiter: str = "\t"):
+def create_sample_list(source: Union[Sequence[PeakList], PeakMatrix], path_out: str, delimiter: str = "\t"):
     """
 
-    :param source:
-    :param path_out:
+    :param source: List of PeakList objects or PeakMatrix object
+    :param path_out: Path to a text file
     :param delimiter:
     :param qc_label:
     :return:
