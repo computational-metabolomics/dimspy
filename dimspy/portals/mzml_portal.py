@@ -3,22 +3,34 @@
 
 import collections
 import os
+from io import BytesIO
+from typing import Sequence, Union
 
 import numpy as np
 import pymzml
 
-from dimspy.experiment import mz_range_from_header
-from dimspy.models.peaklist import PeakList
+from ..metadata import mz_range_from_header
+from ..models.peaklist import PeakList
 
 
 class Mzml:
-    def __init__(self, filename="", **kwargs):
+    """
+    mzML portal
+    """
+    def __init__(self, filename: Union[str, BytesIO], **kwargs):
+        """
+        Initialise a object interface to a mzML file.
+
+        :param filename: Path to the mzML file
+        :param kwargs:
+
+        """
         self.filename = filename
 
-        if not os.path.isfile(self.filename):
+        if not isinstance(filename, BytesIO) and not os.path.isfile(self.filename):
             raise IOError("{} does not exist".format(self.filename))
 
-        if not self.filename.lower().endswith(".mzml") and not self.filename.lower().endswith(".mzml.gz"):
+        if not isinstance(filename, BytesIO) and not self.filename.lower().endswith(".mzml") and not self.filename.lower().endswith(".mzml.gz"):
             raise IOError('Incorrect file format for mzML parser')
 
         if "ms_precisions" in kwargs:
@@ -30,12 +42,12 @@ class Mzml:
 
         self.run = pymzml.run.Reader(self.filename)
         self.run.ms_precisions.update(self.ms_precisions)
+        self.timestamp = self.run.info["start_time"]
 
-    def headers(self):
+    def headers(self) -> collections.OrderedDict:
         """
-
-        :param n:
-        :return:
+        Get all unique header or filter strings and associated scan ids.
+        :return: Dictionary
         """
         h_sids = collections.OrderedDict()
         for scan_id in self._sids:
@@ -44,10 +56,6 @@ class Mzml:
         return h_sids
 
     def _scan_ids(self):
-        """
-
-        :return:
-        """
         sids_h = collections.OrderedDict()
         run = pymzml.run.Reader(self.filename)
         run.ms_precisions.update(self.ms_precisions)
@@ -59,19 +67,30 @@ class Mzml:
         run.close()
         return sids_h
 
-    def scan_ids(self):
+    def scan_ids(self) -> collections.OrderedDict:
         """
-
-        :return:
+        Get all scan ids and associated headers or filter strings.
+        :return: Dictionary
         """
         return self._sids
 
-    def peaklist(self, scan_id, function_noise="median"):
+    def peaklist(self, scan_id, function_noise="median") -> PeakList:
         """
+        Create a peaklist object for a specific scan id.
+        :param scan_id: Scan id
+        :param function_noise: Function to calculate the noise from each scan. The following options are available:
 
-        :param scan_id:
-        :param function_noise:
-        :return:
+        * **median** - the median of all peak intensities within a given scan is used as the noise value.
+
+        * **mean** - the unweighted mean average of all peak intensities within a given scan is used as the noise value.
+
+        * **mad (Mean Absolute Deviation)** - the noise value is set as the mean of the absolute differences between peak
+          intensities and the mean peak intensity (calculated across all peak intensities within a given scan).
+
+        * **noise_packets** - the noise value is calculated using the proprietary algorithms contained in Thermo Fisher
+          Scientific’s msFileReader library. This option should only be applied when you are processing .RAW files.
+
+        :return: PeakList object
         """
         if function_noise not in ["mean", "median", "mad"]:
             raise ValueError("select a function that is available [mean, median, mad]")
@@ -104,31 +123,43 @@ class Mzml:
         pl.add_attribute('snr', snr)
         return pl
 
-    def peaklists(self, scan_ids, function_noise="median"):
+    def peaklists(self, scan_ids, function_noise="median") -> Sequence[PeakList]:
         """
+        Create a list of peaklist objects for each scan id in the list.
+        :param scan_ids: List of scan ids
 
-        :param scan_ids:
-        :param function_noise:
-        :return:
+        :param function_noise: Function to calculate the noise from each scan. The following options are available:
+
+        * **median** - the median of all peak intensities within a given scan is used as the noise value.
+
+        * **mean** - the unweighted mean average of all peak intensities within a given scan is used as the noise value.
+
+        * **mad (Mean Absolute Deviation)** - the noise value is set as the mean of the absolute differences between peak
+          intensities and the mean peak intensity (calculated across all peak intensities within a given scan).
+
+        * **noise_packets** - the noise value is calculated using the proprietary algorithms contained in Thermo Fisher
+          Scientific’s msFileReader library. This option should only be applied when you are processing .RAW files.
+
+        :return: List of PeakList objects
         """
         if function_noise not in ["mean", "median", "mad"]:
             raise ValueError("select a function that is available [mean, median, mad]")
 
         return [self.peaklist(scan_id, function_noise) for scan_id in scan_ids if scan_id in self._sids]
 
-    def tics(self):
+    def tics(self) -> collections.OrderedDict:
         """
-
-        :return:
+        Get all TIC values and associated scan ids
+        :return: Dictionary
         """
         tic_values = collections.OrderedDict()
         for scan_id in self._sids:
             tic_values[scan_id] = self.run[scan_id].TIC
         return tic_values
 
-    def ion_injection_times(self):
+    def ion_injection_times(self) -> collections.OrderedDict:
         """
-
+        Get all ion injection time values and associated scan ids
         :return:
         """
         iits = collections.OrderedDict()
@@ -140,10 +171,10 @@ class Mzml:
                 iits[scan_id] = None
         return iits
 
-    def scan_dependents(self):
+    def scan_dependents(self) -> list:
         """
-
-        :return:
+        Get a nested list of scan id pairs. Each pair represents a fragementation event.
+        :return: Dictionary
         """
         l = []
         for scan_id in self._sids:
@@ -155,7 +186,7 @@ class Mzml:
 
     def close(self):
         """
-
-        :return:
+        Close the file object
+        :return: None
         """
         self.run.close()

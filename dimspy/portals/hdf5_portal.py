@@ -1,21 +1,20 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import h5py
 import logging
 import os
-import warnings
 import pickle as cp
+import warnings
 import zlib
 from ast import literal_eval
 from typing import Sequence
 
+import h5py
 import numpy as np
 import tables as ptb
-
-from dimspy.models.peak_matrix import PeakMatrix, unmask_all_peakmatrix
-from dimspy.models.peaklist import PeakList
-from dimspy.models.peaklist_tags import Tag, PeakList_Tags
+from ..models.peak_matrix import PeakMatrix, unmask_all_peakmatrix
+from ..models.peaklist import PeakList
+from ..models.peaklist_tags import Tag, PeakList_Tags
 
 warnings.filterwarnings('ignore', category=ptb.NaturalNameWarning)
 

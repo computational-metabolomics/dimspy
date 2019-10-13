@@ -2,8 +2,9 @@
 #  -*- coding: utf-8 -*-
 
 
-import unittest
+import io
 import os
+import unittest
 import zipfile
 
 from dimspy.portals.mzml_portal import Mzml
@@ -11,6 +12,7 @@ from dimspy.portals.mzml_portal import Mzml
 
 def to_test_data(*args):
     return os.path.join(os.path.dirname(os.path.realpath(__file__)), "data", *args)
+
 
 def to_test_results(*args):
     return os.path.join(os.path.dirname(os.path.realpath(__file__)), "results", *args)
@@ -26,8 +28,8 @@ class MzmlPortalsTestCase(unittest.TestCase):
         zip_ref.close()
 
     def test_mzml_portal(self):
-
         run = Mzml(to_test_data("MTBLS79_subset", "mzml", "batch04_QC17_rep01_262.mzML"))
+        self.assertEqual(run.timestamp, "2011-04-02T03:28:02Z")
         self.assertEqual((run.run.get_spectrum_count(), run.run.get_spectrum_count()), (88, 88))
         self.assertListEqual(list(run.headers().keys()), ['FTMS + p ESI w SIM ms [70.00-170.00]',
                                                           'FTMS + p ESI w SIM ms [140.00-240.00]',
@@ -62,6 +64,17 @@ class MzmlPortalsTestCase(unittest.TestCase):
         self.assertListEqual(sd[-1], [511, 512])
         self.assertEqual(len(sd), 30)
         run.close()
+
+        # with open(to_test_results("zip_data", "mzml", "A08_Apolar_Daph_AMP1_C30_LCMS_Pos_DIMSn_subset.mzML"), "rb") as inp:
+        #     b = io.BytesIO(inp.read())
+        #     run = Mzml(b)
+        #     sd = run.scan_dependents()
+        #     self.assertListEqual(list(run.tics().values())[0:2], [120293696.0, 13602.5234375])
+        #     self.assertEqual(len(run.tics()), 36)
+        #     self.assertListEqual(sd[0], [1, 3])
+        #     self.assertListEqual(sd[-1], [511, 512])
+        #     self.assertEqual(len(sd), 30)
+        #     run.close()
 
     @classmethod
     def tearDownClass(cls):

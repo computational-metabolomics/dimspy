@@ -8,8 +8,7 @@ import sys
 
 import clr
 import numpy as np
-
-from dimspy.models.peaklist import PeakList
+from ..models.peaklist import PeakList
 
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), "ThermoRawFileReader_3_0_41/Libraries"))
 clr.AddReference('ThermoFisher.CommonCore.RawFileReader')
@@ -33,6 +32,7 @@ class ThermoRaw:
         self.run = RawFileReader.RawFileReaderAdapter.FileFactory(filename)
         self.run.SelectInstrument(Business.Device.MS, 1)
         self.filename = filename
+        self.timestamp = self.run.CreationDate
 
     def headers(self):
         """
@@ -88,15 +88,16 @@ class ThermoRaw:
 
         ion_injection_time = None
         micro_scans = None
+        elapsed_scan_time = None
 
         extra_values = list(self.run.GetTrailerExtraInformation(scan_id).Values)
         extra_labels = list(self.run.GetTrailerExtraInformation(scan_id).Labels)
         for i, label in enumerate(extra_labels):
             if "Ion Injection Time (ms):" == label:
                 ion_injection_time = float(extra_values[i])
-            elif "Elapsed Scan Time (sec):" == label:
+            if "Elapsed Scan Time (sec):" == label:
                 elapsed_scan_time = float(extra_values[i])
-            elif "Micro Scan Count:" == label:
+            if "Micro Scan Count:" == label:
                 micro_scans = float(extra_values[i])
 
         scan_time = float(scan_stats.StartTime)

@@ -10,13 +10,15 @@ origin: 05-14-2017
 """
 
 
-import unittest, os
+import os
+import unittest
+
 import numpy as np
-from dimspy.models.peaklist_tags import Tag
 from dimspy.models.peaklist import PeakList
-from dimspy.process.peak_alignment import align_peaks
-from dimspy.portals.hdf5_portal import save_peaklists_as_hdf5, load_peaklists_from_hdf5
+from dimspy.models.peaklist_tags import Tag
 from dimspy.portals.hdf5_portal import save_peak_matrix_as_hdf5, load_peak_matrix_from_hdf5
+from dimspy.portals.hdf5_portal import save_peaklists_as_hdf5, load_peaklists_from_hdf5
+from dimspy.process.peak_alignment import align_peaks
 
 
 class HDF5PortalsTestCase(unittest.TestCase):
