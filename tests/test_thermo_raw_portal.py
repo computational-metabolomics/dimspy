@@ -4,6 +4,7 @@
 
 import os
 import unittest
+import platform
 
 from dimspy.portals.thermo_raw_portal import ThermoRaw
 
@@ -20,7 +21,12 @@ class ThermoRawPortalsTestCase(unittest.TestCase):
     def test_thermo_raw_portal(self):
 
         run = ThermoRaw(to_test_data("raw", "batch04_QC17_rep01_262.RAW"))
-        self.assertEqual(str(run.timestamp), "02/04/2011 03:28:02")
+
+        if platform.system() == "Darwin":
+            self.assertEqual(str(run.timestamp), "02/04/2011 03:28:02")
+        else:
+            self.assertEqual(str(run.timestamp), "4/2/2011 3:28:02 AM")
+
         self.assertListEqual(list(run.headers().keys()), ['FTMS + p ESI w SIM ms [70.00-170.00]',
                                                           'FTMS + p ESI w SIM ms [140.00-240.00]',
                                                           'FTMS + p ESI w SIM ms [210.00-310.00]',

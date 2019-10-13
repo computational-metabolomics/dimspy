@@ -6,6 +6,7 @@ import os
 import h5py
 import numpy as np
 from datetime import datetime
+import platform
 
 from ..models.peaklist import PeakList
 from ..portals import hdf5_portal
@@ -18,7 +19,11 @@ def sort_ms_files_by_timestamp(ps):
     for i, fn in enumerate(ps):
         if fn.lower().endswith(".raw"):
             run = ThermoRaw(fn)
-            pattern = "%d/%m/%Y %H:%M:%S"
+            if platform.system() == "Darwin":
+                pattern = "%d/%m/%Y %H:%M:%S"
+            else:
+                pattern = "%m/%d/%Y %I:%M:%S AM"
+
         elif fn.lower().endswith(".mzml"):
             run = Mzml(fn)
             pattern = "%Y-%m-%dT%H:%M:%SZ"
