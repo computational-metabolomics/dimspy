@@ -11,10 +11,11 @@ origin: 04-28-2017
 
 
 import unittest
+from functools import reduce
+
 import numpy as np
 from dimspy.models.peaklist import PeakList
 from dimspy.process.peak_alignment import align_peaks
-from functools import reduce
 
 
 class PeakAlignmentTestCase(unittest.TestCase):

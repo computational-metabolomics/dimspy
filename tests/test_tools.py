@@ -10,13 +10,27 @@ origin: 05-23-2017
 """
 
 
-import unittest
-import os
 import copy
+import os
+import unittest
 import zipfile
+
 import numpy as np
-from dimspy.tools import *
-from dimspy.portals.hdf5_portal import *
+from dimspy.portals.hdf5_portal import load_peak_matrix_from_hdf5
+from dimspy.portals.hdf5_portal import load_peaklists_from_hdf5
+from dimspy.portals.hdf5_portal import save_peak_matrix_as_hdf5
+from dimspy.portals.hdf5_portal import save_peaklists_as_hdf5
+from dimspy.tools import align_samples
+from dimspy.tools import blank_filter
+from dimspy.tools import create_sample_list
+from dimspy.tools import hdf5_peak_matrix_to_txt
+from dimspy.tools import hdf5_peaklists_to_txt
+from dimspy.tools import merge_peaklists
+from dimspy.tools import missing_values_sample_filter
+from dimspy.tools import process_scans
+from dimspy.tools import remove_samples
+from dimspy.tools import replicate_filter
+from dimspy.tools import sample_filter
 
 
 def to_test_data(*args):
@@ -168,7 +182,7 @@ class WorkflowTestCase(unittest.TestCase):
     def test_blank_and_sample_filter(self):
 
         self.assertEqual(self.pm_master.shape, (9, 1383))
-        pm_sf = sample_filter(copy.deepcopy(self.pm_master), min_fraction=0.8, within=False, rsd=None, qc_label=None, labels=None)
+        pm_sf = sample_filter(copy.deepcopy(self.pm_master), min_fraction=0.8, within=False, rsd_thres=None, qc_label=None, labels=None)
         self.assertEqual(pm_sf.shape, (9, 60))
 
         self.assertEqual(self.pm_master.shape, (9, 1383))
@@ -176,7 +190,7 @@ class WorkflowTestCase(unittest.TestCase):
                              rm_samples=True, labels=None)
         self.assertEqual(pm_bf.shape, (6, 638))
 
-        pm_bf_sf = sample_filter(pm_bf, min_fraction=0.8, within=False, rsd=None, qc_label=None, labels=None)
+        pm_bf_sf = sample_filter(pm_bf, min_fraction=0.8, within=False, rsd_thres=None, qc_label=None, labels=None)
         self.assertEqual(pm_bf_sf.shape, (6, 306))
 
     def test_remove_samples(self):

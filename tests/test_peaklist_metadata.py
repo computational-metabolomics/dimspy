@@ -10,8 +10,9 @@ origin: 04-28-2017
 """
 
 
-import unittest
 import pickle as cp
+import unittest
+
 from dimspy.models.peaklist_metadata import PeakList_Metadata
 
 

@@ -2,9 +2,12 @@
 #  -*- coding: utf-8 -*-
 
 
-import unittest, sys
-from . import test_tools
+import sys
+import unittest
 from pathlib import Path
+
+from . import test_tools
+
 sys.path.insert(0, str(Path(__file__).parent.parent.resolve()))
 
 

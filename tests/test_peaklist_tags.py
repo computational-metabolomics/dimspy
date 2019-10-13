@@ -10,8 +10,9 @@ origin: 04-29-2017
 """
 
 
-import unittest
 import pickle as cp
+import unittest
+
 from dimspy.models.peaklist_tags import Tag, PeakList_Tags
 
 

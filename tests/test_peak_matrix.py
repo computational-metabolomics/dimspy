@@ -10,12 +10,13 @@ origin: 05-10-2017
 """
 
 
-import unittest
-import numpy as np
 import pickle as cp
-from dimspy.models.peaklist_tags import Tag, PeakList_Tags
+import unittest
+
+import numpy as np
 from dimspy.models.peak_matrix import PeakMatrix
 from dimspy.models.peak_matrix import mask_peakmatrix, unmask_peakmatrix, mask_all_peakmatrix, unmask_all_peakmatrix
+from dimspy.models.peaklist_tags import Tag, PeakList_Tags
 
 
 class PeakMatrixTestCase(unittest.TestCase):
