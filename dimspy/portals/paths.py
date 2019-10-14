@@ -22,7 +22,7 @@ def sort_ms_files_by_timestamp(ps):
             if platform.system() == "Darwin":
                 pattern = "%d/%m/%Y %H:%M:%S"
             else:
-                pattern = "%m/%d/%Y %I:%M:%S"
+                pattern = "%m/%d/%Y %I:%M:%S %p"
 
         elif fn.lower().endswith(".mzml"):
             run = Mzml(fn)
