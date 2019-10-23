@@ -109,9 +109,9 @@ class PathsPortalsTestCase(unittest.TestCase):
             self.assertEqual(files_sorted[1], (os.path.join(p, "batch04_QC17_rep02_263.RAW"), '02/04/2011 03:31:05'))
             self.assertEqual(files_sorted[2], (os.path.join(p, "batch04_QC17_rep03_264.RAW"), '02/04/2011 03:34:09'))
         else:
-            self.assertEqual(files_sorted[0], (os.path.join(p, "batch04_QC17_rep01_262.RAW"), '2/4/2011 3:28:02 AM'))
-            self.assertEqual(files_sorted[1], (os.path.join(p, "batch04_QC17_rep02_263.RAW"), '2/4/2011 3:31:05 AM'))
-            self.assertEqual(files_sorted[2], (os.path.join(p, "batch04_QC17_rep03_264.RAW"), '2/4/2011 3:34:09 AM'))
+            self.assertEqual(files_sorted[0], (os.path.join(p, "batch04_QC17_rep01_262.RAW"), '4/2/2011 3:28:02 AM'))
+            self.assertEqual(files_sorted[1], (os.path.join(p, "batch04_QC17_rep02_263.RAW"), '4/2/2011 3:31:05 AM'))
+            self.assertEqual(files_sorted[2], (os.path.join(p, "batch04_QC17_rep03_264.RAW"), '4/2/2011 3:34:09 AM'))
 
         ps.reverse()
         files_sorted = paths.sort_ms_files_by_timestamp(ps)
@@ -120,9 +120,9 @@ class PathsPortalsTestCase(unittest.TestCase):
             self.assertEqual(files_sorted[1], (os.path.join(p, "batch04_QC17_rep02_263.RAW"), '02/04/2011 03:31:05'))
             self.assertEqual(files_sorted[2], (os.path.join(p, "batch04_QC17_rep03_264.RAW"), '02/04/2011 03:34:09'))
         else:
-            self.assertEqual(files_sorted[0], (os.path.join(p, "batch04_QC17_rep01_262.RAW"), '2/4/2011 3:28:02 AM'))
-            self.assertEqual(files_sorted[1], (os.path.join(p, "batch04_QC17_rep02_263.RAW"), '2/4/2011 3:31:05 AM'))
-            self.assertEqual(files_sorted[2], (os.path.join(p, "batch04_QC17_rep03_264.RAW"), '2/4/2011 3:34:09 AM'))
+            self.assertEqual(files_sorted[0], (os.path.join(p, "batch04_QC17_rep01_262.RAW"), '4/2/2011 3:28:02 AM'))
+            self.assertEqual(files_sorted[1], (os.path.join(p, "batch04_QC17_rep02_263.RAW"), '4/2/2011 3:31:05 AM'))
+            self.assertEqual(files_sorted[2], (os.path.join(p, "batch04_QC17_rep03_264.RAW"), '4/2/2011 3:34:09 AM'))
 
 
 if __name__ == '__main__':
