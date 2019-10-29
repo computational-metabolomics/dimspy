@@ -202,7 +202,7 @@ def validate_metadata(fn_tsv: str) -> collections.OrderedDict:
 
     if "replicate" in fm_dict.keys():
 
-        if 0 in fm_dict["replicate"]:
+        if "0" in fm_dict["replicate"]:
             raise IOError("Incorrect replicate number in list. Row {}".format(list(fm_dict["replicate"]).index(0)))
 
         idxs_replicates = idxs_reps_from_filelist(fm_dict["replicate"])
@@ -245,7 +245,7 @@ def validate_metadata(fn_tsv: str) -> collections.OrderedDict:
         for x in fm_dict['multilist']:
             assert is_int(x), "Column 'multilist' values should be integers"
     else:
-        warnings.warn("Column 'multilist' for spliting peaklists is missing. Not required.")
+        print("Column 'multilist' for spliting peaklists is missing. Not required.")
 
     return fm_dict
 
