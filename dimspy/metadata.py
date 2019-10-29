@@ -172,6 +172,12 @@ def interpret_method(mzrs: list):
 
     return method
 
+def is_int(x):
+    try:
+        int(x)
+        return True
+    except ValueError as e:
+        return False
 
 def validate_metadata(fn_tsv: str) -> collections.OrderedDict:
     """
@@ -234,6 +240,12 @@ def validate_metadata(fn_tsv: str) -> collections.OrderedDict:
         print("Classes:", cls)
     else:
         warnings.warn("Column 'classLabel' for class labels missing. Not required.")
+
+    if "multilist" in fm_dict:
+        for x in fm_dict['multilist']:
+            assert is_int(x), "Column 'multilist' values should be integers"
+    else:
+        warnings.warn("Column 'multilist' for spliting peaklists is missing. Not required.")
 
     return fm_dict
 
