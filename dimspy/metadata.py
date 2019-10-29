@@ -172,6 +172,17 @@ def interpret_method(mzrs: list):
 
     return method
 
+def to_int(x):
+    """
+    :param x: value to convert to int
+    :return: value as int (or False if conversion not possible)
+    """
+    try:
+        i = int(x)
+        return i
+    except ValueError as e:
+        return False
+
 
 def validate_metadata(fn_tsv: str) -> collections.OrderedDict:
     """
@@ -193,6 +204,16 @@ def validate_metadata(fn_tsv: str) -> collections.OrderedDict:
     unique, counts = np.unique(fm_dict["filename"], return_counts=True)
     if len(unique) != sum(counts):
         raise ValueError("Duplicate filename in list")
+
+    # convert relevant columns to int
+    for h in ['replicate', 'batch', 'injectionOrder', 'multilist']:
+        if h in fm_dict:
+            int_l = []
+            for c, x in enumerate(fm_dict[h]):
+                i = to_int(x)
+                assert to_int(i), "Column '{}' values should be integers, see row {}".format(h, c+1)
+                int_l.append(i)
+            fm_dict[h] = int_l
 
     if "replicate" in fm_dict.keys():
 
@@ -234,6 +255,9 @@ def validate_metadata(fn_tsv: str) -> collections.OrderedDict:
         print("Classes:", cls)
     else:
         warnings.warn("Column 'classLabel' for class labels missing. Not required.")
+
+    if "multilist" not in fm_dict:
+        print("Column 'multilist' for spliting peaklists is missing. Not required.")
 
     return fm_dict
 
