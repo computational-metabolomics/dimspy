@@ -29,15 +29,15 @@ class ValidateMetadataTestCase(unittest.TestCase):
                                                'batch04_QC17_rep02_263.mzML', 'batch04_QC17_rep03_264.mzML',
                                                'batch04_S01_rep01_247.mzML', 'batch04_S01_rep02_248.mzML',
                                                'batch04_S01_rep03_249.mzML'])
-        self.assertEqual(fm_dict['replicate'], ['1', '2', '3', '1', '2', '3', '1', '2', '3'])
-        self.assertEqual(fm_dict['batch'], ['1'] * 9)
-        self.assertEqual(fm_dict['injectionOrder'], ['1', '2', '3', '4', '5', '6', '7', '8', '9'])
+        self.assertEqual(fm_dict['replicate'], [1, 2, 3, 1, 2, 3, 1, 2, 3])
+        self.assertEqual(fm_dict['batch'], [1] * 9)
+        self.assertEqual(fm_dict['injectionOrder'], [1, 2, 3, 4, 5, 6, 7, 8, 9])
         self.assertEqual(fm_dict['classLabel'], ['blank', 'blank', 'blank',
                                                  'QC', 'QC', 'QC', 'sample', 'sample', 'sample'])
 
     def test_filelist_multi(self):
         fm_dict = validate_metadata(to_test_data("filelist_multi.txt"))
-        self.assertEqual(fm_dict['multilist'], ['1', '1', '2'])
+        self.assertEqual(fm_dict['multilist'], [1, 1, 2])
 
     def test_filename_error(self):
         with self.assertRaises(Exception) as context:

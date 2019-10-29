@@ -538,7 +538,7 @@ def main():  # pragma: no cover
                     m_nm = pls_merged[i][0].metadata['multilist']
                     hdf5_portal.save_peaklists_as_hdf5(pls_merged[i],
                                                        os.path.join(args.output,
-                                                                    'merged_peaklist_{:03d}.hdf5'.format(int(m_nm))))
+                                                                    'merged_peaklist_{:03d}.hdf5'.format(m_nm)))
         else:
             hdf5_portal.save_peaklists_as_hdf5(pls_merged, args.output)
 
