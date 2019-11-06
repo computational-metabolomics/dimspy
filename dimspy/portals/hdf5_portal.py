@@ -218,7 +218,7 @@ def save_peak_matrix_as_hdf5(pm: PeakMatrix, filename: str, compatibility_mode: 
         dset.attrs.mask = pm.mask
 
         with unmask_all_peakmatrix(pm):
-            dset.attrs.peaklist_ids = pm.peaklist_ids
+            dset.attrs.peaklist_ids = _packMeta(pm.peaklist_ids)
             for i, tags in enumerate(pm.peaklist_tags):
                 dset.attrs['peaklist_tags_%d' % i] = np.array([(t or 'None', v) for v, t in tags.to_list()])
 
@@ -267,7 +267,7 @@ def load_peak_matrix_from_hdf5(filename: str, compatibility_mode: bool = False):
         if dset.attrs.data_class != 'PeakMatrix':
             raise IOError('input database is not a valid PeakMatrix')
         attl = dset.attrs.attributes
-        pids = dset.attrs.peaklist_ids
+        pids = (lambda x: _unpackMeta(x) if isinstance(x,bytes) else x)(dset.attrs.peaklist_ids)
         mask = dset.attrs.mask
 
         tatt = sorted([x for x in dset.attrs._f_list('user') if x.startswith('peaklist_tags_')],
