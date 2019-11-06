@@ -6,10 +6,9 @@ import os
 from ast import literal_eval
 
 import numpy as np
-
-from dimspy.models.peak_matrix import PeakMatrix, unmask_all_peakmatrix
-from dimspy.models.peaklist import PeakList
-from dimspy.models.peaklist_tags import PeakList_Tags
+from ..models.peak_matrix import PeakMatrix, unmask_all_peakmatrix
+from ..models.peaklist import PeakList
+from ..models.peaklist_tags import PeakList_Tags
 
 
 def _evalv(vect):

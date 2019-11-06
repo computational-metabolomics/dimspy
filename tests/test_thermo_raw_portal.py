@@ -2,16 +2,18 @@
 #  -*- coding: utf-8 -*-
 
 
-import unittest
 import os
+import unittest
+import platform
+
 from dimspy.portals.thermo_raw_portal import ThermoRaw
 
 
 def to_test_data(*args):
     return os.path.join(os.path.dirname(os.path.realpath(__file__)), "data", "MTBLS79_subset", *args)
 
-def to_test_result(*args):
-    return os.path.join(os.path.dirname(os.path.realpath(__file__)), "test_results", *args)
+def to_test_results(*args):
+    return os.path.join(os.path.dirname(os.path.realpath(__file__)), "results", *args)
 
 
 class ThermoRawPortalsTestCase(unittest.TestCase):
@@ -19,6 +21,12 @@ class ThermoRawPortalsTestCase(unittest.TestCase):
     def test_thermo_raw_portal(self):
 
         run = ThermoRaw(to_test_data("raw", "batch04_QC17_rep01_262.RAW"))
+
+        if platform.system() == "Darwin":
+            self.assertEqual(str(run.timestamp), "02/04/2011 03:28:02")
+        else:
+            self.assertEqual(str(run.timestamp), "4/2/2011 3:28:02 AM")
+
         self.assertListEqual(list(run.headers().keys()), ['FTMS + p ESI w SIM ms [70.00-170.00]',
                                                           'FTMS + p ESI w SIM ms [140.00-240.00]',
                                                           'FTMS + p ESI w SIM ms [210.00-310.00]',
@@ -32,7 +40,18 @@ class ThermoRawPortalsTestCase(unittest.TestCase):
         self.assertListEqual(list(run.ion_injection_times().values())[0:2], [40.434, 40.095])
         self.assertEqual(len(run.ion_injection_times()), 88)
         self.assertListEqual(run.scan_dependents(), [])
+        pl = run.peaklist(1)
+        self.assertEqual(pl.ID, 1)
+        self.assertEqual(pl.metadata["header"], "FTMS + p ESI w SIM ms [70.00-170.00]")
+        self.assertEqual(pl.metadata["ms_level"], 1.0)
+        self.assertEqual(pl.metadata["ion_injection_time"], 40.434)
+        self.assertEqual(pl.metadata["scan_time"], 0.5010899999999999)
+        self.assertEqual(pl.metadata["elapsed_scan_time"], 1.05)
+        self.assertEqual(pl.metadata["tic"], 39800032.0)
+        self.assertEqual(pl.metadata["function_noise"], "noise_packets")
+        self.assertEqual(pl.metadata["mz_range"], [70.0, 170.0])
         run.close()
+
 
 if __name__ == '__main__':
     unittest.main()

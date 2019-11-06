@@ -11,6 +11,7 @@ dimspy\.portals\.hdf5\_portal module
     :members:
     :undoc-members:
     :show-inheritance:
+    :member-order: bysource
 
 dimspy\.portals\.mzml\_portal module
 ------------------------------------
@@ -19,6 +20,7 @@ dimspy\.portals\.mzml\_portal module
     :members:
     :undoc-members:
     :show-inheritance:
+    :member-order: bysource
 
 dimspy\.portals\.paths module
 -----------------------------
@@ -27,6 +29,7 @@ dimspy\.portals\.paths module
     :members:
     :undoc-members:
     :show-inheritance:
+    :member-order: bysource
 
 dimspy\.portals\.thermo\_raw\_portal module
 -------------------------------------------
@@ -35,6 +38,7 @@ dimspy\.portals\.thermo\_raw\_portal module
     :members:
     :undoc-members:
     :show-inheritance:
+    :member-order: bysource
 
 dimspy\.portals\.txt\_portal module
 -----------------------------------
@@ -43,7 +47,7 @@ dimspy\.portals\.txt\_portal module
     :members:
     :undoc-members:
     :show-inheritance:
-
+    :member-order: bysource
 
 Module contents
 ---------------
@@ -52,3 +56,4 @@ Module contents
     :members:
     :undoc-members:
     :show-inheritance:
+    :member-order: bysource

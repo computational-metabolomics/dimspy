@@ -3,10 +3,11 @@
 
 import argparse
 import os
+import zipfile
 
 import h5py
-
 from dimspy import __version__
+
 from . import tools
 from .portals import hdf5_portal
 
@@ -49,6 +50,7 @@ def main():  # pragma: no cover
     parser_hplt = subparsers.add_parser('hdf5-pls-to-txt', help='Write HDF5 output (peak lists) to text format.')
     parser_csl = subparsers.add_parser('create-sample-list',
                                        help='Create a sample list from a peak matrix object or list of peaklist objects.')
+    parser_un = subparsers.add_parser('unzip', help='Extract files from zip file')
 
     #################################
     # PROCESS SCANS
@@ -81,7 +83,7 @@ def main():  # pragma: no cover
 
     parser_ps.add_argument('-n', '--min_scans',
                            default=1, type=int, required=False,
-                           help="Minimum number of scans required for each m/z range or event (header).")
+                           help="Minimum number of scans required for each m/z range or event.")
 
     parser_ps.add_argument('-a', '--min-fraction',
                            default=0.5, type=float, required=False,
@@ -102,7 +104,7 @@ def main():  # pragma: no cover
     parser_ps.add_argument('-e', '--include-scan-events',
                            action='append', nargs=3, required=False,
                            metavar=('start', 'end', 'scan_type'), default=[],
-                           help="Scan events to select. E.g. 100.0 200.0 sim  or  50.0 1000.0 full")
+                           help="Scan events to select. E.g. 100.0 200.0 sim or 50.0 1000.0 full")
 
     parser_ps.add_argument('-x', '--exclude-scan-events',
                            action='append', nargs=3, required=False,
@@ -411,6 +413,18 @@ def main():  # pragma: no cover
                             default="tab", choices=["tab", "comma"],
                             help="Values on each line of the file are separated by this character.")
 
+    #################################
+    # Unzip archive
+    #################################
+
+    parser_un.add_argument('-i', '--input',
+                            type=str, required=True,
+                            help="file[.zip]")
+
+    parser_un.add_argument('-o', '--output',
+                            type=str, required=True,
+                            help="Directory to write to.")
+
     args = parser.parse_args()
 
     print(args)
@@ -420,7 +434,7 @@ def main():  # pragma: no cover
         filter_scan_events = {}
         if args.exclude_scan_events != [] and args.include_scan_events != []:
             raise argparse.ArgumentTypeError(
-                "-u/--include-scan-events and -x/--exclude-scan-events can not be used together.")
+                "-e/--include-scan-events and -x/--exclude-scan-events can not be used together.")
         elif args.exclude_scan_events != []:
             for se in args.exclude_scan_events:
                 if "exclude" not in filter_scan_events:
@@ -488,7 +502,7 @@ def main():  # pragma: no cover
         pm_sf = tools.sample_filter(peak_matrix=args.input,
                                     min_fraction=args.min_fraction,
                                     within=args.within,
-                                    rsd=args.rsd_threshold,
+                                    rsd_thres=args.rsd_threshold,
                                     qc_label=args.qc_label,
                                     labels=args.labels)
         hdf5_portal.save_peak_matrix_as_hdf5(pm_sf, args.output)
@@ -524,7 +538,7 @@ def main():  # pragma: no cover
                     m_nm = pls_merged[i][0].metadata['multilist']
                     hdf5_portal.save_peaklists_as_hdf5(pls_merged[i],
                                                        os.path.join(args.output,
-                                                                    'merged_peaklist_{:03}.hdf5'.format(m_nm)))
+                                                                    'merged_peaklist_{:03d}.hdf5'.format(m_nm)))
         else:
             hdf5_portal.save_peaklists_as_hdf5(pls_merged, args.output)
 
@@ -561,6 +575,10 @@ def main():  # pragma: no cover
         except:
             inp = hdf5_portal.load_peak_matrix_from_hdf5(args.input)
         tools.create_sample_list(inp, args.output, delimiter=map_delimiter(args.delimiter))
+
+    elif args.step == "unzip":
+        with zipfile.ZipFile(args.input, 'r') as zip_ref:
+            zip_ref.extractall(args.output)
 
 
 if __name__ == "__main__":

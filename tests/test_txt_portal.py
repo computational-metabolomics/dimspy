@@ -9,13 +9,15 @@ origin: 05-14-2017
 
 """
 
-import unittest, os
+import os
+import unittest
+
 import numpy as np
-from dimspy.models.peaklist_tags import Tag
 from dimspy.models.peaklist import PeakList
-from dimspy.process.peak_alignment import align_peaks
-from dimspy.portals.txt_portal import save_peaklist_as_txt, load_peaklist_from_txt
+from dimspy.models.peaklist_tags import Tag
 from dimspy.portals.txt_portal import save_peak_matrix_as_txt, load_peak_matrix_from_txt
+from dimspy.portals.txt_portal import save_peaklist_as_txt, load_peaklist_from_txt
+from dimspy.process.peak_alignment import align_peaks
 
 
 class TxtPortalsTestCase(unittest.TestCase):

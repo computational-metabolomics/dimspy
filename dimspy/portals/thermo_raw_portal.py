@@ -8,8 +8,7 @@ import sys
 
 import clr
 import numpy as np
-
-from dimspy.models.peaklist import PeakList
+from ..models.peaklist import PeakList
 
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), "ThermoRawFileReader_3_0_41/Libraries"))
 clr.AddReference('ThermoFisher.CommonCore.RawFileReader')
@@ -33,6 +32,7 @@ class ThermoRaw:
         self.run = RawFileReader.RawFileReaderAdapter.FileFactory(filename)
         self.run.SelectInstrument(Business.Device.MS, 1)
         self.filename = filename
+        self.timestamp = self.run.CreationDate
 
     def headers(self):
         """
@@ -86,22 +86,21 @@ class ThermoRaw:
 
         scan_stats = self.run.GetScanStatsForScanNumber(scan_id)
 
+        ion_injection_time = None
+        micro_scans = None
+        elapsed_scan_time = None
+
         extra_values = list(self.run.GetTrailerExtraInformation(scan_id).Values)
         extra_labels = list(self.run.GetTrailerExtraInformation(scan_id).Labels)
         for i, label in enumerate(extra_labels):
             if "Ion Injection Time (ms):" == label:
-                ion_injection_time = extra_values[i]
-            else:
-                ion_injection_time = None
+                ion_injection_time = float(extra_values[i])
             if "Elapsed Scan Time (sec):" == label:
-                scan_time = extra_values[i]
-            else:
-                scan_time = None
+                elapsed_scan_time = float(extra_values[i])
             if "Micro Scan Count:" == label:
-                micro_scans = extra_values[i]
-            else:
-                micro_scans = None
+                micro_scans = float(extra_values[i])
 
+        scan_time = float(scan_stats.StartTime)
         tic = scan_stats.TIC
         segment = scan_stats.SegmentNumber
         header = str(self.run.GetScanEventStringForScanNumber(scan_id))
@@ -115,6 +114,7 @@ class ThermoRaw:
                       segment=segment,
                       ion_injection_time=ion_injection_time,
                       scan_time=scan_time,
+                      elapsed_scan_time=elapsed_scan_time,
                       tic=tic,
                       function_noise=function_noise)
 

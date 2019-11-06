@@ -10,11 +10,10 @@ from typing import Sequence, List, Union
 
 import fastcluster as fc
 import numpy as np
+from ..models.peak_matrix import PeakMatrix
+from ..models.peaklist import PeakList
 from scipy import cluster
 from scipy.spatial.distance import squareform
-
-from dimspy.models.peak_matrix import PeakMatrix
-from dimspy.models.peaklist import PeakList
 
 
 # single cluster

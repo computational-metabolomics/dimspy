@@ -5,6 +5,7 @@ import csv
 import os
 import re
 import warnings
+from datetime import datetime
 from typing import Sequence, Dict
 
 import numpy as np
@@ -13,31 +14,31 @@ from .models.peak_matrix import PeakMatrix
 from .models.peaklist import PeakList
 
 
-def mz_range_from_header(h: str):
+def mz_range_from_header(h: str) -> Sequence[float]:
     """
-
-    :param h:
-    :return:
+    Extract m/z range from header or filter string
+    :param h: header or filter string
+    :return: m/z range
     """
 
     return [float(m) for m in re.findall(r'([\w\.-]+)-([\w\.-]+)', h)[0]]
 
 
-def ms_type_from_header(h: str):
+def ms_type_from_header(h: str) -> str:
     """
-
-    :param h:
-    :return:
+    Extract the ms type from header or filter string
+    :param h: header or filter string
+    :return: ms type (e.g. FTMS and ITMS)
     """
 
     return h.split(" ")[0]
 
 
-def scan_type_from_header(h: str):
+def scan_type_from_header(h: str) -> str:
     """
-
-    :param h:
-    :return:
+    Extract the scan type from the header of filter string
+    :param h: header or filter string
+    :return: Scan type (e.g. full or sim)
     """
 
     if " full " in h.lower():
@@ -49,11 +50,11 @@ def scan_type_from_header(h: str):
         return None
 
 
-def mode_type_from_header(h: str):
+def mode_type_from_header(h: str) -> str:
     """
-
-    :param h:
-    :return:
+    Extract scan mode from the header of filter string
+    :param h: header or filter string
+    :return: Scan type (e.g. p = profile, c = centroid)
     """
 
     if " p " in h.lower():
@@ -64,33 +65,33 @@ def mode_type_from_header(h: str):
         return None
 
 
-def count_scan_types(hs: list):
+def count_scan_types(hs: list) -> int:
     """
-
-    :param hs:
-    :return:
+    Count the number of unique scan types
+    :param hs: List of headers or filter strings
+    :return: Count
     """
 
     return len(set([scan_type_from_header(h) for h in hs]))
 
 
-def count_ms_types(hs: list):
+def count_ms_types(hs: list) -> int:
     """
-
-    :param hs:
-    :return:
+    Count the number of unique ms types
+    :param hs: List of headers or filter strings
+    :return: Count
     """
 
     return len(set([ms_type_from_header(h) for h in hs]))
 
 
-def _partially_overlapping_windows(mzrs: list):
+def _partially_overlapping_windows(mzrs: list) -> list:
     """
-    Select adjecent windows that partially overlap
+    Select all adjacent m/z windows that partially overlap
     For example: [100-200] and [185-285] (Valid for SIM-stitch)
 
-    :param mzrs:
-    :return:
+    :param mzrs: Nested list of mz ranges / windows
+    :return: Nested list of m/z ranges / windows
     """
 
     assert type(mzrs) == list, "List required"
@@ -104,13 +105,13 @@ def _partially_overlapping_windows(mzrs: list):
     return temp
 
 
-def _first_fully_overlapping_windows(mzrs: list):
+def _first_fully_overlapping_windows(mzrs: list) -> list:
     """
-    Select windows that fall within another window but do not have identical mass ranges
+    Select m/z windows that fall within another window and have a different mass ranges
     For example: [100-200] and [125-175] (Invalid)
 
-    :param mzrs:
-    :return:
+    :param mzrs: Nested list of m/z ranges / windows
+    :return: Nested list of m/z ranges / windows
     """
 
     assert type(mzrs) == list, "List required"
@@ -121,13 +122,13 @@ def _first_fully_overlapping_windows(mzrs: list):
     return []
 
 
-def _non_overlapping_windows(mzrs: list):
+def _non_overlapping_windows(mzrs: list) -> list:
     """
     Select windows that do not overlap with other windows.
     For example: [100-200] and [200-400] (Valid for merging)
 
-    :param mzrs:
-    :return:
+    :param mzrs: Nested list of m/z ranges / windows
+    :return: Nested list of m/z ranges / windows
     """
 
     assert type(mzrs) == list, "List required"
@@ -145,11 +146,11 @@ def _non_overlapping_windows(mzrs: list):
     return temp
 
 
-def interpret_experiment(mzrs: list):
+def interpret_method(mzrs: list):
     """
-
-    :param mzrs:
-    :return:
+    Interpret and define type of method
+    :param mzrs: Nested list of m/z ranges / windows
+    :return: Type of MS method
     """
 
     mzrs.sort(key=lambda x: x[1])
@@ -159,24 +160,35 @@ def interpret_experiment(mzrs: list):
 
     if len(mzrs) == 1:
         print("Single m/z window.....")
-        experiment = "single"
+        method = "single"
     elif len(now) == len(mzrs):
         print("Adjacent m/z windows.....")
-        experiment = "adjacent"
+        method = "adjacent"
     elif len(pow) == len(mzrs):
-        print("SIM-Stitch experiment - Overlapping m/z windows.....")
-        experiment = "overlapping"
+        print("SIM-Stitch method - Overlapping m/z windows.....")
+        method = "overlapping"
     else:
         raise IOError("SIM-Stitch cannot be applied; 'filter_scan_events' required or set 'skip_stitching' to False")
 
-    return experiment
+    return method
 
-
-def check_metadata(fn_tsv: str):
+def to_int(x):
     """
+    :param x: value to convert to int
+    :return: value as int (or False if conversion not possible)
+    """
+    try:
+        i = int(x)
+        return i
+    except ValueError as e:
+        return False
 
-    :param fn_tsv:
-    :return:
+
+def validate_metadata(fn_tsv: str) -> collections.OrderedDict:
+    """
+    Check and validate metadata within a tab-separated file
+    :param fn_tsv: Path to tab-separated file
+    :return: Dictionary
     """
 
     assert os.path.isfile(fn_tsv.encode('unicode_escape')), "{} does not exist".format(fn_tsv)
@@ -192,6 +204,16 @@ def check_metadata(fn_tsv: str):
     unique, counts = np.unique(fm_dict["filename"], return_counts=True)
     if len(unique) != sum(counts):
         raise ValueError("Duplicate filename in list")
+
+    # convert relevant columns to int
+    for h in ['replicate', 'batch', 'injectionOrder', 'multilist']:
+        if h in fm_dict:
+            int_l = []
+            for c, x in enumerate(fm_dict[h]):
+                i = to_int(x)
+                assert to_int(i), "Column '{}' values should be integers, see row {}".format(h, c+1)
+                int_l.append(i)
+            fm_dict[h] = int_l
 
     if "replicate" in fm_dict.keys():
 
@@ -234,14 +256,17 @@ def check_metadata(fn_tsv: str):
     else:
         warnings.warn("Column 'classLabel' for class labels missing. Not required.")
 
+    if "multilist" not in fm_dict:
+        print("Column 'multilist' for spliting peaklists is missing. Not required.")
+
     return fm_dict
 
 
 def update_metadata_and_labels(peaklists: Sequence[PeakList], fl: Dict):
     """
-
-    :param peaklists:
-    :param fl:
+    Update metadata
+    :param peaklists: List of peaklist Objects
+    :param fl: Dictionary with meta data
     :return:
     """
 
@@ -266,12 +291,12 @@ def update_metadata_and_labels(peaklists: Sequence[PeakList], fl: Dict):
     return peaklists
 
 
-def update_labels(pm: PeakMatrix, fn_tsv: str):
+def update_labels(pm: PeakMatrix, fn_tsv: str) -> PeakMatrix:
     """
-
-    :param pm:
-    :param fn_tsv:
-    :return:
+    Update Sample labels PeakMatrix object
+    :param pm: peakMatrix Object
+    :param fn_tsv: Path to tab-separated file
+    :return: peakMatrix Object
     """
 
     assert os.path.isfile(fn_tsv.encode('unicode_escape')), "{} does not exist".format(fn_tsv)

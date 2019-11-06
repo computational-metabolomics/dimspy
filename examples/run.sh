@@ -1,9 +1,15 @@
 #!/usr/bin/env bash
 
-python -m dimspy process-scans \
---input tests/data/MTBLS79_subset/MTBLS79_mzml_triplicates.zip \
---output tests/test_results/peaklists.hdf5 \
---filelist tests/data/MTBLS79_subset/filelist_mzml_triplicates.txt \
+dimspy --help
+
+dimspy unzip \
+--input ../tests/data/MTBLS79_subset/MTBLS79_mzml_triplicates.zip \
+--output results/mzml
+
+dimspy process-scans \
+--input results/mzml \
+--output results/peaklists.hdf5 \
+--filelist ../tests/data/MTBLS79_subset/filelist_mzml_triplicates.txt \
 --function-noise median \
 --snr-threshold 3.0 \
 --ppm 2.0 \
@@ -12,38 +18,40 @@ python -m dimspy process-scans \
 --block-size 5000 \
 --ncpus 2
 
-python -m dimspy replicate-filter \
---input tests/test_results/peaklists.hdf5 \
---output tests/test_results/peaklists_rf.hdf5 \
+dimspy replicate-filter \
+--input results/peaklists.hdf5 \
+--output results/peaklists_rf.hdf5 \
 --ppm 2.0 \
 --replicates 3 \
 --min-peak-present 2
 
-python -m dimspy align-samples \
---input tests/test_results/peaklists.hdf5 \
---output tests/test_results/pm_a.hdf5 \
+dimspy align-samples \
+--input results/peaklists.hdf5 \
+--output results/pm_a.hdf5 \
 --ppm 2.0
 
-python -m dimspy blank-filter \
---input tests/test_results/pm_a.hdf5 \
---output tests/test_results/pm_a_bf.hdf5 \
+dimspy blank-filter \
+--input results/pm_a.hdf5 \
+--output results/pm_a_bf.hdf5 \
 --blank-label blank \
 --remove
 
-python -m dimspy sample-filter \
---input tests/test_results/pm_a_bf.hdf5 \
---output tests/test_results/pm_a_bf_sf.hdf5 \
+dimspy sample-filter \
+--input results/pm_a_bf.hdf5 \
+--output results/pm_a_bf_sf.hdf5 \
 --min-fraction 0.8
 
-python -m dimspy hdf5-pls-to-txt \
---input tests/test_results/peaklists_rf.hdf5 \
---output tests/test_results/
+dimspy hdf5-pls-to-txt \
+--input results/peaklists_rf.hdf5 \
+--output results \
+--delimiter tab
 
-python -m dimspy hdf5-pm-to-txt \
---input tests/test_results/pm_a_bf_sf.hdf5 \
---output tests/test_results/pm_a_bf_sf.txt
+dimspy hdf5-pm-to-txt \
+--input results/pm_a_bf_sf.hdf5 \
+--output results/pm_a_bf_sf.txt \
+--delimiter tab
 
-python -m dimspy merge-peaklists \
---input tests/test_results/peaklists_rf.hdf5 \
---input tests/test_results/peaklists.hdf5 \
---output tests/test_results/peaklists_merged.hdf5
+dimspy merge-peaklists \
+--input results/peaklists_rf.hdf5 \
+--input results/peaklists.hdf5 \
+--output results/peaklists_merged.hdf5

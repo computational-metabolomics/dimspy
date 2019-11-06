@@ -10,10 +10,11 @@ origin: 04-28-2017
 """
 
 
+import pickle as cp
 import unittest
+
 import numpy as np
 import pandas as pd
-import pickle as cp
 from dimspy.models.peaklist import PeakList
 
 

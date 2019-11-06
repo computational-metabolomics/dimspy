@@ -16,7 +16,6 @@ from .peaklist_metadata import PeakList_Metadata
 from .peaklist_tags import PeakList_Tags
 
 
-
 class PeakList(object):
     """
     The PeakList class.

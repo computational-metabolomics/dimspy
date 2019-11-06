@@ -4,18 +4,17 @@
 import collections
 import logging
 import os
-import zipfile
 from functools import reduce
 from typing import Sequence, Dict
 
 import numpy as np
+from ..metadata import mz_range_from_header
+from ..metadata import scan_type_from_header
+from ..models.peaklist import PeakList
+from ..portals import mzml_portal
+from ..portals import thermo_raw_portal
 
-from dimspy.experiment import mz_range_from_header
-from dimspy.experiment import scan_type_from_header
-from dimspy.models.peaklist import PeakList
-from dimspy.portals import mzml_portal
-from dimspy.portals import thermo_raw_portal
-from dimspy.process.peak_alignment import align_peaks
+from .peak_alignment import align_peaks
 
 
 def _calculate_edges(mz_ranges):
@@ -78,20 +77,12 @@ def read_scans(fn: str, source: str, function_noise: str, min_scans: int = 1, fi
     if min_scans is not None and type(min_scans) is not int:
         raise ValueError("Integer (>= 1) or None required for min_scans")
 
-    if zipfile.is_zipfile(source):
-        if fn.lower().endswith(".mzml"):
-            run = mzml_portal.Mzml(fn, source)
-        elif fn.lower().endswith(".raw"):
-            raise IOError("Zip file with raw files not supported")
-        else:
-            raise IOError("Incorrect format: {}".format(os.path.basename(fn)))
+    if fn.lower().endswith(".mzml"):
+        run = mzml_portal.Mzml(fn)
+    elif fn.lower().endswith(".raw"):
+        run = thermo_raw_portal.ThermoRaw(fn)
     else:
-        if fn.lower().endswith(".mzml"):
-            run = mzml_portal.Mzml(fn)
-        elif fn.lower().endswith(".raw"):
-            run = thermo_raw_portal.ThermoRaw(fn)
-        else:
-            raise IOError("Incorrect format: {}".format(os.path.basename(fn)))
+        raise IOError("Incorrect format: {}".format(os.path.basename(fn)))
 
     h_sids = run.headers()
 

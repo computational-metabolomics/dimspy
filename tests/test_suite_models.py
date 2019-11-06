@@ -9,8 +9,10 @@ origin: 04-29-2017
 
 """
 
-import unittest, sys
+import sys
+import unittest
 from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__).parent.parent.resolve()))
 from . import test_peaklist_metadata, test_peaklist_tags, test_peaklist, test_peak_matrix
 

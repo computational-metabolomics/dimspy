@@ -2,16 +2,39 @@
 # -*- coding: utf-8 -*-
 
 import os
-import zipfile
 
 import h5py
 import numpy as np
+from datetime import datetime
+import platform
 
-from dimspy.models.peaklist import PeakList
-from dimspy.portals import hdf5_portal
+from ..models.peaklist import PeakList
+from ..portals import hdf5_portal
+from ..portals.mzml_portal import Mzml
+from ..portals.thermo_raw_portal import ThermoRaw
 
 
-def check_paths(tsv, source):
+def sort_ms_files_by_timestamp(ps):
+    s_files = {}
+    for i, fn in enumerate(ps):
+        if fn.lower().endswith(".raw"):
+            run = ThermoRaw(fn)
+            if platform.system() == "Darwin":
+                pattern = "%d/%m/%Y %H:%M:%S"
+            else:
+                pattern = "%m/%d/%Y %I:%M:%S %p"
+
+        elif fn.lower().endswith(".mzml"):
+            run = Mzml(fn)
+            pattern = "%Y-%m-%dT%H:%M:%SZ"
+        else:
+            continue
+        s_files[fn] = str(run.timestamp)
+        run.close()
+    return sorted(s_files.items(), key=lambda x: datetime.strptime(x[1], pattern), reverse=False)
+
+
+def validate_and_sort_paths(source, tsv):
     """
 
     :param tsv:
@@ -23,11 +46,8 @@ def check_paths(tsv, source):
             if os.path.isdir(source):
                 filenames = [os.path.join(source, fn) for fn in os.listdir(source) if
                              fn.lower().endswith(".mzml") or fn.lower().endswith(".raw")]
-            elif zipfile.is_zipfile(source):
-                with zipfile.ZipFile(source) as zf:
-                    if len([fn for fn in zf.namelist() if fn.lower().endswith(".raw")]) > 0:
-                        raise IOError("Archive with *.raw files not yet supported. Convert to mzML")
-                    filenames = [fn for fn in zf.namelist() if fn.lower().endswith(".mzml")]
+                filenames = [fd[0] for fd in sort_ms_files_by_timestamp(filenames)]
+
             elif h5py.is_hdf5(source):
                 peaklists = hdf5_portal.load_peaklists_from_hdf5(source)
                 filenames = [os.path.join(os.path.abspath(os.path.dirname(source)), pl.ID) for pl in peaklists]
@@ -71,15 +91,17 @@ def check_paths(tsv, source):
                     else:
                         raise IOError("{} does not exist in list with Peaklist objects".format(filename))
             else:
+                for fn in source:
+                    if not os.path.isfile(fn):
+                        raise IOError("[Errno 2] No such file or directory: {}".format(fn))
+
                 for filename in fm[fm.dtype.names[0]]:
-                    if filename not in [os.path.basename(fn) for fn in source]:
+                    fns = [os.path.basename(fn) for fn in source]
+                    if filename in fns:
+                        filenames.append(source[fns.index(filename)])
+                    else:
                         raise IOError("{} (row {}) does not exist in source provided".format(filename, list(
                             fm[fm.dtype.names[0]]).index(filename) + 1))
-                for fn in source:
-                    if os.path.isfile(fn):
-                        filenames.append(fn)
-                    else:
-                        raise IOError("[Errno 2] No such file or directory: {}".format(fn))
 
         elif type(source) == str:
             if os.path.isdir(source):
@@ -88,15 +110,6 @@ def check_paths(tsv, source):
                     if os.path.basename(fn) not in l:
                         raise IOError("{} does not exist in directory provided".format(os.path.basename(fn)))
                     filenames.append(os.path.join(source, fn))
-
-            elif zipfile.is_zipfile(source):
-                with zipfile.ZipFile(source) as zf:
-                    if len([fn for fn in zf.namelist() if fn.lower().endswith(".raw")]) > 0:
-                        raise IOError("Archive with *.raw files not yet supported. Convert to mzML")
-                    for fn in fm[fm.dtype.names[0]]:
-                        if fn not in zf.namelist():
-                            raise IOError("{} does not exist in .zip file".format(fn))
-                        filenames.append(fn)
 
             elif h5py.is_hdf5(source):
                 peaklists = hdf5_portal.load_peaklists_from_hdf5(source)
