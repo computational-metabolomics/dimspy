@@ -582,7 +582,7 @@ def missing_values_sample_filter(peak_matrix: PeakMatrix, max_fraction: float):
 def remove_samples(obj: Union[PeakMatrix, Sequence[PeakList]], sample_names: list):
     """
 
-    :param obj: Peaklist Object
+    :param obj: PeakMatrix Object or List of PeakList objects
     :param sample_names: List of sample names
     :return: List of Peaklist Objects or PeakMatrix object
     """

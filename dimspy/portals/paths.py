@@ -38,9 +38,9 @@ def sort_ms_files_by_timestamp(ps):
     for i, fn in enumerate(ps):
         if fn.lower().endswith(".raw"):
             run = ThermoRaw(fn)
-            if platform.system() == "Darwin":
+            try:
                 pattern = "%d/%m/%Y %H:%M:%S"
-            else:
+            except:
                 pattern = "%m/%d/%Y %I:%M:%S %p"
 
         elif fn.lower().endswith(".mzml"):
