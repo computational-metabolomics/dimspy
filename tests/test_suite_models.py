@@ -1,13 +1,24 @@
 #!/usr/bin/env python
-#  -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
+#
+# Copyright © 2017-2019 Ralf Weber, Albert Zhou.
+#
+# This file is part of DIMSpy.
+#
+# DIMSpy is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# DIMSpy is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with DIMSpy.  If not, see <https://www.gnu.org/licenses/>.
+#
 
-"""
-test_suite_models
-
-author(s): Albert
-origin: 04-29-2017
-
-"""
 
 import sys
 import unittest
