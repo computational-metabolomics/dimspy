@@ -38,19 +38,26 @@ def sort_ms_files_by_timestamp(ps):
     for i, fn in enumerate(ps):
         if fn.lower().endswith(".raw"):
             run = ThermoRaw(fn)
-            try:
-                pattern = "%d/%m/%Y %H:%M:%S"
-            except:
-                pattern = "%m/%d/%Y %I:%M:%S %p"
 
         elif fn.lower().endswith(".mzml"):
             run = Mzml(fn)
-            pattern = "%Y-%m-%dT%H:%M:%SZ"
         else:
             continue
         s_files[fn] = str(run.timestamp)
         run.close()
-    return sorted(s_files.items(), key=lambda x: datetime.strptime(x[1], pattern), reverse=False)
+
+    if list(s_files.keys())[0].lower().endswith(".mzml"):
+        pattern = "%Y-%m-%dT%H:%M:%SZ"
+        s_files_sorted = sorted(s_files.items(), key=lambda x: datetime.strptime(x[1], pattern), reverse=False)
+    else:
+        try:
+            pattern = "%d/%m/%Y %H:%M:%S"
+            s_files_sorted = sorted(s_files.items(), key=lambda x: datetime.strptime(x[1], pattern), reverse=False)
+        except:
+            pattern = "%m/%d/%Y %I:%M:%S %p"
+            s_files_sorted = sorted(s_files.items(), key=lambda x: datetime.strptime(x[1], pattern), reverse=False)
+
+    return s_files_sorted
 
 
 def validate_and_sort_paths(source, tsv):
