@@ -1,4 +1,6 @@
+
 This license (see 'SOFTWARE LICENSE AGREEMENT' below) covers the following files which are distributed with the DIMSpy software package:
+
  - ThermoFisher.CommonCore.BackgroundSubtraction.dll
  - ThermoFisher.CommonCore.BackgroundSubtraction.XML
  - ThermoFisher.CommonCore.Data.dll
@@ -11,7 +13,7 @@ This license (see 'SOFTWARE LICENSE AGREEMENT' below) covers the following files
 Anyone receiving RawFileReader as part of a larger software distribution (in the current context, as part of DIMSpy) is considered an "end user" under
 section 3.3 of the RawFileReader License, and is not granted rights to redistribute RawFileReader.
 
- |
+|
 
 **SOFTWARE LICENSE AGREEMENT (&quot;License&quot;) FOR RawFileReader**
 ----------------------------------------------------------------------
