@@ -148,6 +148,6 @@ def validate_and_sort_paths(source, tsv):
             else:
                 raise IOError("[Errno 2] No such file or directory: {} or {}".format(source, tsv))
     else:
-        raise IOError("[Errno 2] No such file or directory: {} or {}".format(source, tsv))
+        raise IOError("[Errno 2] No such file or directory: {}".format(tsv))
 
     return filenames
