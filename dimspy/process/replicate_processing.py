@@ -77,7 +77,7 @@ def remove_edges(pls_sd: Dict):
     return pls_sd
 
 
-def read_scans(fn: str, source: str, function_noise: str, min_scans: int = 1, filter_scan_events: Dict = None):
+def read_scans(fn: str, function_noise: str, min_scans: int = 1, filter_scan_events: Dict = None):
     """
 
     :param fn:
@@ -110,33 +110,46 @@ def read_scans(fn: str, source: str, function_noise: str, min_scans: int = 1, fi
         if ("include" in filter_scan_events and "exclude" in filter_scan_events) or \
                 ("include" not in filter_scan_events and "exclude" not in filter_scan_events):
             raise ValueError(
-                "Use 'exclude' or 'include' for filter_scan_events not both. E.g {'include': [[70.0, 170.0, 'sim']]}")
+                "Use 'exclude' or 'include' for filter_scan_events not both. E.g {'include': ['FTMS + p ESI w SIM ms [70.00-170.00]']} or {'include': [[70.0, 170.0, 'sim']]}")
 
-        if len([True for fse in list(filter_scan_events.values())[0] if len(fse) == 3]) != len(
-                list(filter_scan_events.values())[0]):
-            raise ValueError("Provide a start, end and scan type (sim or full) for filter_scan_events.")
+        if isinstance(list(filter_scan_events.values())[0][0], str):
 
-        filter_scan_events = {list(filter_scan_events.keys())[0]:
-                                  [[float(fse[0]), float(fse[1]), str(fse[2])] for fse in
-                                   list(filter_scan_events.values())[0]]}
-
-        h_descs = {}
-        for h in h_sids.copy():
-            mzr = mz_range_from_header(h)
-            h_descs[h] = [mzr[0], mzr[1], scan_type_from_header(h).lower()]
-
-        incl_excl = list(filter_scan_events.keys())[0]
-        for hd in filter_scan_events[incl_excl]:
-            if hd not in list(h_descs.values()):
-                logging.warning("Event {} doest not exist".format(str(hd)))
-
-        for hd in h_descs:
             if list(filter_scan_events.keys())[0] == "include":
-                if h_descs[hd] not in filter_scan_events["include"]:
-                    del h_sids[hd]
+                h_sids_temp = collections.OrderedDict()
+                for hd in list(filter_scan_events.values())[0]:
+                    h_sids_temp[hd] = h_sids[hd]
+                h_sids = h_sids_temp
+
             elif list(filter_scan_events.keys())[0] == "exclude":
-                if h_descs[hd] in filter_scan_events["exclude"]:
+                for hd in list(filter_scan_events.values())[0]:
                     del h_sids[hd]
+
+        elif isinstance(list(filter_scan_events.values())[0][0], list):
+
+            if len([True for fse in list(filter_scan_events.values())[0] if len(fse) == 3]) != len(
+                    list(filter_scan_events.values())[0]):
+                raise ValueError("Provide a start, end and scan type (sim or full) for filter_scan_events.")
+
+            filter_scan_events = {list(filter_scan_events.keys())[0]:
+                                      [[float(fse[0]), float(fse[1]), str(fse[2])] for fse in
+                                       list(filter_scan_events.values())[0]]}
+            h_descs = {}
+            for h in h_sids.copy():
+                mzr = mz_range_from_header(h)
+                h_descs[h] = [mzr[0], mzr[1], scan_type_from_header(h).lower()]
+
+            incl_excl = list(filter_scan_events.keys())[0]
+            for hd in filter_scan_events[incl_excl]:
+                if hd not in list(h_descs.values()):
+                    logging.warning("Event {} doest not exist".format(str(hd)))
+
+            for hd in h_descs:
+                if list(filter_scan_events.keys())[0] == "include":
+                    if h_descs[hd] not in filter_scan_events["include"]:
+                        del h_sids[hd]
+                elif list(filter_scan_events.keys())[0] == "exclude":
+                    if h_descs[hd] in filter_scan_events["exclude"]:
+                        del h_sids[hd]
 
     if len(h_sids) == 0:
         raise Exception("No scan data to process. Check filter_scan_events")

@@ -173,7 +173,7 @@ def process_scans(source: str, function_noise: str, snr_thres: float, ppm: float
             source = ""
 
         print("Reading scans....")
-        pls_scans = read_scans(filenames[i], source, function_noise, min_scans, filter_scan_events)
+        pls_scans = read_scans(filenames[i], function_noise, min_scans, filter_scan_events)
 
         if type(remove_mz_range) == list and len(remove_mz_range) > 0:
             print("Removing m/z ranges.....")
