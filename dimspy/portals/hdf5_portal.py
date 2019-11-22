@@ -243,7 +243,8 @@ def save_peak_matrix_as_hdf5(pm: PeakMatrix, filename: str, compatibility_mode: 
 
             dset.attrs.flag_names = pm.flag_names
             for fn in pm.flag_names:
-                dset.attrs[fn] = pm.flag_values(fn)
+                vals = pm.flag_values(fn)
+                dset.attrs[fn] = vals if len(vals) < 65000 else _packMeta(vals)
 
     (_old_savepm if compatibility_mode else _savepm)()
     f.close()
@@ -295,7 +296,7 @@ def load_peak_matrix_from_hdf5(filename: str, compatibility_mode: bool = False):
             PeakList_Tags(*[Tag(_eval(v), None if t == 'None' else t) for t, v in map(lambda x: x.astype(str), tags)])
             for tags in [dset.attrs[x] for x in tatt]]
 
-        flgs = [(flg, dset.attrs[flg]) for flg in dset.attrs.flag_names]
+        flgs = [(flg, (lambda x: _unpackMeta(x) if isinstance(x,bytes) else x)(dset.attrs[flg])) for flg in dset.attrs.flag_names]
         alst = [(attr, f.root[attr].read().astype(f.root[attr].attrs.dtype)) for attr in attl]
         return pids, ptgs, alst, mask, flgs
 
