@@ -15,7 +15,9 @@ install:
   - conda info -a
   - conda env create -n test-environment -f environment.yml
   - activate test-environment
-  - python setup.py install
-
+  - conda install pytest -c conda-forge
+  - pip install .
+  
 test_script:
-  - python setup.py test
+  - dimspy --help
+  - pytest
