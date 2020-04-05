@@ -50,7 +50,7 @@ section 3.3 of the RawFileReader License, and is not granted rights to redistrib
 
 
 .. |Build Status (Travis)| image:: https://img.shields.io/travis/computational-metabolomics/dimspy.svg?style=flat&maxAge=3600&label=Travis-CI
-   :target: https://travis-ci.org/computational-metabolomics/dimspy
+   :target: https://travis-ci.com/computational-metabolomics/dimspy
 
 .. |Build Status (AppVeyor)| image:: https://img.shields.io/appveyor/ci/RJMW/dimspy.svg?style=flat&maxAge=3600&label=AppVeyor
    :target: https://ci.appveyor.com/project/RJMW/dimspy/branch/master
