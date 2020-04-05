@@ -14,12 +14,12 @@ install:
   - conda info -a
   - conda env create -n test-environment -f environment.yml
   - source activate test-environment
-  - conda install coverage codecov -c conda-forge
-  - python setup.py install
-
+  - conda install pytest codecov pytest-cov -c conda-forge
+  - pip install .
+  
 script:
   - dimspy --help
-  - coverage run --source dimspy setup.py test
+  - pytest --cov=dimspy tests/
 
 after_script:
-  - python -m codecov
+  - codecov
