@@ -48,6 +48,7 @@ class PeakFiltersTestCase(unittest.TestCase):
 
         mzs = np.tile(np.arange(0, 1000, step = 100, dtype = float), (8, 1))
         ints = np.arange(80, dtype = float).reshape((8, 10)) / 20.
+        ints[3, 1] = ints[7, 1] = ints[7, 3] = 0 # test blank filter
         ics = np.array([[1, 2] * 5] * 8)
 
         return PeakMatrix(pids, tags, (('mz', mzs), ('intensity', ints), ('intra_count', ics)))
@@ -128,11 +129,15 @@ class PeakFiltersTestCase(unittest.TestCase):
 
         pm = self._createPeakMatrix()
         pm = filter_blank_peaks(pm, 'blank', 0.4)
-        self.assertTrue(pm.is_empty())
+        self.assertTupleEqual(pm.shape, (6, 2))
 
         pm = self._createPeakMatrix()
         pm = filter_blank_peaks(pm, 'blank', 0.3, method = 'max')
-        self.assertTrue(pm.is_empty())
+        self.assertTupleEqual(pm.shape, (6, 2))
+
+        pm = self._createPeakMatrix()
+        pm = filter_blank_peaks(pm, 'blank', 0.3, fold_threshold = 2)
+        self.assertTupleEqual(pm.shape, (6, 1))
 
         pm = self._createPeakMatrix()
         self.assertRaises(ValueError, lambda: filter_blank_peaks(pm, 'Not_blank', 0.3))
