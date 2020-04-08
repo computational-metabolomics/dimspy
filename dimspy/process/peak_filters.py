@@ -196,15 +196,16 @@ def filter_blank_peaks(pm: PeakMatrix, blank_tag: Any, fraction_threshold: Union
         raise ValueError('filter method must be mean, median or max')
 
     with unmask_peakmatrix(pm, blank_tag) as m:
-        ints = m.intensity_matrix[0] if m.shape[0] == 1 else \
-            np.max(m.intensity_matrix, axis=0) if method == 'max' else \
-                np.array([getattr(np, method)(x) for x in m.intensity_matrix.T])
-        ints *= fold_threshold
+        mm = np.ma.masked_array(m.intensity_matrix, mask = ~(m.intensity_matrix > 0))
+        ints = mm[0] if mm.shape[0] == 1 else getattr(np, method)(mm, axis = 0)
+        imsk = ints.mask
+        ints = np.array(ints) * fold_threshold
 
     with mask_peakmatrix(pm, blank_tag) as m:
         faild_int = np.sum(m.intensity_matrix >= ints, axis=0) < (fraction_threshold * m.shape[0])
-        m.add_flag(flag_name, ~((ints > 0) & faild_int))
+        m.add_flag(flag_name, ~(~imsk & faild_int))
 
     if rm_blanks:
         pm = pm.remove_samples(np.where([x.has_tag(blank_tag) for x in pm.peaklist_tags])[0])
     return pm
+
