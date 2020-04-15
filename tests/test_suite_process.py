@@ -25,13 +25,13 @@ import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent.resolve()))
-from . import test_peak_filters
+from . import test_peak_filters, test_peak_alignment
 
 
 if __name__ == '__main__':
     suite = unittest.TestSuite()
 
-    # suite.addTest(unittest.findTestCases(test_peak_alignment))
+    suite.addTest(unittest.findTestCases(test_peak_alignment))
     suite.addTest(unittest.findTestCases(test_peak_filters))
 
     runner = unittest.TextTestRunner()
