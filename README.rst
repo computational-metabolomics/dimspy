@@ -1,6 +1,6 @@
 DIMSpy
 ======
-|Version| |Py versions| |Git| |Bioconda| |Build Status (Travis)| |Build Status (AppVeyor)| |License| |RTD doc| |codecov| |binder| |gitter|
+|Version| |Py versions| |Bioconda| |Git| |Build Status (Travis)| |Build Status (AppVeyor)| |codecov| |License| |binder| |RTD doc| |gitter|
 
 Python package for processing direct-infusion mass spectrometry-based metabolomics and lipidomics data
 
@@ -49,10 +49,10 @@ Anyone receiving RawFileReader as part of a larger software distribution (in the
 section 3.3 of the RawFileReader License, and is not granted rights to redistribute RawFileReader.
 
 
-.. |Build Status (Travis)| image:: https://img.shields.io/travis/computational-metabolomics/dimspy.svg?style=flat&maxAge=3600&label=Travis-CI
+.. |Build Status (Travis)| image:: https://img.shields.io/travis/computational-metabolomics/dimspy.svg?logo=travis&maxAge=600&style=flat-square
    :target: https://travis-ci.com/computational-metabolomics/dimspy
 
-.. |Build Status (AppVeyor)| image:: https://img.shields.io/appveyor/ci/RJMW/dimspy.svg?style=flat&maxAge=3600&label=AppVeyor
+.. |Build Status (AppVeyor)| image:: https://img.shields.io/appveyor/ci/RJMW/dimspy.svg?logo=appveyor&style=flat-square&maxAge=600
    :target: https://ci.appveyor.com/project/RJMW/dimspy/branch/master
 
 .. |Py versions| image:: https://img.shields.io/pypi/pyversions/dimspy.svg?style=flat&maxAge=3600
@@ -64,7 +64,7 @@ section 3.3 of the RawFileReader License, and is not granted rights to redistrib
 .. |Git| image:: https://img.shields.io/badge/repository-GitHub-blue.svg?style=flat&maxAge=3600
    :target: https://github.com/computational-metabolomics/dimspy
 
-.. |Bioconda| image:: https://img.shields.io/badge/install%20with-bioconda-brightgreen.svg?style=flat&maxAge=3600
+.. |Bioconda| image:: https://img.shields.io/conda/vn/bioconda/dimspy?style=flat-square&maxAge=3600
    :target: http://bioconda.github.io/recipes/dimspy/README.html
 
 .. |License| image:: https://img.shields.io/pypi/l/dimspy.svg?style=flat&maxAge=3600
