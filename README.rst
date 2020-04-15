@@ -1,6 +1,6 @@
 DIMSpy
 ======
-|Version| |Py versions| |Git| |Bioconda| |Build Status (Travis)| |Build Status (AppVeyor)| |License| |RTD doc| |codecov| |binder|
+|Version| |Py versions| |Git| |Bioconda| |Build Status (Travis)| |Build Status (AppVeyor)| |License| |RTD doc| |codecov| |binder| |gitter|
 
 Python package for processing direct-infusion mass spectrometry-based metabolomics and lipidomics data
 
@@ -79,3 +79,5 @@ section 3.3 of the RawFileReader License, and is not granted rights to redistrib
 .. |binder| image:: https://mybinder.org/badge_logo.svg
    :target: https://mybinder.org/v2/gh/computational-metabolomics/dimspy/master?filepath=notebooks%2Fworkflow.ipynb
 
+.. |gitter| image:: https://badges.gitter.im/Join%20Chat.svg
+   :target: https://gitter.im/computational-metabolomics/dimspy?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
