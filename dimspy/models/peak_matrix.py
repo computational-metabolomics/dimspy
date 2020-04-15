@@ -786,6 +786,7 @@ class PeakMatrix(object):
         if comprehensive:
             ttypes = self.peaklist_tag_types
             if None in ttypes: ttypes.remove(None)
+            ttypes = sorted([str(t) for t in ttypes])
             tnum = len(ttypes)
             hd = [hd[0]] + ['missing values'] + ['tags_' + x for x in ttypes] + ['tags_untyped'] + hd[1:]
             dm = [dm[0]] + \
