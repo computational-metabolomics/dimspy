@@ -128,7 +128,10 @@ class Mzml:
         else:
             ion_injection_time = None
         header = scan['MS:1000512']
-        mz_range = mz_range_from_header(header)
+        if header:
+            mz_range = mz_range_from_header(header)
+        else:
+            mz_range = [None, None]
         ms_level = scan['ms level']
         pl = PeakList(ID=scan.ID, mz=mzs, intensity=ints,
                       mz_range=mz_range,
