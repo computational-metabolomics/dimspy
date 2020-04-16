@@ -7,30 +7,30 @@ Python package for processing direct-infusion mass spectrometry-based metabolomi
 - **Documentation:** https://dimspy.readthedocs.io/en/latest
 - **Source:** https://github.com/computational-metabolomics/dimspy
 - **Bug reports:** https://github.com/computational-metabolomics/dimspy/issues
+- **Galaxy tool wrappers:** https://github.com/computational-metabolomics/dimspy-galaxy
 
-Installation
-------------
+
+Installation (Conda, PyPi and Galaxy)
+-------------------------------------
 See the `Installation page <https://dimspy.readthedocs.io/en/latest/introduction.html#installation>`__ of
 the `online documentation <https://computational-metabolomics.github.io/dimspy/>`__.
 
 
-Command line
-------------
-::
-
-    $ dimspy --help
-
-
-Bugs
-----
+Bug reports
+-----------
 Please report any bugs that you find `here <https://github.com/computational-metabolomics/dimspy/issues>`_.
 Or fork the repository on `GitHub <https://github.com/computational-metabolomics/dimspy/>`_
 and create a pull request (PR). We welcome all contributions, and we
 will help you to make the PR if you are new to `git`.
 
 
-Developers & Contributors
--------------------------
+Credits
+-------
+DIMSpy was originally written by Ralf Weber and Albert Zhou and has been developed with the help of many others.
+Thanks to everyone who has improved DIMSpy by contributing code, adding features, bug reports and fixes, and documentation.
+
+
+**Developers and contributers**
  - Ralf J. M. Weber (r.j.weber@bham.ac.uk) - `University of Birmingham (UK) <https://www.birmingham.ac.uk/staff/profiles/biosciences/weber-ralf.aspx>`_
  - Jiarui (Albert) Zhou (j.zhou.3@bham.ac.uk) - `University of Birmingham (UK) <http://www.birmingham.ac.uk/index.aspx>`_, `HIT Shenzhen (China) <http://www.hitsz.edu.cn>`_
  - Thomas N. Lawson (tnl495@bham.ac.uk) - `University of Birmingham (UK) <http://www.birmingham.ac.uk/index.aspx>`_
