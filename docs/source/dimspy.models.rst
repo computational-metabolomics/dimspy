@@ -1,10 +1,7 @@
-dimspy\.models package
+models
 ======================
 
-Submodules
-----------
-
-dimspy\.models\.peak\_matrix module
+peak\_matrix
 -----------------------------------
 
 .. automodule:: dimspy.models.peak_matrix
@@ -12,7 +9,7 @@ dimspy\.models\.peak\_matrix module
     :undoc-members:
     :show-inheritance:
 
-dimspy\.models\.peaklist module
+peaklist
 -------------------------------
 
 .. automodule:: dimspy.models.peaklist
@@ -20,7 +17,7 @@ dimspy\.models\.peaklist module
     :undoc-members:
     :show-inheritance:
 
-dimspy\.models\.peaklist\_metadata module
+peaklist\_metadata
 -----------------------------------------
 
 .. automodule:: dimspy.models.peaklist_metadata
@@ -28,19 +25,10 @@ dimspy\.models\.peaklist\_metadata module
     :undoc-members:
     :show-inheritance:
 
-dimspy\.models\.peaklist\_tags module
+peaklist\_tags
 -------------------------------------
 
 .. automodule:: dimspy.models.peaklist_tags
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-
-Module contents
----------------
-
-.. automodule:: dimspy.models
     :members:
     :undoc-members:
     :show-inheritance:
