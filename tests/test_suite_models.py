@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Copyright © 2017-2019 Ralf Weber, Albert Zhou.
+# Copyright © 2017-2020 Ralf Weber, Albert Zhou.
 #
 # This file is part of DIMSpy.
 #

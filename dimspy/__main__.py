@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Copyright © 2017-2019 Ralf Weber, Albert Zhou.
+# Copyright © 2017-2020 Ralf Weber, Albert Zhou.
 #
 # This file is part of DIMSpy.
 #
@@ -604,7 +604,7 @@ def main():  # pragma: no cover
 
     elif args.step == "licenses":
         print("""
-DIMSpy is licensed under the GNU General Public License v3.0. Copyright © 2017 - 2019 Ralf Weber, Albert Zhou
+DIMSpy is licensed under the GNU General Public License v3.0. Copyright © 2017 - 2020 Ralf Weber, Albert Zhou
 
 RawFileReader reading tool. Copyright © 2016 by Thermo Fisher Scientific, Inc. All rights reserved. 
 

@@ -39,7 +39,7 @@ Developers & Contributors
 
 Licenses
 --------
-DIMSpy is licensed under the GNU General Public License v3.0 (see `LICENSE file <https://github.com/computational-metabolomics/dimspy/blob/master/LICENSE>`_ for licensing information). Copyright © 2017 - 2019 Ralf Weber, Albert Zhou
+DIMSpy is licensed under the GNU General Public License v3.0 (see `LICENSE file <https://github.com/computational-metabolomics/dimspy/blob/master/LICENSE>`_ for licensing information). Copyright © 2017 - 2020 Ralf Weber, Albert Zhou
 
 **Third-party licenses and copyright**
 
