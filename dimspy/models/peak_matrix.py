@@ -654,7 +654,9 @@ class PeakMatrix(object):
         :rtype: PeakMatrix object (self)
 
         """
-        if isinstance(sample_ids, Iterable): sample_ids = list(sample_ids)
+        if isinstance(sample_ids, tuple) and len(sample_ids) == 1 and isinstance(sample_ids[0], (np.ndarray, Iterable)): sample_ids = sample_ids[0]
+        if isinstance(sample_ids, np.ndarray): sample_ids = sample_ids.tolist()
+        elif isinstance(sample_ids, Iterable): sample_ids = list(sample_ids)
         rmids = np.where(~self.mask)[0][sample_ids] if masked_only else sample_ids
         self._pids = np.delete(self._pids, rmids, axis=0)
         self._tags = np.delete(self._tags, rmids, axis=0)

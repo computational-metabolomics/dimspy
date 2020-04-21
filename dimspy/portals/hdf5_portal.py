@@ -103,8 +103,10 @@ def save_peaklists_as_hdf5(pkls: Sequence[PeakList], filename: str, compatibilit
         dset.attrs.tags = np.array([(t or 'None', v) for v, t in pkl.tags.to_list()])
         for k, v in pkl.metadata.items(): setattr(dset.attrs, 'metadata_' + k, _packMeta(v))
 
-    _save = _old_savepkl if compatibility_mode else _savepkl
-    for pl in enumerate(pkls): _save(*pl)
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore', ptb.NaturalNameWarning)
+        _save = _old_savepkl if compatibility_mode else _savepkl
+        for pl in enumerate(pkls): _save(*pl)
     f.close()
 
 
@@ -168,11 +170,13 @@ def load_peaklists_from_hdf5(filename: str, compatibility_mode: bool = False):
                                                                                     None if t == 'None' else t)
         return dset.attrs.order, pkl
 
-    pkls = [_old_loadpkl(dname) for dname in f.keys()] if compatibility_mode else \
-        [_loadpkl(dset) for dset in f.walk_nodes('/', 'Table')]
-    pkls = list(zip(*sorted(pkls, key=lambda x: x[0])))[1]
-
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore', ptb.NaturalNameWarning)
+        pkls = [_old_loadpkl(dname) for dname in f.keys()] if compatibility_mode else \
+               [_loadpkl(dset) for dset in f.walk_nodes('/', 'Table')]
+        pkls = list(zip(*sorted(pkls, key=lambda x: x[0])))[1]
     f.close()
+
     return pkls
 
 
@@ -246,7 +250,9 @@ def save_peak_matrix_as_hdf5(pm: PeakMatrix, filename: str, compatibility_mode: 
                 vals = pm.flag_values(fn)
                 dset.attrs[fn] = vals if len(vals) < 65000 else _packMeta(vals)
 
-    (_old_savepm if compatibility_mode else _savepm)()
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore', ptb.NaturalNameWarning)
+        (_old_savepm if compatibility_mode else _savepm)()
     f.close()
 
 
@@ -300,7 +306,9 @@ def load_peak_matrix_from_hdf5(filename: str, compatibility_mode: bool = False):
         alst = [(attr, f.root[attr].read().astype(f.root[attr].attrs.dtype)) for attr in attl]
         return pids, ptgs, alst, mask, flgs
 
-    res = (_old_loadpm if compatibility_mode else _loadpm)()
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore', ptb.NaturalNameWarning)
+        res = (_old_loadpm if compatibility_mode else _loadpm)()
     f.close()
 
     pm = PeakMatrix(*res[:3])
