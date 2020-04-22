@@ -3,6 +3,7 @@
 
 from dimspy.tools import *
 from dimspy.portals.hdf5_portal import *
+import zipfile
 
 
 def main():
@@ -30,23 +31,29 @@ def main():
     pls_rf = replicate_filter(pls, ppm=2.0, replicates=3, min_peaks=2, rsd_thres=None, report=logfile, block_size=5000)
     print("Completed")
 
-    print("Write each replicate filtered peaklist to a text files")
+    print("Write each replicate filtered peaklist to a text file")
     for pl in pls_rf:
         with open(pl.ID + ".txt", "w") as out:
             out.write(os.path.join("results", pl.to_str("\t")))
     print("Completed")
 
-    print("Create a new sample list.....")
-    sample_list = os.path.join(output, "sample_list.txt")
-    create_sample_list(pls_rf, sample_list, delimiter="\t")
-    print("Completed")
-    print("")
+    # print("Save, write and load peaklists")
+    # save_peaklists_as_hdf5(pls_rf, os.path.join(output, "pls_rf.h5"))
+    # hdf5_peaklists_to_txt(os.path.join(output, "pls_rf.h5"), path_out=output)
+    # pls_rf = load_peaklists_from_hdf5(os.path.join(output, "pls_rf.h5"))
+    # print("Completed")
+
+    # print("Create a new sample list.....")
+    # sample_list = os.path.join(output, "sample_list.txt")
+    # create_sample_list(pls_rf, sample_list, delimiter="\t")
+    # print("Completed")
+    # print("")
 
     print("Align Samples.....")
     pm = align_samples(pls_rf, ppm=3.0, ncpus=1, block_size=5000)
     print("Completed", pm.shape)
 
-    # print("Save, write and load  peak matrix")
+    # print("Save, write and load peak matrix")
     # save_peak_matrix_as_hdf5(pm, os.path.join(output, "pm.h5"))
     # hdf5_peak_matrix_to_txt(os.path.join(output, "pm.h5"), path_out=os.path.join(output, "pm.txt"), attr_name="intensity", comprehensive=True)
     # pm = load_peak_matrix_from_hdf5(os.path.join(output, "pm.h5"))
