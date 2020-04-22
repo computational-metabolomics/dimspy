@@ -1,8 +1,8 @@
 dimspy --help
 
 dimspy unzip^
---input ../tests/data/MTBLS79_subset/MTBLS79_mzml_triplicates.zip^
---output results/mzml
+ --input ../tests/data/MTBLS79_subset/MTBLS79_mzml_triplicates.zip^
+ --output results/mzml
 
 dimspy process-scans^
  --input results/mzml^

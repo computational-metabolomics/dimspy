@@ -14,7 +14,7 @@ def main():
     if not os.path.exists(output):
         os.mkdir(output)
 
-    print("Unzip mzml files.....")
+    print("Unzip mzML files.....")
     zip_ref = zipfile.ZipFile(source, 'r')
     zip_ref.extractall(os.path.join("data"))
     zip_ref.close()
