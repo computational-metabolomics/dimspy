@@ -1,10 +1,7 @@
-dimspy\.portals package
+portals
 =======================
 
-Submodules
-----------
-
-dimspy\.portals\.hdf5\_portal module
+hdf5\_portal
 ------------------------------------
 
 .. automodule:: dimspy.portals.hdf5_portal
@@ -13,7 +10,7 @@ dimspy\.portals\.hdf5\_portal module
     :show-inheritance:
     :member-order: bysource
 
-dimspy\.portals\.mzml\_portal module
+mzml\_portal
 ------------------------------------
 
 .. automodule:: dimspy.portals.mzml_portal
@@ -22,7 +19,7 @@ dimspy\.portals\.mzml\_portal module
     :show-inheritance:
     :member-order: bysource
 
-dimspy\.portals\.paths module
+paths
 -----------------------------
 
 .. automodule:: dimspy.portals.paths
@@ -31,7 +28,7 @@ dimspy\.portals\.paths module
     :show-inheritance:
     :member-order: bysource
 
-dimspy\.portals\.thermo\_raw\_portal module
+thermo\_raw\_portal
 -------------------------------------------
 
 .. automodule:: dimspy.portals.thermo_raw_portal
@@ -40,19 +37,10 @@ dimspy\.portals\.thermo\_raw\_portal module
     :show-inheritance:
     :member-order: bysource
 
-dimspy\.portals\.txt\_portal module
+txt\_portal
 -----------------------------------
 
 .. automodule:: dimspy.portals.txt_portal
-    :members:
-    :undoc-members:
-    :show-inheritance:
-    :member-order: bysource
-
-Module contents
----------------
-
-.. automodule:: dimspy.portals
     :members:
     :undoc-members:
     :show-inheritance:

@@ -1,10 +1,7 @@
-dimspy\.process package
+process
 =======================
 
-Submodules
-----------
-
-dimspy\.process\.peak\_alignment module
+peak\_alignment
 ---------------------------------------
 
 .. automodule:: dimspy.process.peak_alignment
@@ -13,7 +10,7 @@ dimspy\.process\.peak\_alignment module
     :show-inheritance:
     :member-order: bysource
 
-dimspy\.process\.peak\_filters module
+peak\_filters
 -------------------------------------
 
 .. automodule:: dimspy.process.peak_filters
@@ -22,19 +19,10 @@ dimspy\.process\.peak\_filters module
     :show-inheritance:
     :member-order: bysource
 
-dimspy\.process\.scan\_processing module
+scan\_processing
 ----------------------------------------
 
 .. automodule:: dimspy.process.replicate_processing
-    :members:
-    :undoc-members:
-    :show-inheritance:
-    :member-order: bysource
-
-Module contents
----------------
-
-.. automodule:: dimspy.process
     :members:
     :undoc-members:
     :show-inheritance:
