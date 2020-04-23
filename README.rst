@@ -39,6 +39,10 @@ Thanks to everyone who has improved DIMSpy by contributing code, adding features
  - European Commission's H2020 programme, grant agreement number 654241
  - Wellcome Trust, grant number 202952/Z/16/Z
 
+**Citation**
+
+To cite DIMSpy please use one of the Zenodo references listed `here <https://dimspy.readthedocs.io/en/latest/citation.html>`__.
+
 
 License
 --------
