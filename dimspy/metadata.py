@@ -65,7 +65,6 @@ def scan_type_from_header(h: str) -> str:
     elif " sim " in h.lower():
         return "SIM"
     else:
-        # Other scan types (e.g. Thermo and Waters)
         return None
 
 

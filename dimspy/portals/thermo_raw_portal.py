@@ -25,15 +25,23 @@ import os
 import re
 import sys
 
-import clr
 import numpy as np
 from ..models.peaklist import PeakList
 
-sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), "ThermoRawFileReader_3_0_41/Libraries"))
-clr.AddReference('ThermoFisher.CommonCore.RawFileReader')
-clr.AddReference('ThermoFisher.CommonCore.Data')
-import ThermoFisher.CommonCore.Data.Business as Business
-import ThermoFisher.CommonCore.RawFileReader as RawFileReader
+try:
+    import clr
+    sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), "ThermoRawFileReader_3_0_41/Libraries"))
+    clr.AddReference('ThermoFisher.CommonCore.RawFileReader')
+    clr.AddReference('ThermoFisher.CommonCore.Data')
+    import ThermoFisher.CommonCore.Data.Business as Business
+    import ThermoFisher.CommonCore.RawFileReader as RawFileReader
+except ImportError:
+    import warnings
+    warnings.warn("DIMSpy requires the Mono framework in order to read and process .raw files. "
+                  "Install dimspy via conda (highly recommended) to automatically install Mono "
+                  "(see https://dimspy.readthedocs.io/en/latest/installation.html) or " 
+                  "install Mono from (https://www.mono-project.com). "
+                  "You can ignore this warning if you use DIMSpy to read and process .mzML files.")
 
 
 def mz_range_from_header(h: str):
