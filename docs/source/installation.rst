@@ -4,7 +4,7 @@ Installation
 Conda (recommended)
 -------------------
 
-Install Miniconda, follow these steps described `here <https://docs.conda.io/projects/conda/en/latest/user-guide/install>`_
+Install Miniconda, follow the steps described `here <https://docs.conda.io/projects/conda/en/latest/user-guide/install>`_
 
 Start the ``conda prompt``
 
@@ -55,7 +55,6 @@ Install the current release of ``dimspy`` with ``pip``::
 .. note::
 
     * The installation process will take a few minutes.
-    * Feel free to use a different name for the Conda environment
 
 To upgrade to a newer release use the ``--upgrade`` flag::
 
