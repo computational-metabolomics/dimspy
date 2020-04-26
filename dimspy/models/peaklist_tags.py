@@ -1,20 +1,27 @@
 #!/usr/bin/env python
-#  -*- coding: utf-8 -*-
-
-"""
-The PeakList tags class.
-
-.. moduleauthor:: Albert Zhou, Ralf Weber
-
-.. versionadded:: 1.0.0
-
-.. warning::
-    This class is designed for PeakList and PeakMatrix internal use only.
-   
-"""
+# -*- coding: utf-8 -*-
+#
+# Copyright © 2017-2020 Ralf Weber, Albert Zhou.
+#
+# This file is part of DIMSpy.
+#
+# DIMSpy is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# DIMSpy is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with DIMSpy.  If not, see <https://www.gnu.org/licenses/>.
+#
 
 
 from __future__ import annotations
+
 from typing import Union
 
 
@@ -24,8 +31,8 @@ class Tag(object):
 
     This class is mainly used in PeakList and PeakMatrix classes for sample filtering.
 
-    :param value: tag value, must be number (int, float), string (ascii, unicode), or Tag object (ignore ttype setting)
-    :param ttype: tag type, must be string or None (untyped), default = None
+    :param value: Tag value, must be number (int, float), string (ascii, unicode), or Tag object (ignore ttype setting)
+    :param ttype: Tag type, must be string or None (untyped), default = None
 
     Single value will be treated as untyped tag:
 
@@ -47,15 +54,15 @@ class Tag(object):
         """
         Property of tag value.
 
-        :getter: returns the value of the tag
-        :setter: set the tag value, must be number or string
+        :getter: Returns the value of the tag
+        :setter: Set the tag value, must be number or string
         :type: int, float, str, unicode
 
         """
         return self._value
 
     @value.setter
-    def value(self, value: Union[int, float, str]): # numpy types should be manually converted
+    def value(self, value: Union[int, float, str]):  # numpy types should be manually converted
         self._value = value
 
     @property
@@ -63,8 +70,8 @@ class Tag(object):
         """
         Property of tag type. None indicates untyped tag.
 
-        :getter: returns the type of the tag
-        :setter: set the tag type, must be None or string
+        :getter: Returns the type of the tag
+        :setter: Set the tag type, must be None or string
         :type: None, str, unicode
 
         """
@@ -72,7 +79,7 @@ class Tag(object):
 
     @ttype.setter
     def ttype(self, value: Union[str, None]):
-        if value in ('None', ''): # reserve for hdf5 protal
+        if value in ('None', ''):  # reserve for hdf5 protal
             raise KeyError('["%s"] is not an acceptable tag type' % value)
         self._type = None if value is None else value
 
@@ -81,7 +88,7 @@ class Tag(object):
         """
         Property to decide if the tag is typed or untyped.
 
-        :getter: returns typed status of the tag
+        :getter: Returns typed status of the tag
         :type: bool
 
         """
@@ -107,8 +114,8 @@ class PeakList_Tags(object):
     For instance, PeakList can have tags batch = 1 and plate = 1, but not batch = 1 and batch = 2, or (untyped) 1 and (untyped) 1.
     Single value will be treated as untyped tag.
 
-    :param args: list of untyped tags
-    :param kwargs: list of typed tags. Only one tag value can be assigned to a specific tag type
+    :param args: List of untyped tags
+    :param kwargs: List of typed tags. Only one tag value can be assigned to a specific tag type
 
     >>> PeakList_Tags('untyped_tag1', Tag('untyped_tag2'), Tag('typed_tag', 'tag_type'))
     >>> PeakList_Tags(tag_type1 = 'tag_value1', tag_type2 = 'tag_value2')
@@ -118,7 +125,7 @@ class PeakList_Tags(object):
     def __init__(self, *args, **kwargs):
         self._tags = []
         for v in args: self.add_tag(v)
-        for k,v in list(kwargs.items()): self.add_tag(v,k)
+        for k, v in list(kwargs.items()): self.add_tag(v, k)
 
     # build-ins
     def __str__(self):
@@ -136,7 +143,7 @@ class PeakList_Tags(object):
         """
         Property of included tag types. None indicates untyped tags included.
 
-        :getter: returns a set containing all the tag types of the typed tags
+        :getter: Returns a set containing all the tag types of the typed tags
         :type: set
 
         """
@@ -147,7 +154,7 @@ class PeakList_Tags(object):
         """
         Property of included tag values. Same tag values will be merged
 
-        :getter: returns a set containing all the tag values, both typed and untyped tags
+        :getter: Returns a set containing all the tag values, both typed and untyped tags
         :type: set
 
         """
@@ -158,7 +165,7 @@ class PeakList_Tags(object):
         """
         Property of all included tags.
 
-        :getter: returns a tuple containing all the tags, both typed and untyped
+        :getter: Returns a tuple containing all the tags, both typed and untyped
         :type: tuple
 
         """
@@ -169,7 +176,7 @@ class PeakList_Tags(object):
         """
         Property of included typed tags.
 
-        :getter: returns a tuple containing all the typed tags
+        :getter: Returns a tuple containing all the typed tags
         :type: tuple
 
         """
@@ -180,7 +187,7 @@ class PeakList_Tags(object):
         """
         Property of included untyped tags.
 
-        :getter: returns a tuple containing all the untyped tags
+        :getter: Returns a tuple containing all the untyped tags
         :type: tuple
 
         """
@@ -191,8 +198,8 @@ class PeakList_Tags(object):
         """
         Checks whether there exists a specific tag.
 
-        :param tag: the tag for checking
-        :param tag_type: the type of the tag
+        :param tag: The tag for checking
+        :param tag_type: The type of the tag
         :rtype: bool
 
         >>> tags = PeakList_Tags('untyped_tag1', Tag('tag_value1', 'tag_type1'))
@@ -207,13 +214,13 @@ class PeakList_Tags(object):
 
         """
         return (tag in self._tags) if isinstance(tag, Tag) or tag_type is None else \
-               (Tag(tag, tag_type) in self._tags)
+            (Tag(tag, tag_type) in self._tags)
 
     def has_tag_type(self, tag_type: Union[str, None] = None):
         """
         Checks whether there exists a specific tag type.
 
-        :param tag_type: the tag type for checking, None indicates untyped tags
+        :param tag_type: The tag type for checking, None indicates untyped tags
         :rtype: bool
 
         """
@@ -223,7 +230,7 @@ class PeakList_Tags(object):
         """
         Returns tag value of the given tag type, or tuple of untyped tags if tag_type is None.
 
-        :param tag_type: valid tag type, None for untyped tags
+        :param tag_type: Valid tag type, None for untyped tags
         :rtype: Tag, or None if tag_type not exists
 
         """
@@ -234,8 +241,8 @@ class PeakList_Tags(object):
         """
         Adds typed or untyped tag.
 
-        :param tag: tag or tag value to add
-        :param tag_type: type of the tag value
+        :param tag: Tag or tag value to add
+        :param tag_type: Type of the tag value
 
         >>> tags = PeakList_Tags()
         >>> tags.add_tag('untyped_tag1')
@@ -254,8 +261,8 @@ class PeakList_Tags(object):
         """
         Drops typed and untyped tag.
 
-        :param tag: tag or tag value to drop
-        :param tag_type: type of the tag value
+        :param tag: Tag or tag value to drop
+        :param tag_type: Type of the tag value
 
         >>> tags = PeakList_Tags('untyped_tag1', tag_type1 = 'tag_value1')
         >>> tags.drop_tag(Tag('tag_value1', 'tag_type1'))
@@ -270,7 +277,7 @@ class PeakList_Tags(object):
         """
         Drops the tag with the given type.
 
-        :param tag_type: tag type to drop, None (untyped) may drop multiple tags
+        :param tag_type: Tag type to drop, None (untyped) may drop multiple tags
 
         """
         self._tags = [x for x in self._tags if x.ttype != tag_type]

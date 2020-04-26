@@ -1,29 +1,38 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
-"""
-Cluster and align peaklists into peak matrix.
-
-.. moduleauthor:: Albert Zhou, Ralf Weber
-
-.. versionadded:: 1.0.0
-
-"""
-
+#
+# Copyright © 2017-2020 Ralf Weber, Albert Zhou.
+#
+# This file is part of DIMSpy.
+#
+# DIMSpy is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# DIMSpy is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with DIMSpy.  If not, see <https://www.gnu.org/licenses/>.
+#
 
 
 import logging
-import numpy as np
-import fastcluster as fc
-from functools import reduce
-from operator import itemgetter
-from multiprocessing import Pool, cpu_count
 from collections import Counter
+from functools import reduce
+from multiprocessing import Pool, cpu_count
+from operator import itemgetter
 from typing import Sequence, List, Union
+
+import fastcluster as fc
+import numpy as np
+from ..models.peak_matrix import PeakMatrix
+from ..models.peaklist import PeakList
 from scipy import cluster
 from scipy.spatial.distance import squareform
-from dimspy.models.peaklist import PeakList
-from dimspy.models.peak_matrix import PeakMatrix
 
 
 # single cluster
@@ -69,7 +78,8 @@ def _cluster_peaks_mp(params):
     return _cluster_peaks(*params)
 
 
-def _cluster_peaks_map(mzs: Sequence[float], ppm: float, block_size: int, fixed_block: bool, edge_extend: Union[int, float], ncpus: Union[int, None]) -> List[List[int]]:
+def _cluster_peaks_map(mzs: Sequence[float], ppm: float, block_size: int, fixed_block: bool,
+                       edge_extend: Union[int, float], ncpus: Union[int, None]) -> List[List[int]]:
     if not np.all(mzs[1:] >= mzs[:-1]):
         raise ValueError('mz values not in ascending order')
     if not 1 <= block_size <= len(mzs):
@@ -99,7 +109,9 @@ def _cluster_peaks_map(mzs: Sequence[float], ppm: float, block_size: int, fixed_
         largechk = [x for x in p if len(x[0]) > 1E+5]
         if len(largechk) > 0:
             raise RuntimeError('Some of the clustering chunks contain too many peaks: \n%s' %
-                str.join('\n', ['mz range [%.5f - %.5f] ... [%d] peaks' % (min(x[0]),max(x[0]),len(x[0])) for x in largechk]))
+                               str.join('\n',
+                                        ['mz range [%.5f - %.5f] ... [%d] peaks' % (min(x[0]), max(x[0]), len(x[0])) for
+                                         x in largechk]))
         return (_smap if ncpus == 1 or cpu_count() <= 2 else _mmap)(f, p)
 
     # align edges
@@ -183,8 +195,8 @@ def _align_peaks(cids: np.ndarray, pids: np.ndarray, *attrs):
 
     def _fillam(a):
         alg = _avg_am if a.dtype.kind in ('i', 'u', 'f') else \
-              _cat_am if a.dtype.kind in ('?', 'b', 'a', 'S', 'U') else \
-              lambda x: logging.warning('undefined alignment behaviour for [%s] dtype data') # returns None
+            _cat_am if a.dtype.kind in ('?', 'b', 'a', 'S', 'U') else \
+                lambda x: logging.warning('undefined alignment behaviour for [%s] dtype data')  # returns None
         return alg(a)
 
     attrMs = list(map(_fillam, attrs))
@@ -195,17 +207,18 @@ def _align_peaks(cids: np.ndarray, pids: np.ndarray, *attrs):
 
 
 # interface
-def align_peaks(peaks: Sequence[PeakList], ppm: float = 2.0, block_size: int = 5000, fixed_block: bool = True, edge_extend: Union[int, float] = 10, ncpus: Union[int, None]  = None):
+def align_peaks(peaks: Sequence[PeakList], ppm: float = 2.0, block_size: int = 5000, fixed_block: bool = True,
+                edge_extend: Union[int, float] = 10, ncpus: Union[int, None] = None):
     """
     Cluster and align peaklists into a peak matrix.
 
-    :param peaks: list of peaklists for alignment
-    :param ppm: the hierarchical clustering cutting height, i.e., ppm range for each aligned mz value. Default = 2.0
+    :param peaks: List of peaklists for alignment
+    :param ppm: The hierarchical clustering cutting height, i.e., ppm range for each aligned mz value. Default = 2.0
     :param block_size: number peaks in each centre clustering block. This can be a exact or approximate number depends
         on the fixed_block parameter. Default = 5000
-    :param fixed_block: whether the blocks contain fixed number of peaks. Default = True
-    :param edge_extend: ppm range for the edge blocks. Default = 10
-    :param ncpus: number of CPUs for parallel clustering. Default = None, indicating using as many as possible
+    :param fixed_block: Whether the blocks contain fixed number of peaks. Default = True
+    :param edge_extend: Ppm range for the edge blocks. Default = 10
+    :param ncpus: Number of CPUs for parallel clustering. Default = None, indicating using as many as possible
     :rtype: PeakMatrix object
 
     .. figure::  images/alignment.png
@@ -239,7 +252,7 @@ def align_peaks(peaks: Sequence[PeakList], ppm: float = 2.0, block_size: int = 5
         raise ValueError('peak attributes not the same')
     if 'intra_count' in attrs:
         raise AttributeError('preserved attribute name [intra_count] already exists')
-    attrs = [x for x in attrs if x not in peaks[0].flag_attributes] # flags should be excluded
+    attrs = [x for x in attrs if x not in peaks[0].flag_attributes]  # flags should be excluded
 
     # single peaklist
     if len(peaks) == 1:

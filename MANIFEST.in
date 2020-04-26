@@ -1,5 +1,6 @@
 include README.rst
 include LICENSE
+include RawFileReaderLicense.rst
 include requirements.txt
 include examples/*.*
 include tests/*.py
@@ -7,7 +8,7 @@ include tests/data/*.*
 include tests/data/MTBLS79_subset/*.*
 include tests/data/MTBLS79_subset/mzml/*.*
 include tests/data/MTBLS79_subset/raw/*.*
-include tests/test_results/*.*
+include tests/results/*.*
 include dimspy/portals/ThermoRawFileReader_3_0_41/Libraries/*.XML
 include dimspy/portals/ThermoRawFileReader_3_0_41/Libraries/*.dll
 include dimspy/portals/ThermoRawFileReader_3_0_41/License/RawFileRdr_License_Agreement_RevA.doc

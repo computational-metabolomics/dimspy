@@ -1,21 +1,34 @@
 #!/usr/bin/env python
-#  -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
+#
+# Copyright © 2017-2020 Ralf Weber, Albert Zhou.
+#
+# This file is part of DIMSpy.
+#
+# DIMSpy is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# DIMSpy is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with DIMSpy.  If not, see <https://www.gnu.org/licenses/>.
+#
 
-"""
-test_txt_portal
 
-author(s): Albert
-origin: 05-14-2017
+import os
+import unittest
 
-"""
-
-import unittest, os
 import numpy as np
-from dimspy.models.peaklist_tags import Tag
 from dimspy.models.peaklist import PeakList
-from dimspy.process.peak_alignment import align_peaks
-from dimspy.portals.txt_portal import save_peaklist_as_txt, load_peaklist_from_txt
+from dimspy.models.peaklist_tags import Tag
 from dimspy.portals.txt_portal import save_peak_matrix_as_txt, load_peak_matrix_from_txt
+from dimspy.portals.txt_portal import save_peaklist_as_txt, load_peaklist_from_txt
+from dimspy.process.peak_alignment import align_peaks
 
 
 class TxtPortalsTestCase(unittest.TestCase):

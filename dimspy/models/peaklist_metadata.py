@@ -1,17 +1,23 @@
 #!/usr/bin/env python
-#  -*- coding: utf-8 -*-
-
-"""
-The PeakList metadata class.
-
-.. moduleauthor:: Albert Zhou, Ralf Weber
-
-.. versionadded:: 1.0.0
-
-.. warning::
-    This class is designed for PeakList internal use only.
-
-"""
+# -*- coding: utf-8 -*-
+#
+# Copyright © 2017-2020 Ralf Weber, Albert Zhou.
+#
+# This file is part of DIMSpy.
+#
+# DIMSpy is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# DIMSpy is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with DIMSpy.  If not, see <https://www.gnu.org/licenses/>.
+#
 
 
 # DO NOT try metadata.metadata.attr.
@@ -22,8 +28,8 @@ class PeakList_Metadata(dict):
 
     Dictionary-like container for PeakList metadata storage.
 
-    :param args: iterable object of key-value pairs
-    :param kwargs: metadata key-value pairs
+    :param args: Iterable object of key-value pairs
+    :param kwargs: Metadata key-value pairs
 
     >>> PeakList_Metadata([('name', 'sample_1'), ('qc', False)])
     >>> PeakList_Metadata(name = 'sample_1', qc = False)
@@ -64,4 +70,3 @@ class PeakList_Metadata(dict):
             del self[item]
         else:
             super().__delattr__(item)
-

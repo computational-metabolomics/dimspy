@@ -1,18 +1,30 @@
 #!/usr/bin/env python
-#  -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
+#
+# Copyright © 2017-2020 Ralf Weber, Albert Zhou.
+#
+# This file is part of DIMSpy.
+#
+# DIMSpy is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# DIMSpy is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with DIMSpy.  If not, see <https://www.gnu.org/licenses/>.
+#
 
-"""
-test_Peaklist
 
-author(s): Albert
-origin: 04-28-2017
-
-"""
-
-
-import unittest
-import numpy as np
 import pickle as cp
+import unittest
+
+import numpy as np
+import pandas as pd
 from dimspy.models.peaklist import PeakList
 
 
@@ -170,6 +182,14 @@ class PeakListTestCase(unittest.TestCase):
             self.fail('to_str function failed: ' + str(e))
         self.assertListEqual(np.arange(0, 1000, step = 100).tolist(),
                              list(map(float, list(zip(*[x.split(',') for x in psr.split('\n')[1:]]))[0])))
+
+        try:
+            pl_df = pl.to_df()
+        except Exception as e:
+            self.fail('to_df function failed: ' + str(e))
+
+        title, data = zip(*pl.to_dict().items())
+        self.assertTrue(pl_df.equals(pd.DataFrame(list(zip(*data)), columns=title)))
 
     def test_pl_pickle(self):
         pl = self._createPeakList()

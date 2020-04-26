@@ -1,16 +1,27 @@
 #!/usr/bin/env python
-#  -*- coding: utf-8 -*-
-
-"""
-test_peak_filters
-
-author(s): Albert
-origin: 05-14-2017
-
-"""
+# -*- coding: utf-8 -*-
+#
+# Copyright © 2017-2020 Ralf Weber, Albert Zhou.
+#
+# This file is part of DIMSpy.
+#
+# DIMSpy is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# DIMSpy is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with DIMSpy.  If not, see <https://www.gnu.org/licenses/>.
+#
 
 
 import unittest
+
 from dimspy.models.peaklist_tags import PeakList_Tags
 from dimspy.process.peak_filters import *
 
@@ -37,6 +48,7 @@ class PeakFiltersTestCase(unittest.TestCase):
 
         mzs = np.tile(np.arange(0, 1000, step = 100, dtype = float), (8, 1))
         ints = np.arange(80, dtype = float).reshape((8, 10)) / 20.
+        ints[3, 1] = ints[7, 1] = ints[7, 3] = 0 # test blank filter
         ics = np.array([[1, 2] * 5] * 8)
 
         return PeakMatrix(pids, tags, (('mz', mzs), ('intensity', ints), ('intra_count', ics)))
@@ -117,11 +129,15 @@ class PeakFiltersTestCase(unittest.TestCase):
 
         pm = self._createPeakMatrix()
         pm = filter_blank_peaks(pm, 'blank', 0.4)
-        self.assertTrue(pm.is_empty())
+        self.assertTupleEqual(pm.shape, (6, 2))
 
         pm = self._createPeakMatrix()
         pm = filter_blank_peaks(pm, 'blank', 0.3, method = 'max')
-        self.assertTrue(pm.is_empty())
+        self.assertTupleEqual(pm.shape, (6, 2))
+
+        pm = self._createPeakMatrix()
+        pm = filter_blank_peaks(pm, 'blank', 0.3, fold_threshold = 2)
+        self.assertTupleEqual(pm.shape, (6, 1))
 
         pm = self._createPeakMatrix()
         self.assertRaises(ValueError, lambda: filter_blank_peaks(pm, 'Not_blank', 0.3))
