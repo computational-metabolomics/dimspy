@@ -22,6 +22,7 @@
 
 import collections
 import os
+from typing import Sequence, Union
 import re
 import sys
 
@@ -37,56 +38,76 @@ try:
     import ThermoFisher.CommonCore.RawFileReader as RawFileReader
 except ImportError:
     import warnings
-    warnings.warn("DIMSpy requires the Mono framework in order to read and process .raw files. "
-                  "Install dimspy via conda (highly recommended) to automatically install Mono "
-                  "(see https://dimspy.readthedocs.io/en/latest/installation.html) or " 
-                  "install Mono from (https://www.mono-project.com). "
-                  "You can ignore this warning if you use DIMSpy to read and process .mzML files.")
+    warnings.warn("""
+                  DIMSpy requires the Mono framework in order to read and process .raw files. 
+                  Install dimspy via conda (highly recommended) to automatically install Mono 
+                  (see https://dimspy.readthedocs.io/en/latest/installation.html) or 
+                  install Mono from (https://www.mono-project.com). 
+                  You can ignore this warning if you use DIMSpy to read and process .mzML files.
+                  """)
 
 
-def mz_range_from_header(h: str):
+def mz_range_from_header(h: str) -> list:
     """
+    Extract the m/z range from a header or filterstring
 
-    :param h:
+    :param h: str
     :return: Sequence[float, float]
     """
     return [float(m) for m in re.findall(r'([\w\.-]+)-([\w\.-]+)', h)[0]]
 
 
 class ThermoRaw:
-
+    "ThermoRaw portal"
     def __init__(self, filename):
+        """
+        Initialise a object interface to a mzML file.
+
+        :param filename: Path to the mzML file
+
+        """
         self.run = RawFileReader.RawFileReaderAdapter.FileFactory(filename)
         self.run.SelectInstrument(Business.Device.MS, 1)
         self.filename = filename
         self.timestamp = self.run.CreationDate
 
-    def headers(self):
+    def headers(self) -> collections.OrderedDict:
         """
-
-        :return:
+        Get all unique header or filter strings and associated scan ids.
+        :return: Dictionary
         """
         sids = collections.OrderedDict()
         for scan_id in range(self.run.RunHeaderEx.FirstSpectrum, self.run.RunHeaderEx.LastSpectrum + 1):
             sids.setdefault(str(self.run.GetFilterForScanNumber(scan_id).Filter), []).append(scan_id)
         return sids
 
-    def scan_ids(self):
+    def scan_ids(self) -> collections.OrderedDict:
         """
-
-        :return:
+        Get all scan ids and associated headers or filter strings.
+        :return: Dictionary
         """
         sids = collections.OrderedDict()
         for scan_id in range(self.run.RunHeaderEx.FirstSpectrum, self.run.RunHeaderEx.LastSpectrum + 1):
             sids[scan_id] = str(self.run.GetFilterForScanNumber(scan_id).Filter)
         return sids
 
-    def peaklist(self, scan_id, function_noise="noise_packets"):
+    def peaklist(self, scan_id, function_noise="noise_packets") -> PeakList:
         """
+        Create a peaklist object for a specific scan id.
+        :param scan_id: Scan id
+        :param function_noise: Function to calculate the noise from each scan. The following options are available:
 
-        :param scan_id:
-        :param function_noise:
-        :return:
+        * **median** - the median of all peak intensities within a given scan is used as the noise value.
+
+        * **mean** - the unweighted mean average of all peak intensities within a given scan is used as the noise value.
+
+        * **mad (Mean Absolute Deviation)** - the noise value is set as the mean of the absolute differences between peak
+          intensities and the mean peak intensity (calculated across all peak intensities within a given scan).
+
+        * **noise_packets** - the noise value is calculated using the proprietary algorithms contained in Thermo Fisher
+          Scientific’s msFileReader library. This option should only be applied when you are processing .RAW files.
+
+        :return: PeakList object
         """
         if function_noise not in ["noise_packets", "mean", "median", "mad"]:
             raise ValueError("select a function that is available [noise_packets, mean, median, mad]")
@@ -152,29 +173,45 @@ class ThermoRaw:
 
         return pl
 
-    def peaklists(self, scan_ids, function_noise="noise_packets"):
+    def peaklists(self, scan_ids, function_noise="noise_packets") -> Sequence[PeakList]:
         """
+        Create a list of peaklist objects for each scan id in the list.
+        :param scan_ids: List of scan ids
 
-        :param scan_ids:
-        :param function_noise:
-        :return:
+        :param function_noise: Function to calculate the noise from each scan. The following options are available:
+
+        * **median** - the median of all peak intensities within a given scan is used as the noise value.
+
+        * **mean** - the unweighted mean average of all peak intensities within a given scan is used as the noise value.
+
+        * **mad (Mean Absolute Deviation)** - the noise value is set as the mean of the absolute differences between peak
+          intensities and the mean peak intensity (calculated across all peak intensities within a given scan).
+
+        * **noise_packets** - the noise value is calculated using the proprietary algorithms contained in Thermo Fisher
+          Scientific’s msFileReader library. This option should only be applied when you are processing .RAW files.
+
+        :return: List of PeakList objects
         """
         if function_noise not in ["noise_packets", "mean", "median", "mad"]:
             raise ValueError("select a function that is available [noise_packets, mean, median, mad]")
 
         return [self.peaklist(scan_id, function_noise=function_noise) for scan_id in scan_ids]
 
-    def tics(self):
+    def tics(self) -> collections.OrderedDict:
+        """
+        Get all TIC values and associated scan ids
+        :return: Dictionary
+        """
         tics = collections.OrderedDict()
         for scan_id in range(self.run.RunHeaderEx.FirstSpectrum, self.run.RunHeaderEx.LastSpectrum + 1):
             scan_stats = self.run.GetScanStatsForScanNumber(scan_id)
             tics[scan_id] = scan_stats.TIC
         return tics
 
-    def ion_injection_times(self):
+    def ion_injection_times(self) -> collections.OrderedDict:
         """
-
-        :return:
+        Get all TIC values and associated scan ids
+        :return: Dictionary
         """
         iits = collections.OrderedDict()
         for scan_id in range(self.run.RunHeaderEx.FirstSpectrum, self.run.RunHeaderEx.LastSpectrum + 1):
@@ -187,10 +224,10 @@ class ThermoRaw:
                 iits[scan_id] = None
         return iits
 
-    def scan_dependents(self):
+    def scan_dependents(self) -> list:
         """
-
-        :return:
+        Get a nested list of scan id pairs. Each pair represents a fragementation event.
+        :return: List
         """
         l = []
         for scan_id in range(self.run.RunHeaderEx.FirstSpectrum, self.run.RunHeaderEx.LastSpectrum + 1):
@@ -202,7 +239,7 @@ class ThermoRaw:
 
     def close(self):
         """
-
-        :return:
+        Close the reader/file object
+        :return: None
         """
         self.run.Close()

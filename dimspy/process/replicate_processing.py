@@ -56,9 +56,10 @@ def _calculate_edges(mz_ranges):
 
 def remove_edges(pls_sd: Dict):
     """
+    Removes overlapping m/z regions of adjacent (SIM) windows / scan events.
 
-    :param pls_sd:
-    :return:
+    :param pls_sd: List of peaklist objects
+    :return: List of peaklist objects
     """
     if type(pls_sd) is not dict and type(pls_sd) is not collections.OrderedDict:
         raise TypeError("Incorrect format - dict or collections.OrderedDict required")
@@ -79,13 +80,31 @@ def remove_edges(pls_sd: Dict):
 
 def read_scans(fn: str, function_noise: str, min_scans: int = 1, filter_scan_events: Dict = None):
     """
+    Read, filter, group and sort scans based on the header / filter string
+    Helper function for 'process_scans (tools module)'
 
-    :param fn:
-    :param source:
-    :param function_noise:
-    :param min_scans:
-    :param filter_scan_events:
-    :return:
+    :param fn: Path to the .mzml or .raw file
+
+    :param function_noise: Function to calculate the noise from each scan. The following options are available:
+
+        * **median** - the median of all peak intensities within a given scan is used as the noise value.
+
+        * **mean** - the unweighted mean average of all peak intensities within a given scan is used as the noise value.
+
+        * **mad (Mean Absolute Deviation)** - the noise value is set as the mean of the absolute differences between peak
+          intensities and the mean peak intensity (calculated across all peak intensities within a given scan).
+
+        * **noise_packets** - the noise value is calculated using the proprietary algorithms contained in Thermo Fisher
+          Scientific’s msFileReader library. This option should only be applied when you are processing .RAW files.
+
+    :param min_scans: Minimum number of scans required for each *m/z* window or event within a raw/mzML data file.
+
+    :param filter_scan_events: Include or exclude specific scan events, by default all ALL scan events will be
+        included. To include or exclude specific scan events use the following format of a dictionary.
+
+        >>> {"include":[[100, 300, "sim"]]} or {"include":[[100, 1000, "full"]]}
+
+    :return: List of peaklist objects
     """
 
     if filter_scan_events is None:
@@ -172,16 +191,31 @@ def average_replicate_scans(name: str, pls: Sequence[PeakList], ppm: float = 2.0
                             rsd_thres: float = 30.0, rsd_on: str = "intensity", block_size: int = 5000,
                             ncpus: int = None):
     """
+    Align, filter and average replicate scans/peaklist
+    Helper function for 'process_scans (tools module)'
 
-    :param name:
-    :param pls:
-    :param ppm:
-    :param min_fraction:
-    :param rsd_thres:
-    :param rsd_on:
-    :param block_size:
-    :param ncpus:
-    :return:
+    :param name: Name average peaklist
+
+    :param pls: List of peaklists
+
+    :param ppm: Maximum tolerated m/z deviation in parts per million.
+
+    :param min_fraction: A numerical value from 0 to 1 that specifies the minimum proportion of scans a given mass
+        spectral peak must be detected in, in order for it to be kept in the output peaklist. Here, scans refers to
+        replicates of the same scan event type, i.e. if set to 0.33, then a peak would need to be detected in at least
+        1 of the 3 replicates of a given scan event type.
+
+    :param rsd_thres: Relative standard deviation threshold - A numerical value equal-to or greater-than 0.
+        If greater than 0, then peaks whose intensity values have a percent relative standard deviation (otherwise termed
+        the percent coefficient of variation) greater-than this value are excluded from the output peaklist.
+
+    :param rsd_on: Intensity or SNR
+
+    :param block_size: Number peaks in each centre clustering block.
+
+    :param ncpus: Number of CPUs for parallel clustering. Default = None, indicating using all CPUs that are available
+
+    :return: List of peaklists
     """
 
     emlst = np.array([x.size == 0 for x in pls])
@@ -227,14 +261,24 @@ def average_replicate_scans(name: str, pls: Sequence[PeakList], ppm: float = 2.0
 def average_replicate_peaklists(pls: Sequence[PeakList], ppm: float, min_peaks: int, rsd_thres: float = None,
                                 block_size: int = 5000, ncpus: int = None):
     """
+    Align, filter and average replicate peaklists.
+    Helper function for 'replicate_filter (tools module)'
 
-    :param pls:
-    :param ppm:
-    :param min_peaks:
-    :param rsd_thres:
-    :param block_size:
-    :param ncpus:
-    :return:
+    :param pls: List of peaklists
+
+    :param ppm: Maximum tolerated m/z deviation in parts per million.
+
+    :param min_peaks: Minimum number of technical replicates (i.e. peaklists) a peak has to be present in.
+
+    :param rsd_thres: Relative standard deviation threshold - A numerical value equal-to or greater-than 0.
+        If greater than 0, then peaks whose intensity values have a percent relative standard deviation (otherwise termed
+        the percent coefficient of variation) greater-than this value are excluded from the output peaklist.
+
+    :param block_size: Number peaks in each centre clustering block.
+
+    :param ncpus: Number of CPUs for parallel clustering. Default = None, indicating using all CPUs that are available
+
+    :return: List of peaklists
     """
 
     pm = align_peaks(pls, ppm, block_size, ncpus)
@@ -258,10 +302,12 @@ def average_replicate_peaklists(pls: Sequence[PeakList], ppm: float, min_peaks: 
 
 def join_peaklists(name: str, pls: Sequence[PeakList]):
     """
+    Join/Merge peaklists (i.e. windows) with different m/z ranges.
+    Helper function for 'process_scans (tools module)'
 
-    :param name:
-    :param pls:
-    :return:
+    :param name: Name newly created joined/merged peaklist
+    :param pls: List of peaklists
+    :return: Peaklist
     """
 
     def _join_atrtributes(pls):

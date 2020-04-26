@@ -6,18 +6,18 @@ Welcome to DIMSpy's documentation!
 Python package for processing direct-infusion mass spectrometry-based metabolomics and lipidomics data
 
 
-Content
--------
+Contents
+--------
 
 .. toctree::
     :maxdepth: 3
 
     installation
-    reference
+    api-reference
     cli
     credits
     bugs-and-issues
-    release-notes
+    changelog
     citation
     license
 

@@ -42,6 +42,11 @@ def main():
         python_requires='>=3.7',
         install_requires=open('requirements.txt').read().splitlines(),
         include_package_data=True,
+        project_urls={
+            "Documentation": "https://dimspy.readthedocs.io/en/latest/",
+            "Changelog": "https://dimspy.readthedocs.io/en/latest/changelog.html",
+            "Bug Tracker": "https://github.com/computational-metabolomics/dimspy/issues",
+        },
         classifiers=[
           "Programming Language :: Python :: 3",
           "Programming Language :: Python :: 3.7",

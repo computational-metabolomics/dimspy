@@ -36,7 +36,8 @@ from .models.peaklist import PeakList
 def mz_range_from_header(h: str) -> Sequence[float]:
     """
     Extract m/z range from header or filter string
-    :param h: header or filter string
+
+    :param h: Header or filter string
     :return: m/z range
     """
 
@@ -46,6 +47,7 @@ def mz_range_from_header(h: str) -> Sequence[float]:
 def ms_type_from_header(h: str) -> str:
     """
     Extract the ms type from header or filter string
+
     :param h: header or filter string
     :return: ms type (e.g. FTMS and ITMS)
     """
@@ -56,6 +58,7 @@ def ms_type_from_header(h: str) -> str:
 def scan_type_from_header(h: str) -> str:
     """
     Extract the scan type from the header of filter string
+
     :param h: header or filter string
     :return: Scan type (e.g. full or sim)
     """
@@ -71,6 +74,7 @@ def scan_type_from_header(h: str) -> str:
 def mode_type_from_header(h: str) -> str:
     """
     Extract scan mode from the header of filter string
+
     :param h: header or filter string
     :return: Scan type (e.g. p = profile, c = centroid)
     """
@@ -86,6 +90,7 @@ def mode_type_from_header(h: str) -> str:
 def count_scan_types(hs: list) -> int:
     """
     Count the number of unique scan types
+
     :param hs: List of headers or filter strings
     :return: Count
     """
@@ -96,6 +101,7 @@ def count_scan_types(hs: list) -> int:
 def count_ms_types(hs: list) -> int:
     """
     Count the number of unique ms types
+
     :param hs: List of headers or filter strings
     :return: Count
     """
@@ -167,6 +173,7 @@ def _non_overlapping_windows(mzrs: list) -> list:
 def interpret_method(mzrs: list):
     """
     Interpret and define type of method
+
     :param mzrs: Nested list of m/z ranges / windows
     :return: Type of MS method
     """
@@ -192,8 +199,8 @@ def interpret_method(mzrs: list):
 
 def to_int(x):
     """
-    :param x: value to convert to int
-    :return: value as int (or False if conversion not possible)
+    :param x: Value to convert to int
+    :return: Value as int (or False if conversion not possible)
     """
     try:
         i = int(x)
@@ -205,6 +212,7 @@ def to_int(x):
 def validate_metadata(fn_tsv: str) -> collections.OrderedDict:
     """
     Check and validate metadata within a tab-separated file
+
     :param fn_tsv: Path to tab-separated file
     :return: Dictionary
     """
@@ -283,9 +291,10 @@ def validate_metadata(fn_tsv: str) -> collections.OrderedDict:
 def update_metadata_and_labels(peaklists: Sequence[PeakList], fl: Dict):
     """
     Update metadata
+
     :param peaklists: List of peaklist Objects
     :param fl: Dictionary with meta data
-    :return:
+    :return: List of peaklist objects
     """
 
     if not isinstance(peaklists[0], PeakList):

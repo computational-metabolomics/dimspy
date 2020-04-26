@@ -59,12 +59,12 @@ def load_peaklist_from_txt(filename: str, ID: any, delimiter: str = ',', flag_na
     """
     Loads a peaklist from plain text file.
 
-    :param filename: path to an exiting text-based peaklist file
+    :param filename: Path to an exiting text-based peaklist file
     :param ID: ID of the peaklist
-    :param delimiter: delimiter of the text lines. Default = ',', i.e., CSV format
-    :param flag_names: names of the flag attributes. Default = 'auto', indicating all the attribute names ends
+    :param delimiter: Delimiter of the text lines. Default = ',', i.e., CSV format
+    :param flag_names: Names of the flag attributes. Default = 'auto', indicating all the attribute names ends
         with "_flag" will be treated as flag attibute. Provide None to indicate no flag attributes
-    :param has_flag_col: whether the text file contains the overall "flags" column. If True, it's values will be
+    :param has_flag_col: Whether the text file contains the overall "flags" column. If True, it's values will be
         discarded. The overall flags of the new peaklist will be calculated automatically. Default = True
     :rtype: PeakList object
 
@@ -99,10 +99,10 @@ def save_peak_matrix_as_txt(pm: PeakMatrix, filename: str, *args, **kwargs):
     """
     Saves a peak matrix in plain text file.
 
-    :param pm: the target peak matrix object
-    :param filename: path to a new text file
-    :param args: arguments to be passed to PeakMatrix.to_str
-    :param kwargs: keyword arguments to be passed to PeakMatrix.to_str
+    :param pm: The target peak matrix object
+    :param filename: Path to a new text file
+    :param args: Arguments to be passed to PeakMatrix.to_str
+    :param kwargs: Keyword arguments to be passed to PeakMatrix.to_str
 
     """
     if os.path.isfile(filename):
@@ -116,10 +116,10 @@ def load_peak_matrix_from_txt(filename: str, delimiter: str = '\t', samples_in_r
     """
     Loads a peak matrix from plain text file.
 
-    :param filename: path to an exiting text-based peak matrix file
-    :param delimiter: delimiter of the text lines. Default = '\t', i.e., TSV format
-    :param samples_in_rows: whether or not the samples are stored in rows. Default = True
-    :param comprehensive: whether the input is a 'comprehensive' or 'simple' version of the matrix. Default = 'auto', i.e., auto detect
+    :param filename: Path to an exiting text-based peak matrix file
+    :param delimiter: Delimiter of the text lines. Default = '\t', i.e., TSV format
+    :param samples_in_rows: Whether or not the samples are stored in rows. Default = True
+    :param comprehensive: Whether the input is a 'comprehensive' or 'simple' version of the matrix. Default = 'auto', i.e., auto detect
     :rtype: PeakMatrix object
 
     """

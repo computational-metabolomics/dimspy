@@ -212,13 +212,13 @@ def align_peaks(peaks: Sequence[PeakList], ppm: float = 2.0, block_size: int = 5
     """
     Cluster and align peaklists into a peak matrix.
 
-    :param peaks: list of peaklists for alignment
-    :param ppm: the hierarchical clustering cutting height, i.e., ppm range for each aligned mz value. Default = 2.0
+    :param peaks: List of peaklists for alignment
+    :param ppm: The hierarchical clustering cutting height, i.e., ppm range for each aligned mz value. Default = 2.0
     :param block_size: number peaks in each centre clustering block. This can be a exact or approximate number depends
         on the fixed_block parameter. Default = 5000
-    :param fixed_block: whether the blocks contain fixed number of peaks. Default = True
-    :param edge_extend: ppm range for the edge blocks. Default = 10
-    :param ncpus: number of CPUs for parallel clustering. Default = None, indicating using as many as possible
+    :param fixed_block: Whether the blocks contain fixed number of peaks. Default = True
+    :param edge_extend: Ppm range for the edge blocks. Default = 10
+    :param ncpus: Number of CPUs for parallel clustering. Default = None, indicating using as many as possible
     :rtype: PeakMatrix object
 
     .. figure::  images/alignment.png

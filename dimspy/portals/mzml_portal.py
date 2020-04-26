@@ -74,7 +74,7 @@ class Mzml:
                 h_sids.setdefault(self.run[scan_id]['MS:1000512'], []).append(scan_id)
         return h_sids
 
-    def _scan_ids(self):
+    def _scan_ids(self) -> collections.OrderedDict:
         sids_h = collections.OrderedDict()
         run = pymzml.run.Reader(self.filename)
         run.ms_precisions.update(self.ms_precisions)
@@ -105,9 +105,6 @@ class Mzml:
 
         * **mad (Mean Absolute Deviation)** - the noise value is set as the mean of the absolute differences between peak
           intensities and the mean peak intensity (calculated across all peak intensities within a given scan).
-
-        * **noise_packets** - the noise value is calculated using the proprietary algorithms contained in Thermo Fisher
-          Scientific’s msFileReader library. This option should only be applied when you are processing .RAW files.
 
         :return: PeakList object
         """
@@ -182,7 +179,7 @@ class Mzml:
     def ion_injection_times(self) -> collections.OrderedDict:
         """
         Get all ion injection time values and associated scan ids
-        :return:
+        :return: Dictionary
         """
         iits = collections.OrderedDict()
         for scan_id in self._sids:
@@ -196,7 +193,7 @@ class Mzml:
     def scan_dependents(self) -> list:
         """
         Get a nested list of scan id pairs. Each pair represents a fragementation event.
-        :return: Dictionary
+        :return: List
         """
         l = []
         for scan_id in self._sids:
@@ -208,7 +205,7 @@ class Mzml:
 
     def close(self):
         """
-        Close the file object
+        Close the reader/file object
         :return: None
         """
         self.run.close()

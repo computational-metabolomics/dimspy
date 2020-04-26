@@ -41,9 +41,9 @@ class PeakMatrix(object):
     automatically managed flags to "remove" peaks without actually delete them. Therefore the filterings on the peaks
     are traceable. Normally, PeakMatrix object is created by functions e.g. align_peaks() rather than manual.
 
-    :param peaklist_ids: the IDs of the source peak lists
-    :param peaklist_tags: the tags (PeakList_Tags) of the source peak lists
-    :param peaklist_attributes: the attributes of the source peak lists. Must be a list or tuple in the format of
+    :param peaklist_ids: The IDs of the source peak lists
+    :param peaklist_tags: The tags (PeakList_Tags) of the source peak lists
+    :param peaklist_attributes: The attributes of the source peak lists. Must be a list or tuple in the format of
         [(attr_name, attr_matrix), ...], where attr_name is name of the attribute, and attr_matrix is the vertically
         stacked arrtibute values in the shape of samples x peaks. The order of the attributes will be kept in the
         PeakMatrix. The first two attributes must be "mz" and "intensity".

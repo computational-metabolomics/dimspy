@@ -63,14 +63,15 @@ def process_scans(source: str, function_noise: str, snr_thres: float, ppm: float
                   report: Union[str, None] = None, block_size: int = 5000, ncpus: int or None = None):
     """
     Extract, filter and average spectral data from input .RAW or .mzML files and generate a single mass
-    spectral peaklist (object) for each of the data files defined in the ‘filelist’ (see below).
+    spectral peaklist (object) for each of the data files within a directory or defined in
+    the ‘filelist’ (if provided).
 
     .. warning::
         When using .mzML files generated using the Proteowizard tool, SIM-type scans will only be treated
         as spectra if the ‘simAsSpectra’ filter was set to true during the conversion process:
         *msconvert.exe example.raw* **--simAsSpectra** *--64 --zlib --filter "peakPicking true 1-”*
 
-    :param source: Path to a set of input .RAW or .mzML files
+    :param source: Path to a set/directory of .raw or .mzML files
 
     :param function_noise: Function to calculate the noise from each scan. The following options are available:
 
@@ -123,7 +124,7 @@ def process_scans(source: str, function_noise: str, snr_thres: float, ppm: float
     :param skip_stitching: Selected Ion Monitoring (SIM) scans with overlapping scan ranges can be "stitched" together
         in to a pseudo-spectrum. This is achieved by setting this parameter to False (default).
 
-    :param remove_mz_range: this option allows for specific m/z regions of the output peaklist to be deleted, this
+    :param remove_mz_range: This option allows for specific m/z regions of the output peaklist to be deleted, this
         option may be useful for removing sections of a spectrum known to correspond to system noise peaks.
 
     :param ringing_thres: Fourier transform-based mass spectra often contain peaks (ringing artefacts) around
@@ -633,13 +634,15 @@ def missing_values_sample_filter(peak_matrix: PeakMatrix, max_fraction: float):
     acquisition has occurred, the reasons for which are many and diverse.
 
     :param peak_matrix: PeakMatrix object
-
     :param max_fraction: **Maximum percentage of missing values** (REQUIRED; default = 0.8) - a numeric value ranging
-        from 0 to 1 (decimal representation of percentage), where:
+           from 0 to 1 (decimal representation of percentage), where:
+
         * A value of 0 (i.e. 0%) corresponds to a very harsh filtering procedure, in which only those samples with zero
           missing values are retained in the output peak matrix.
+
         * A value of 1 (i.e. 100%) corresponds to a very liberal filtering procedure, in which samples with as many as
           100% missing values will be retained in the output peak matrix.
+
     :return: PeakMatrix object
     """
 

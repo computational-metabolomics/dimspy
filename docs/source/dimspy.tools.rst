@@ -1,5 +1,5 @@
 tools
-======================
+=====
 
 .. automodule:: dimspy.tools
     :members:

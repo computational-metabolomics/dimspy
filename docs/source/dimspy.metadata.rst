@@ -1,5 +1,5 @@
 metadata
-======================
+========
 
 .. automodule:: dimspy.metadata
     :members:

@@ -34,6 +34,12 @@ from ..portals.thermo_raw_portal import ThermoRaw
 
 
 def sort_ms_files_by_timestamp(ps):
+    """
+    Sort a set directory of .mzml or .raw files
+
+    :param ps: List of paths
+    :return List
+    """
     s_files = {}
     for i, fn in enumerate(ps):
         if fn.lower().endswith(".raw"):
@@ -62,10 +68,11 @@ def sort_ms_files_by_timestamp(ps):
 
 def validate_and_sort_paths(source, tsv):
     """
+    Validate and sort a set (i.e. directory or hdf5 file) of .mzml or .raw files.
 
-    :param tsv:
-    :param source:
-    :return:
+    :param tsv: Path to tab-separated file
+    :param source: Path to a Path to the .hdf5 file to read from.
+    :return: List
     """
     if tsv is None:
         if type(source) == str:

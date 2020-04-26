@@ -28,8 +28,8 @@ class PeakList_Metadata(dict):
 
     Dictionary-like container for PeakList metadata storage.
 
-    :param args: iterable object of key-value pairs
-    :param kwargs: metadata key-value pairs
+    :param args: Iterable object of key-value pairs
+    :param kwargs: Metadata key-value pairs
 
     >>> PeakList_Metadata([('name', 'sample_1'), ('qc', False)])
     >>> PeakList_Metadata(name = 'sample_1', qc = False)

@@ -1,8 +1,8 @@
 process
-=======================
+=======
 
 peak\_alignment
----------------------------------------
+---------------
 
 .. automodule:: dimspy.process.peak_alignment
     :members:
@@ -11,7 +11,7 @@ peak\_alignment
     :member-order: bysource
 
 peak\_filters
--------------------------------------
+-------------
 
 .. automodule:: dimspy.process.peak_filters
     :members:
@@ -20,7 +20,7 @@ peak\_filters
     :member-order: bysource
 
 scan\_processing
-----------------------------------------
+----------------
 
 .. automodule:: dimspy.process.replicate_processing
     :members:

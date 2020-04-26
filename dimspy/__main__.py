@@ -43,7 +43,7 @@ def main():  # pragma: no cover
 
     print(("Executing dimspy version %s." % __version__))
 
-    parser = argparse.ArgumentParser(description='Python package to process DIMS data',
+    parser = argparse.ArgumentParser(description='Python package for processing direct-infusion mass spectrometry-based metabolomics and lipidomics data',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     subparsers = parser.add_subparsers(dest='step')
@@ -675,8 +675,6 @@ If you distribute this Software to others, you agree to:
 
 5.9. Use, duplication or disclosure of this Software by the U.S. Government is subject to the restricted rights applicable to commercial computer software (under FAR 52.227019 and DFARS 252.227-7013 or parallel regulations). The manufacturer for this purpose is Thermo Finnigan LLC, 355 River Oaks Parkway, San Jose, California 95134, U.S.A.
 """)
-
-
 
 
 if __name__ == "__main__":

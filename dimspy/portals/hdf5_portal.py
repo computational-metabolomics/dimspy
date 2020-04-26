@@ -56,9 +56,9 @@ def save_peaklists_as_hdf5(pkls: Sequence[PeakList], filename: str, compatibilit
     """
     Saves multiple peaklists in a HDF5 file.
 
-    :param pkls: the target list of peaklist objects
-    :param filename: path to a new HDF5 file
-    :param compatibility_mode: change mode to read previous DIMSpy v1.* based HDF5 file
+    :param pkls: The target list of peaklist objects
+    :param filename: Path to a new HDF5 file
+    :param compatibility_mode: Change mode to read previous DIMSpy v1.* based HDF5 file
 
     To incorporate with different dtypes in the attribute matrix, this portal converts all the arribute values
     into fix-length strings for HDF5 data tables storage. The order of the peaklists will be retained.
@@ -114,8 +114,8 @@ def load_peaklists_from_hdf5(filename: str, compatibility_mode: bool = False):
     """
     Loads a list of peaklist objects from a HDF5 file.
 
-    :param filename: path to a HDF5 file
-    :param compatibility_mode: change mode to read previous DIMSpy v1.* based HDF5 file
+    :param filename: Path to a HDF5 file
+    :param compatibility_mode: Change mode to read previous DIMSpy v1.* based HDF5 file
     :rtype: Sequence[PeakList]
 
     The values in HDF5 data tables are automatically converted to their original dtypes before loading in the peaklist.
@@ -185,8 +185,8 @@ def save_peak_matrix_as_hdf5(pm: PeakMatrix, filename: str, compatibility_mode: 
     """
     Saves a peak matrix object to a HDF5 file.
 
-    :param pm: the target peak matrix object
-    :param filename: path to a new HDF5 file
+    :param pm: The target peak matrix object
+    :param filename: Path to a new HDF5 file
 
     The order of the attributes and flags will be retained.
 
@@ -260,7 +260,7 @@ def load_peak_matrix_from_hdf5(filename: str, compatibility_mode: bool = False):
     """
     Loads a peak matrix from a HDF5 file.
 
-    :param filename: path to an existing HDF5 file
+    :param filename: Path to an existing HDF5 file
     :rtype: PeakMatrix object
 
     """

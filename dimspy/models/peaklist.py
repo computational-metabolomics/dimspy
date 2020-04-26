@@ -43,10 +43,10 @@ class PeakList(object):
     attributes e.g. SNRs, and peaklist tags and metadata. It utilises the automatically managed flags to "remove" or
     "retain" peaks without actually delete them. Therefore the filterings on the peaks are traceable.
 
-    :param ID: the ID of the peaklist data, unique string or integer value is recommended
-    :param mz: mz values of all the peaks. Must in the ascending order
-    :param intensity: intensities of all the peaks. Must have the same size as mz
-    :param kwargs: key-value pairs of the peaklist metadata
+    :param ID: The ID of the peaklist data, unique string or integer value is recommended
+    :param mz: Mz values of all the peaks. Must in the ascending order
+    :param intensity: Intensities of all the peaks. Must have the same size as mz
+    :param kwargs: Key-value pairs of the peaklist metadata
 
     >>> mz_values = np.random.uniform(100, 1200, size = 100)
     >>> int_values = np.random.normal(60, 10, size = 100)
@@ -157,9 +157,9 @@ class PeakList(object):
         """
         Property of the peaklist ID.
 
-        :getter: returns the peaklist ID
-        :setter: set the peaklist ID
-        :type: same as input ID
+        :getter: Returns the peaklist ID
+        :setter: Set the peaklist ID
+        :type: Same as input ID
 
         """
         return self._id
@@ -173,7 +173,7 @@ class PeakList(object):
         """
         Property of the peaklist size.
 
-        :getter: returns the flagged peaklist size
+        :getter: Returns the flagged peaklist size
         :type: int
 
         """
@@ -184,7 +184,7 @@ class PeakList(object):
         """
         Property of the peaklist full size.
 
-        :getter: returns the full peaklist size, i.e., including the unflagged peaks
+        :getter: Returns the full peaklist size, i.e., including the unflagged peaks
         :type: int
 
         """
@@ -195,7 +195,7 @@ class PeakList(object):
         """
         Property of the peaklist attributes table shape.
 
-        :getter: returns the attibutes table shape, i.e., peaks number x attributes number. The "flags" column does not count
+        :getter: Returns the attibutes table shape, i.e., peaks number x attributes number. The "flags" column does not count
         :type: tuple
 
         """
@@ -206,7 +206,7 @@ class PeakList(object):
         """
         Property of the peaklist full attributes table shape.
 
-        :getter: returns the full attibutes table shape, including the unflagged peaks
+        :getter: Returns the full attibutes table shape, including the unflagged peaks
         :type: tuple
 
         """
@@ -217,7 +217,7 @@ class PeakList(object):
         """
         Property of the peaklist metadata.
 
-        :getter: returns an access interface to the peaklist metadata object
+        :getter: Returns an access interface to the peaklist metadata object
         :type: PeakList_Metadata object
 
         """
@@ -228,7 +228,7 @@ class PeakList(object):
         """
         Property of the peaklist tags.
 
-        :getter: returns an access interface to the peaklist tags object
+        :getter: Returns an access interface to the peaklist tags object
         :type: PeakList_Tags object
 
         """
@@ -239,7 +239,7 @@ class PeakList(object):
         """
         Property of the attribute names.
 
-        :getter: returns a tuple of the attribute names
+        :getter: Returns a tuple of the attribute names
         :type: tuple
 
         """
@@ -250,7 +250,7 @@ class PeakList(object):
         """
         Property of the flag attribute names.
 
-        :getter: returns a tuple of the flag attribute names
+        :getter: Returns a tuple of the flag attribute names
         :type: tuple
 
         """
@@ -261,7 +261,7 @@ class PeakList(object):
         """
         Property of the attribute table.
 
-        :getter: returns a deep copy of the flagged attribute table
+        :getter: Returns a deep copy of the flagged attribute table
         :type: numpy structured array
 
         """
@@ -272,7 +272,7 @@ class PeakList(object):
         """
         Property of the flags.
 
-        :getter: returns a deep copy of the flags array
+        :getter: Returns a deep copy of the flags array
         :type: numpy array
 
         """
@@ -283,7 +283,7 @@ class PeakList(object):
         """
         Property of the overall attribute table.
 
-        :getter: returns the original attribute table
+        :getter: Returns the original attribute table
         :type: numpy structured array
 
         .. warning::
@@ -328,7 +328,7 @@ class PeakList(object):
         """
         Checks whether there exists an attribute in the table.
 
-        :param attr_name: the attribute name for checking
+        :param attr_name: The attribute name for checking
         :rtype: bool
 
         """
@@ -340,16 +340,16 @@ class PeakList(object):
         """
         Adds an new attribute to the PeakList attribute table.
 
-        :param attr_name: the name of the new attribute, must be a string
-        :param attr_value: the values of the new attribute. It's size must equals to PeakList.size
+        :param attr_name: The name of the new attribute, must be a string
+        :param attr_value: The values of the new attribute. It's size must equals to PeakList.size
             (if flagged_only == True), or PeakList.full_size (if flagged_only == False)
-        :param attr_dtype: the data type of the new attribute. If it is set to None, the PeakList will
+        :param attr_dtype: The data type of the new attribute. If it is set to None, the PeakList will
             try to detect the data type based on attr_value. If the detection failed it will take the "object" type. Default = None
-        :param is_flag: whether the new attribute is a flag attribute, i.e., will be used in flags calculation. Default = False
-        :param on_index: insert the new attribute on a specific column. It can't be 0 or 1, as the first two
+        :param is_flag: Whether the new attribute is a flag attribute, i.e., will be used in flags calculation. Default = False
+        :param on_index: Insert the new attribute on a specific column. It can't be 0 or 1, as the first two
             attributes are fixed as mz and intensity. Setting to None means to put it to the last column. Default = None
-        :param flagged_only: whether the attr_value is set to the flagged peaks or all peaks. Default = True
-        :param invalid_value: if flagged_only is set to True, this value will be assigned to the unflagged peaks.
+        :param flagged_only: Whether the attr_value is set to the flagged peaks or all peaks. Default = True
+        :param invalid_value: If flagged_only is set to True, this value will be assigned to the unflagged peaks.
             The actual value depends on the attribute data type. For instance, on a boolean attribute invalid_value = 0 will
             be converted to False. Default = numpy.nan
         :rtype: PeakList object (self)
@@ -412,7 +412,7 @@ class PeakList(object):
         """
         Drops an existing attribute.
 
-        :param attr_name: the attribute name to drop. It cannot be mz, intensity, or flags
+        :param attr_name: The attribute name to drop. It cannot be mz, intensity, or flags
         :rtype: PeakList object (self)
 
         """
@@ -434,11 +434,11 @@ class PeakList(object):
         """
         Sets values to an existing attribute.
 
-        :param attr_name: the attribute to set values
-        :param attr_value: the new attribute values, It's size must equals to PeakList.size
+        :param attr_name: The attribute to set values
+        :param attr_value: The new attribute values, It's size must equals to PeakList.size
             (if flagged_only == True), or PeakList.full_size (if flagged_only == False)
-        :param flagged_only: whether the attr_value is set to the flagged peaks or all peaks. Default = True
-        :param unsorted_mz: whether the attr_value contains unsorted mz values. This parameter is valid only when
+        :param flagged_only: Whether the attr_value is set to the flagged peaks or all peaks. Default = True
+        :param unsorted_mz: Whether the attr_value contains unsorted mz values. This parameter is valid only when
             attr_name == "mz". Default = False
         :rtype: PeakList object (self)
 
@@ -466,8 +466,8 @@ class PeakList(object):
         """
         Gets values of an existing attribute.
 
-        :param attr_name: the attribute to get values
-        :param flagged_only: whether to return the values of flagged peaks or all peaks. Default = True
+        :param attr_name: The attribute to get values
+        :param flagged_only: Whether to return the values of flagged peaks or all peaks. Default = True
         :rtype: numpy array
 
         """
@@ -480,9 +480,9 @@ class PeakList(object):
         """
         Sets values to a peak.
 
-        :param peak_index: the index of the peak to set values
-        :param peak_value: the new peak values. Must contain values for all the attributes (not including flags)
-        :param flagged_only: whether the peak_value is set to the index of flagged peaks or all peaks. Default = True
+        :param peak_index: The index of the peak to set values
+        :param peak_value: The new peak values. Must contain values for all the attributes (not including flags)
+        :param flagged_only: Whether the peak_value is set to the index of flagged peaks or all peaks. Default = True
         :rtype: PeakList object (self)
 
         >>> print(peaks)
@@ -515,8 +515,8 @@ class PeakList(object):
         """
         Gets values of a peak.
 
-        :param peak_index: the index of the peak to get values
-        :param flagged_only: whether the values are taken from the index of flagged peaks or all peaks. Default = True
+        :param peak_index: The index of the peak to get values
+        :param flagged_only: Whether the values are taken from the index of flagged peaks or all peaks. Default = True
         :rtype: numpy array
 
         """
@@ -527,7 +527,7 @@ class PeakList(object):
         """
         Insert a new peak.
 
-        :param peak_value: the values of the new peak. Must contain values for all the attributes. It's position depends
+        :param peak_value: The values of the new peak. Must contain values for all the attributes. It's position depends
             on the mz value, i.e., the 1st value of the input
         :rtype: PeakList object (self)
 
@@ -542,8 +542,8 @@ class PeakList(object):
         """
         Remove an existing peak.
 
-        :param peak_index: the index of the peak to remove
-        :param flagged_only: whether the index is for flagged peaks or all peaks. Default = True
+        :param peak_index: The index of the peak to remove
+        :param flagged_only: Whether the index is for flagged peaks or all peaks. Default = True
         :rtype: PeakList object (self)
 
         """
@@ -558,7 +558,7 @@ class PeakList(object):
         """
         Remove unflagged peaks.
 
-        :param flag_name: remove peaks unflagged by this flag attribute. Setting None means to remove peaks unflagged by
+        :param flag_name: Remove peaks unflagged by this flag attribute. Setting None means to remove peaks unflagged by
             the overall flags. Default = None
         :rtype: PeakList object (self)
 
@@ -600,7 +600,7 @@ class PeakList(object):
         """
         Exports peaklist attribute table to a dictionary (mappable object), including the flags.
 
-        :param dict_type: result dictionary type, Default = OrderedDict
+        :param dict_type: Result dictionary type, Default = OrderedDict
         :rtype: list
 
         """
