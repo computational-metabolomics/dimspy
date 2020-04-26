@@ -6,7 +6,7 @@ All notable changes to this project will be documented here. For more details ch
 `DIMSpy v2.0.0 <https://github.com/computational-metabolomics/dimspy/releases/tag/v2.0.0>`_
 -------------------------------------------------------------------------------------------
 
-**Release date: 25 April 2020**
+**Release date: 26 April 2020**
 
 - First stable Python 3 only release
 - Refactor and improve HDF5 portal to save peaklists and/or peak matrices
