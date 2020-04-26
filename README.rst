@@ -11,7 +11,7 @@ Python package for processing direct-infusion mass spectrometry-based metabolomi
 
 Installation (Conda, PyPi and Galaxy)
 -------------------------------------
-See the `Installation page <https://dimspy.readthedocs.io/en/latest/introduction.html#installation>`__ of
+See the `Installation page <https://dimspy.readthedocs.io/en/latest/installation.html>`__ of
 the `online documentation <https://computational-metabolomics.github.io/dimspy/>`__.
 
 
@@ -29,9 +29,9 @@ DIMSpy was originally written by Ralf Weber and Albert Zhou and has been develop
 Thanks to everyone who has improved DIMSpy by contributing code, adding features, bug reports and fixes, and documentation.
 
 **Developers and contributers**
- - Ralf J. M. Weber (r.j.weber@bham.ac.uk) - `University of Birmingham (UK) <https://www.birmingham.ac.uk/staff/profiles/biosciences/weber-ralf.aspx>`_
- - Jiarui (Albert) Zhou (j.zhou.3@bham.ac.uk) - `University of Birmingham (UK) <http://www.birmingham.ac.uk/index.aspx>`_, `HIT Shenzhen (China) <http://www.hitsz.edu.cn>`_
- - Thomas N. Lawson (t.n.lawson@bham.ac.uk) - `University of Birmingham (UK) <http://www.birmingham.ac.uk/index.aspx>`_
+ - Ralf J. M. Weber (r.j.weber@bham.ac.uk) - `University of Birmingham (UK) <https://www.birmingham.ac.uk/staff/profiles/biosciences/weber-ralf.aspx>`__
+ - Jiarui (Albert) Zhou (j.zhou.3@bham.ac.uk) - `University of Birmingham (UK) <http://www.birmingham.ac.uk/index.aspx>`__, `HIT Shenzhen (China) <http://www.hitsz.edu.cn>`_
+ - Thomas N. Lawson (t.n.lawson@bham.ac.uk) - `University of Birmingham (UK) <http://www.birmingham.ac.uk/index.aspx>`__
  - Martin R. Jones (martin.jones@eawag.ch) - `Eawag  (Switzerland) <https://www.eawag.ch/en/aboutus/portrait/organisation/staff/profile/martin-jones/show/>`_
 
 **DIMSpy acknowledges support from the following funders:**
@@ -51,7 +51,7 @@ DIMSpy is licensed under the GNU General Public License v3.0 (see `LICENSE file 
 **Third-party licenses and copyright**
 
 RawFileReader reading tool. Copyright © 2016 by Thermo Fisher Scientific, Inc. All rights reserved. See `RawFileReaderLicense <https://github.com/computational-metabolomics/dimspy/blob/master/RawFileReaderLicense.rst>`_ for licensing information.
-Using DIMSpy software for processing Thermo Fisher Scientific *.raw files implies the acceptance of the RawFileReader license terms.
+Using DIMSpy software for processing Thermo Fisher Scientific \*.raw files implies the acceptance of the RawFileReader license terms.
 Anyone receiving RawFileReader as part of a larger software distribution (in the current context, as part of DIMSpy) is considered an "end user" under
 section 3.3 of the RawFileReader License, and is not granted rights to redistribute RawFileReader.
 
