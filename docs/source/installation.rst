@@ -14,7 +14,7 @@ Start the ``conda prompt``
 Create a dimspy specific ``conda`` environment.
 This will install a the dependencies required to run ``dimspy``::
 
-    $ conda create --yes --name dimspy -c conda-forge -c bioconda -c computational-metabolomics
+    $ conda create --yes --name dimspy dimspy -c conda-forge -c bioconda -c computational-metabolomics
 
 .. note::
 
