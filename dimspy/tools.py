@@ -614,8 +614,8 @@ def sample_filter(peak_matrix: Union[PeakMatrix, str], min_fraction: float, with
         peak_matrix = update_labels(peak_matrix, labels)
 
     if qc_label is not None:
-        if Tag(qc_label, 'classLabel') not in peak_matrix.peaklist_tags:
-            raise IOError("QC label ({}) does not exist".format(qc_label))
+        if len([True for pt in peak_matrix.peaklist_tags if Tag(qc_label, 'classLabel') in pt]) == 0:
+            raise KeyError("QC label ({}) does not exist".format(qc_label))
 
     peak_matrix = filter_fraction(peak_matrix, min_fraction, within_classes=within, class_tag_type="classLabel")
 
