@@ -337,8 +337,9 @@ def update_labels(pm: PeakMatrix, fn_tsv: str) -> PeakMatrix:
     assert "sample_id" == list(fm_dict.keys())[0] or "filename" == list(fm_dict.keys())[
         0], "Column for class labels not available"
     assert "classLabel" in fm_dict.keys(), "Column for class label (classLabel) not available"
-    assert (fm_dict[list(fm_dict.keys())[0]] == pm.peaklist_ids).all(), "Sample ids do not match {}".format(
-        np.setdiff1d(fm_dict[list(fm_dict.keys())[0]], pm.peaklist_ids))
+    assert (np.array(fm_dict[list(fm_dict.keys())[0]]) == np.array(
+        pm.peaklist_ids)).all(), "Sample ids do not match {}".format(
+        np.setdiff1d(np.array(fm_dict[list(fm_dict.keys())[0]]), np.array(pm.peaklist_ids)))
 
     for tag_name in ["replicate", "replicates", "batch", "injectionOrder", "classLabel"]:
         if tag_name in fm_dict:
