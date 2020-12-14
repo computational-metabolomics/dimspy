@@ -1,6 +1,6 @@
 DIMSpy
 ======
-|Py versions| |Version| |Bioconda| |Galaxy-eu| |Git| |Build Status (Travis)| |Build Status (AppVeyor)| |codecov| |License| |binder| |RTD doc| |gitter|
+|Py versions| |Version| |Bioconda| |Galaxy-eu| |Git| |Build Status| |Build Status (AppVeyor)| |codecov| |License| |binder| |RTD doc| |gitter|
 
 Python package for processing direct-infusion mass spectrometry-based metabolomics and lipidomics data
 
@@ -56,8 +56,8 @@ Anyone receiving RawFileReader as part of a larger software distribution (in the
 section 3.3 of the RawFileReader License, and is not granted rights to redistribute RawFileReader.
 
 
-.. |Build Status (Travis)| image:: https://img.shields.io/travis/computational-metabolomics/dimspy.svg?logo=travis&maxAge=600&style=flat-square
-   :target: https://travis-ci.com/computational-metabolomics/dimspy
+.. |Build Status| image:: https://github.com/computational-metabolomics/dimspy/workflows/dimspy/badge.svg
+   :target: https://github.com/computational-metabolomics/dimspy/actions
 
 .. |Build Status (AppVeyor)| image:: https://img.shields.io/appveyor/ci/RJMW/dimspy.svg?logo=appveyor&style=flat-square&maxAge=600
    :target: https://ci.appveyor.com/project/RJMW/dimspy/branch/master
