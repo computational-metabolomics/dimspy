@@ -44,12 +44,13 @@ def sort_ms_files_by_timestamp(ps):
     for i, fn in enumerate(ps):
         if fn.lower().endswith(".raw"):
             run = ThermoRaw(fn)
-
+            d = "{}/{}/{}".format(str(run.timestamp.get_Day()).zfill(2), str(run.timestamp.get_Month()).zfill(2), run.timestamp.get_Year())
+            s_files[fn] = "{} {}".format(d, str(run.timestamp).split(" ", 1)[1])
         elif fn.lower().endswith(".mzml"):
             run = Mzml(fn)
+            s_files[fn] = str(run.timestamp)
         else:
             continue
-        s_files[fn] = str(run.timestamp)
         run.close()
 
     if list(s_files.keys())[0].lower().endswith(".mzml"):
@@ -60,7 +61,7 @@ def sort_ms_files_by_timestamp(ps):
             pattern = "%d/%m/%Y %H:%M:%S"
             s_files_sorted = sorted(s_files.items(), key=lambda x: datetime.strptime(x[1], pattern), reverse=False)
         except:
-            pattern = "%m/%d/%Y %I:%M:%S %p"
+            pattern = "%d/%m/%Y %I:%M:%S %p"
             s_files_sorted = sorted(s_files.items(), key=lambda x: datetime.strptime(x[1], pattern), reverse=False)
 
     return s_files_sorted
