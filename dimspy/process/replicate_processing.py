@@ -281,7 +281,7 @@ def average_replicate_peaklists(pls: Sequence[PeakList], ppm: float, min_peaks: 
     :return: List of peaklists
     """
 
-    pm = align_peaks(pls, ppm, block_size, ncpus)
+    pm = align_peaks(pls, ppm=ppm, block_size=block_size, ncpus=ncpus)
 
     prefix = os.path.commonprefix([p.ID for p in pls])
     merged_id = "{}{}".format(prefix, "_".join(map(str, [p.ID.replace(prefix, "").split(".")[0] for p in pls])))
