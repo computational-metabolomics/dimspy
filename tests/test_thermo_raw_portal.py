@@ -39,8 +39,9 @@ class ThermoRawPortalsTestCase(unittest.TestCase):
     def test_thermo_raw_portal(self):
 
         run = ThermoRaw(to_test_data("raw", "batch04_QC17_rep01_262.RAW"))
-
-        self.assertTrue(str(run.timestamp) == "4/2/2011 3:28:02 AM" or str(run.timestamp) == "02/04/2011 03:28:02")
+        self.assertTrue(str(run.timestamp) == "4/2/2011 3:28:02 AM"
+                        or str(run.timestamp) == "04/02/2011 03:28:02"
+                        or str(run.timestamp) == "02/04/2011 03:28:02")
 
         self.assertListEqual(list(run.headers().keys()), ['FTMS + p ESI w SIM ms [70.00-170.00]',
                                                           'FTMS + p ESI w SIM ms [140.00-240.00]',

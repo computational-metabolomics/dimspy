@@ -1,0 +1,60 @@
+name: dimspy
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python-version: [3.7]
+
+    env:
+      OS: ${{ matrix.os }}
+      PYTHON: ${{ matrix.python-version }}
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup conda - Python ${{ matrix.python-version }}
+        uses: s-weigand/setup-conda@v1
+        with:
+          update-conda: true
+          python-version: ${{ matrix.python-version }}
+          conda-channels: conda-forge, bioconda
+
+      - name: Install dependencies
+        run: |
+
+          python --version
+          conda env update --file environment.yml --name base
+
+      - name: Lint with flake8
+        run: |
+
+          conda install flake8
+
+          # stop build if there are Python syntax errors or undefined names
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+
+          # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+      - name: Test with pytest-cov
+        run: |
+
+          python setup.py install
+          dimspy --help
+
+          conda install pytest codecov pytest-cov -c conda-forge
+          pytest --cov ./ --cov-config=.coveragerc --cov-report=xml
+
+      - name: Upload code coverage to codecov
+        uses: codecov/codecov-action@v1
+        with:
+          flags: unittests
+          env_vars: OS,PYTHON
+          fail_ci_if_error: true
+          verbose: true
