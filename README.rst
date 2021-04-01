@@ -12,7 +12,7 @@ Python package for processing direct-infusion mass spectrometry-based metabolomi
 Installation (Conda, PyPi and Galaxy)
 -------------------------------------
 See the `Installation page <https://dimspy.readthedocs.io/en/latest/installation.html>`__ of
-the `online documentation <https://computational-metabolomics.github.io/dimspy/>`__.
+the `online documentation <https://dimspy.readthedocs.io/en/latest/>`__.
 
 
 Bug reports
