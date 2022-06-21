@@ -1,6 +1,6 @@
 fastcluster==1.1.26
 h5py==2.10.0
-numpy==1.17.1
+numpy==1.22.0
 pandas==0.25.0
 pymzml==2.4.5
 pythonnet==2.4.0
